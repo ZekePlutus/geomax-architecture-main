@@ -1,0 +1,8 @@
+.form-control.form-control-solid,.input-group.input-group-solid,.form-control.form-control-solid:focus
+{
+    border: 1px solid var(--bs-gray-300) ;
+    
+}   
+
+
+ 
