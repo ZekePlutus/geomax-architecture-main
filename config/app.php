@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Mock Database Mode
+    |--------------------------------------------------------------------------
+    |
+    | When true, the application will use mock data instead of hitting the
+    | database. This is useful for UI testing when no database is available.
+    |
+    */
+
+    'mock_database' => env('MOCK_DATABASE', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
