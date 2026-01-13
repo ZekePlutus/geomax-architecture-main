@@ -1,0 +1,11 @@
+{
+    "name": "user",
+    "namespace": "App\\Modules\\Core\\User",
+    "version": "1.0.0",
+    "description": "User identity, company membership, and role assignment module",
+    "requires": {},
+    "assets": {
+        "css": "Resources/css/user.css",
+        "js": "Resources/js/user.js"
+    }
+}

@@ -3,5 +3,5 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\HorizonServiceProvider::class,
-    App\Modules\User\ModuleServiceProvider::class,
+    App\Modules\Core\User\ModuleServiceProvider::class,
 ];
