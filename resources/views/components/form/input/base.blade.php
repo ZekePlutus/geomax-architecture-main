@@ -31,6 +31,7 @@
     'autocomplete' => 'off',
     
     // Metronic Styles
+    'variant' => 'solid',            // solid, transparent, flush
     'size' => null,                  // sm, lg
     'wrapperClass' => '',            // Additional class for wrapper
     'inputClass' => '',              // Additional class for input
@@ -70,7 +71,15 @@
     $inputId = $id ?? ($name ? str_replace(['[', ']', '.'], '_', $name) : 'input_' . \Illuminate\Support\Str::uuid());
     
     // Build form-control classes
-    $formControlClass = 'form-control form-control-solid';
+    $formControlClass = 'form-control';
+    
+    if ($variant === 'solid') {
+        $formControlClass .= ' form-control-solid';
+    } elseif ($variant === 'transparent') {
+        $formControlClass .= ' form-control-transparent';
+    } elseif ($variant === 'flush') {
+        $formControlClass .= ' form-control-flush';
+    }
     
     // Size classes
     if ($size === 'sm') {

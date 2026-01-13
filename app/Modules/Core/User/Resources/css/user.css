@@ -1,0 +1,331 @@
+/**
+ * User Module Styles
+ * 
+ * Self-contained CSS for the User module.
+ * All styles specific to user management are defined here.
+ */
+
+/* User List Styles */
+.user-list {
+    padding: 1rem;
+}
+
+.user-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.user-list-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+/* User Card Styles */
+.user-card {
+    background: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease;
+}
+
+.user-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.user-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #666;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 0.25rem;
+}
+
+.user-email {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+/* User Status Badge */
+.user-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.user-status--active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.user-status--inactive {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.user-status--pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* User Form Styles */
+.user-form {
+    max-width: 600px;
+}
+
+.user-form-section {
+    margin-bottom: 2rem;
+}
+
+.user-form-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.user-form-group {
+    margin-bottom: 1rem;
+}
+
+.user-form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.user-form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.user-form-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.user-form-input--error {
+    border-color: #ef4444;
+}
+
+.user-form-error {
+    font-size: 0.75rem;
+    color: #ef4444;
+    margin-top: 0.25rem;
+}
+
+/* Role Selection */
+.role-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.role-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.role-checkbox:hover {
+    background: #f3f4f6;
+}
+
+.role-checkbox input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+}
+
+.role-checkbox-label {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.role-checkbox-description {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Permissions Grid */
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.permission-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.permission-card-header {
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 0.5rem;
+}
+
+.permission-card-description {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Restrictions List */
+.restrictions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.restriction-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.restriction-item:last-child {
+    border-bottom: none;
+}
+
+.restriction-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.restriction-type {
+    font-weight: 500;
+    color: #374151;
+}
+
+.restriction-value {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.restriction-remove {
+    color: #ef4444;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.restriction-remove:hover {
+    background: #fee2e2;
+}
+
+/* User Table Styles */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.user-table th,
+.user-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.user-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.user-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.user-table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Setup/Activation Page */
+.setup-container {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.setup-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.setup-description {
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .user-list-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .user-table {
+        display: block;
+        overflow-x: auto;
+    }
+}

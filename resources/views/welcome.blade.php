@@ -1,4 +1,4 @@
-@extends('layout.master')
+@extends('layout50.master')
 
 @section('title', 'Dashboard')
 @section('page_title', 'Dashboard')
@@ -142,13 +142,13 @@
                  <div class="col-xl-4 col-md-6">
                      <div class="cursor-pointer border border-hover-primary rounded-3 p-4 theme-pattern h-100" 
                           onclick="setTheme({
-                              primary: '#D81B60', secondary: '#212121', success: '#00C853', info: '#00B0FF', warning: '#FFAB00', danger: '#D50000', dark: '#000000', light: '#ECEFF1'
+                              primary: '#D81B60', secondary: '#FCE4EC', success: '#00C853', info: '#00B0FF', warning: '#FFAB00', danger: '#D50000', dark: '#000000', light: '#ECEFF1'
                           })">
                           <div class="d-flex flex-column gap-3">
                               <span class="fs-5 fw-bold text-gray-800">Crimson Night</span>
                                <div class="d-flex rounded-2 overflow-hidden shadow-sm border border-gray-300" style="height: 40px;">
                                   <div class="flex-grow-1" style="background-color: #D81B60" title="Primary"></div>
-                                  <div class="flex-grow-1" style="background-color: #212121" title="Secondary"></div>
+                                  <div class="flex-grow-1" style="background-color: #FCE4EC" title="Secondary"></div>
                                   <div class="flex-grow-1" style="background-color: #00C853" title="Success"></div>
                                   <div class="flex-grow-1" style="background-color: #00B0FF" title="Info"></div>
                                   <div class="flex-grow-1" style="background-color: #FFAB00" title="Warning"></div>
@@ -242,89 +242,13 @@
 
     function setTheme(palette) {
         currentPalette = palette;
-
-        // Iterate through all keys in the palette object (primary, secondary, etc.)
-        for (const [key, hex] of Object.entries(palette)) {
-            // Set the main CSS variable (e.g., --bs-primary: #123456)
-            document.documentElement.style.setProperty(`--bs-${key}`, hex);
-
-            // Calculate derived values if it's a valid hex
-            const rgb = hexToRgb(hex);
-            if (rgb) {
-                // Set RGB variable (e.g., --bs-primary-rgb: 18, 52, 86)
-                document.documentElement.style.setProperty(`--bs-${key}-rgb`, `${rgb.r}, ${rgb.g}, ${rgb.b}`);
-                
-                // Set Light variable (e.g., --bs-primary-light) - 90% white mix
-                const lightColor = mixColors(rgb, {r: 255, g: 255, b: 255}, 0.90);
-                document.documentElement.style.setProperty(`--bs-${key}-light`, `rgb(${lightColor.r}, ${lightColor.g}, ${lightColor.b})`);
-
-                // Set Active variable (e.g., --bs-primary-active) - 10% darker
-                const activeColor = shadeColor(hex, -10);
-                document.documentElement.style.setProperty(`--bs-${key}-active`, activeColor);
-
-                // Set Inverse color (Text color on top of solid background)
-                const inverseColor = getContrastColor(hex);
-                document.documentElement.style.setProperty(`--bs-${key}-inverse`, inverseColor);
-            }
+        
+        // Use the global function from theme-customizer.blade.php
+        if (typeof window.applyTheme === 'function') {
+            window.applyTheme(palette);
+        } else {
+            console.error('applyTheme function not found. Ensure theme-customizer.blade.php is included.');
         }
-
-        // Special case: Link color often matches primary
-        if (palette.primary) {
-             document.documentElement.style.setProperty('--bs-link-color', palette.primary);
-        }
-    }
-
-    function hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : null;
-    }
-
-    // Weight is 0-1, amount of color2 to mix into color1
-    function mixColors(color1, color2, weight) {
-        return {
-            r: Math.round(color1.r * (1 - weight) + color2.r * weight),
-            g: Math.round(color1.g * (1 - weight) + color2.g * weight),
-            b: Math.round(color1.b * (1 - weight) + color2.b * weight)
-        };
-    }
-
-    function getContrastColor(hex) {
-        const rgb = hexToRgb(hex);
-        if (!rgb) return '#ffffff';
-        
-        // Calculate relative luminance
-        const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
-        
-        // Return black for bright colors, white for dark colors
-        return brightness > 128 ? '#000000' : '#ffffff';
-    }
-
-    function shadeColor(color, percent) {
-        var R = parseInt(color.substring(1,3),16);
-        var G = parseInt(color.substring(3,5),16);
-        var B = parseInt(color.substring(5,7),16);
-
-        R = parseInt(R * (100 + percent) / 100);
-        G = parseInt(G * (100 + percent) / 100);
-        B = parseInt(B * (100 + percent) / 100);
-
-        R = (R<255)?R:255;  
-        G = (G<255)?G:255;  
-        B = (B<255)?B:255;  
-        
-        R = Math.round(R);
-        G = Math.round(G);
-        B = Math.round(B);
-
-        var RR = ((R.toString(16).length==1)?"0"+R.toString(16):R.toString(16));
-        var GG = ((G.toString(16).length==1)?"0"+G.toString(16):G.toString(16));
-        var BB = ((B.toString(16).length==1)?"0"+B.toString(16):B.toString(16));
-
-        return "#"+RR+GG+BB;
     }
     </script>
 @endsection

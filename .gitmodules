@@ -1,0 +1,3 @@
+[submodule "saas-governance-runtime"]
+	path = saas-governance-runtime
+	url = git@github.com:ZerroukZakaria/saas-governance-runtime.git

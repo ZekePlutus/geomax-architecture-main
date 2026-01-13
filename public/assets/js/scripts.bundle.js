@@ -7546,7 +7546,7 @@ var KTAppLayoutBuilder = function() {
 					return;
 
 					toastr.success(
-						"Preview has been updated with current configured layout.", 
+						"Preview has been updated with current configured layout50.", 
 						"Preview updated!", 
 						{timeOut: 0, extendedTimeOut: 0, closeButton: true, closeDuration: 0}
 					);

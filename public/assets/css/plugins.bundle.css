@@ -22620,22 +22620,22 @@
 :root,
 [data-bs-theme=light] {
   --bs-prismjs-bg: #1e1e3f;
-  --bs-prismjs-border: rgba(255, 255, 255, 0.1);
+  --bs-prismjs-border: rgba(var(--bs-white-rgb), 0.1);
   --bs-prismjs-btn-bg: #2d2d5e;
   --bs-prismjs-btn-bg-hover: #2d2d5e;
-  --bs-prismjs-btn-color: rgba(255, 255, 255, 0.75);
-  --bs-prismjs-btn-color-hover: #17C653;
+  --bs-prismjs-btn-color: rgba(var(--bs-white-rgb), 0.75);
+  --bs-prismjs-btn-color-hover: var(--bs-primary);
   --bs-prismjs-scrollbar-color: #323268;
   --bs-prismjs-scrollbar-color-hover: #373773;
 }
 
 [data-bs-theme=dark] {
   --bs-prismjs-bg: #151521;
-  --bs-prismjs-border: rgba(255, 255, 255, 0.1);
+  --bs-prismjs-border: rgba(var(--bs-white-rgb), 0.1);
   --bs-prismjs-btn-bg: #27273d;
   --bs-prismjs-btn-bg-hover: #27273d;
-  --bs-prismjs-btn-color: rgba(255, 255, 255, 0.75);
-  --bs-prismjs-btn-color-hover: #17C653;
+  --bs-prismjs-btn-color: rgba(var(--bs-white-rgb), 0.75);
+  --bs-prismjs-btn-color-hover: var(--bs-primary);
   --bs-prismjs-scrollbar-color: #2d2d46;
   --bs-prismjs-scrollbar-color-hover: #333350;
 }
@@ -25004,7 +25004,7 @@ body {
 
 .fc {
   --fc-border-color: var(--bs-gray-200);
-  --fc-page-bg-color: #ffffff;
+  --fc-page-bg-color: var(--bs-white);
   --fc-small-font-size: 0.95rem;
   --fc-highlight-color: var(--bs-light);
   --fc-bg-event-opacity: 0.3;

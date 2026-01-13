@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Mock Database Mode
+    |--------------------------------------------------------------------------
+    |
+    | When true, the application will use mock data instead of hitting the
+    | database. This is useful for UI testing when no database is available.
+    |
+    */
+
+    'mock_database' => env('MOCK_DATABASE', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
@@ -83,6 +95,8 @@ return [
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+
+    'supported_locales' => ['en', 'es', 'fr', 'de', 'pt', 'it', 'ar'],
 
     /*
     |--------------------------------------------------------------------------
