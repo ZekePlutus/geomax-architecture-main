@@ -160,6 +160,14 @@
                                         <td>GeoTable JS API</td>
                                         <td><code>GeoTable.reload(), .getSelected(), .destroy()</code></td>
                                     </tr>
+                                    <tr>
+                                        <td>Custom Cell Rendering</td>
+                                        <td><code>'view' => 'path.to.blade'</code> in column config</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Custom Actions View</td>
+                                        <td><code>actions-view="path.to.blade"</code> prop</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -184,24 +192,6 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>
-                                            <span class="text-danger fw-bold">Custom Cell Slots</span>
-                                        </td>
-                                        <td>
-                                            <code>&lt;x-slot:cell-{key}&gt;</code> with <code>$row</code> and <code>$value</code>
-                                            <br><small class="text-warning">Documented (lines 53-68) but NOT implemented in render loop (lines 843-876)</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <span class="text-danger fw-bold">Actions Slot with Row Context</span>
-                                        </td>
-                                        <td>
-                                            <code>&lt;x-slot:actions="['row' => $row]"&gt;</code>
-                                            <br><small class="text-warning">Actions slot renders once globally, not per-row (line 879)</small>
-                                        </td>
-                                    </tr>
                                     <tr>
                                         <td>Bulk Actions</td>
                                         <td>
@@ -240,12 +230,11 @@
                                 </tbody>
                             </table>
 
-                            <div class="alert alert-danger d-flex mt-5 p-4">
+                            <div class="alert alert-info d-flex mt-5 p-4">
                                 <i class="ki-outline ki-information-5 fs-2 me-3"></i>
                                 <div>
-                                    <strong>Priority Fix Required:</strong>
-                                    <br>Custom cell slots (<code>cell-{key}</code>) are critical for rich table UIs (avatars, badges, action menus per row).
-                                    The component documentation shows this feature but the render loop doesn't implement it.
+                                    <strong>Note:</strong>
+                                    <br>Features listed here are planned for future implementation. Prioritize based on real consumption needs.
                                 </div>
                             </div>
                         </div>
@@ -255,42 +244,49 @@
 
             {{-- Implementation Notes --}}
             <div class="card card-bordered mt-5">
-                <div class="card-header bg-light">
+                <div class="card-header bg-light-success">
                     <h4 class="card-title">
-                        <i class="ki-outline ki-code me-2"></i>
-                        Implementation Notes
+                        <i class="ki-outline ki-check-circle text-success me-2"></i>
+                        Implementation Reference (Custom Cell & Actions Rendering)
                     </h4>
                 </div>
                 <div class="card-body">
+                    <div class="alert alert-success mb-5">
+                        <i class="ki-outline ki-check-circle me-2"></i>
+                        <strong>Implemented!</strong> Custom cell rendering and actions with row context are now working via Blade view partials.
+                    </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="text-gray-800">To Fix Custom Cell Slots:</h6>
+                            <h6 class="text-gray-800">Custom Cell View Usage:</h6>
                             <p class="text-muted fs-7">
-                                In <code>base.blade.php</code> lines 843-876, the render loop needs to check for slot existence before using built-in renderers:
+                                Add a <code>'view'</code> key to any column definition pointing to a Blade partial.
+                                The view receives <code>$row</code>, <code>$value</code>, <code>$column</code>, and <code>$index</code>.
                             </p>
-                            <pre class="bg-light-dark text-white p-3 rounded fs-8"><code>@verbatim{{-- Inside @foreach($normalizedColumns as $column) --}}
-@php $slotName = 'cell-' . $column['key']; @endphp
+                            <pre class="bg-light-dark text-white p-3 rounded fs-8"><code>// Column definition
+['key' => 'status', 'label' => 'Status', 'view' => 'components.table.cells.status-badge']
 
-@if(isset($$slotName))
-    {{ $$slotName(['row' => $row, 'value' => $cellValue]) }}
-@else
-    {{-- Existing switch for built-in renderers --}}
-    @switch($column['render'] ?? null)
-        ...
-    @endswitch
-@endif@endverbatim</code></pre>
+// In resources/views/components/table/cells/status-badge.blade.php
+@verbatim&lt;span class="badge badge-{{ $value === 'active' ? 'success' : 'danger' }}"&gt;
+    {{ ucfirst($value) }}
+&lt;/span&gt;@endverbatim</code></pre>
                         </div>
                         <div class="col-md-6">
-                            <h6 class="text-gray-800">To Fix Actions Per-Row:</h6>
+                            <h6 class="text-gray-800">Custom Actions View:</h6>
                             <p class="text-muted fs-7">
-                                The actions slot needs to be invoked inside the row loop with row context:
+                                Use the <code>actions-view</code> prop to specify a Blade partial for per-row actions.
+                                The view receives <code>$row</code> and <code>$index</code>.
                             </p>
-                            <pre class="bg-light-dark text-white p-3 rounded fs-8"><code>@verbatim{{-- Inside the <tr> loop, replace static actions slot --}}
-@if($showActions && isset($actions))
-<td class="text-end">
-    {{ $actions(['row' => $row]) }}
-</td>
-@endif@endverbatim</code></pre>
+                            <pre class="bg-light-dark text-white p-3 rounded fs-8"><code>// Component usage
+&lt;x-table.datatable.base
+    :columns="$columns"
+    :data="$data"
+    :show-actions="true"
+    actions-view="components.table.cells.user-actions"
+/&gt;
+
+// In user-actions.blade.php
+@verbatim&lt;a href="/users/{{ $row['id'] }}/edit"&gt;Edit&lt;/a&gt;
+&lt;button onclick="deleteUser({{ $row['id'] }})"&gt;Delete&lt;/button&gt;@endverbatim</code></pre>
                         </div>
                     </div>
                 </div>
@@ -603,6 +599,29 @@
                 </div>
             </div>
 
+            {{-- Custom Cell Views Example --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Custom Cell Rendering
+                    <span class="badge badge-light-success">NEW - view partials with row context</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.datatable.base
+                        id="demo-custom-cells"
+                        :columns="[
+                            ['key' => 'name', 'label' => 'Product'],
+                            ['key' => 'price', 'label' => 'Price', 'view' => 'components.table.cells.price'],
+                            ['key' => 'stock', 'label' => 'Stock Status', 'view' => 'components.table.cells.stock-status'],
+                            ['key' => 'active', 'label' => 'Status', 'view' => 'components.table.cells.active-toggle'],
+                        ]"
+                        :data="$sampleProducts"
+                        :show-actions="true"
+                        actions-view="components.table.cells.product-actions"
+                        row-key="id"
+                    />
+                </div>
+            </div>
+
             <div class="showcase-example">
                 <div class="showcase-example-label">
                     DataTables Enabled (Search, Sort, Paginate)
@@ -659,18 +678,36 @@
     &lt;/x-slot:toolbar&gt;
 &lt;/x-table.datatable.base&gt;
 
-&lt;!-- With Actions Column --&gt;
+&lt;!-- With Actions Column (static, no row context) --&gt;
 &lt;x-table.datatable.base
     :columns="$columns"
     :data="$data"
     :show-actions="true"
-    row-key="id"
 &gt;
     &lt;x-slot:actions&gt;
         &lt;button class="btn btn-sm btn-light-primary"&gt;Edit&lt;/button&gt;
         &lt;button class="btn btn-sm btn-light-danger"&gt;Delete&lt;/button&gt;
     &lt;/x-slot:actions&gt;
 &lt;/x-table.datatable.base&gt;
+
+&lt;!-- Custom Cell Rendering via View Partials --&gt;
+&lt;x-table.datatable.base
+    :columns="[
+        ['key' => 'name', 'label' => 'Name'],
+        ['key' => 'status', 'label' => 'Status', 'view' => 'components.table.cells.status-badge'],
+        ['key' => 'avatar', 'label' => 'Avatar', 'view' => 'components.table.cells.avatar'],
+    ]"
+    :data="$users"
+/&gt;
+
+&lt;!-- Custom Actions with Row Context --&gt;
+&lt;x-table.datatable.base
+    :columns="$columns"
+    :data="$data"
+    :show-actions="true"
+    actions-view="components.table.cells.user-actions"
+    row-key="id"
+/&gt;
 
 &lt;!-- Full DataTables with Search, Sort, Pagination --&gt;
 &lt;x-table.datatable.base

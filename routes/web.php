@@ -15,7 +15,7 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 if (in_array(app()->environment(), ['local', 'staging', 'development', 'testing'])) {
-    Route::prefix('__components')->group(function () {
+    Route::prefix('components')->group(function () {
         Route::get('/', function () {
             return view('core-ui.components.showcase');
         })->name('core-ui.showcase');

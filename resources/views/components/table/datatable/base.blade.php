@@ -234,6 +234,7 @@
     'rowClickable' => false,                // Enable row click handling
     'rowUrl' => null,                       // URL pattern for row click (use {id} placeholder)
     'rowAttributes' => [],                  // Default data-* attributes for rows
+    'actionsView' => null,                  // Blade view path for actions (receives $row, $index)
 
     // ============================================
     // CALLBACKS (JavaScript function names)
@@ -344,31 +345,310 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 @endif
 <style>
-    /* DataTable Metronic Integration Styles */
+    /* ============================================ */
+    /* GeoTable - Modern DataTable Styles          */
+    /* Supports Light & Dark Mode                  */
+    /* ============================================ */
+
+    :root {
+        /* Light Mode (Default) */
+        --geo-table-bg: #ffffff;
+        --geo-table-header-bg: #f8f9fa;
+        --geo-table-header-text: #6c757d;
+        --geo-table-border: #e9ecef;
+        --geo-table-row-hover: #f8f9fa;
+        --geo-table-row-stripe: #fafbfc;
+        --geo-table-text: #3f4254;
+        --geo-table-text-muted: #a1a5b7;
+        --geo-table-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        --geo-table-card-shadow: 0 0 30px 0 rgba(82, 63, 105, 0.05);
+        --geo-input-bg: #ffffff;
+        --geo-input-border: #e4e6ef;
+        --geo-input-focus-border: #b5b5c3;
+        --geo-pagination-bg: #ffffff;
+        --geo-pagination-active-bg: #3699ff;
+        --geo-pagination-active-text: #ffffff;
+        --geo-pagination-hover-bg: #f3f6f9;
+    }
+
+    [data-bs-theme="dark"],
+    [data-theme="dark"],
+    .theme-dark {
+        /* Dark Mode */
+        --geo-table-bg: #1e1e2d;
+        --geo-table-header-bg: #1a1a27;
+        --geo-table-header-text: #9899ac;
+        --geo-table-border: #2b2b40;
+        --geo-table-row-hover: #252536;
+        --geo-table-row-stripe: #1b1b29;
+        --geo-table-text: #cdcdde;
+        --geo-table-text-muted: #6c7293;
+        --geo-table-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+        --geo-table-card-shadow: 0 0 30px 0 rgba(0, 0, 0, 0.15);
+        --geo-input-bg: #1b1b29;
+        --geo-input-border: #323248;
+        --geo-input-focus-border: #474761;
+        --geo-pagination-bg: #1e1e2d;
+        --geo-pagination-active-bg: #3699ff;
+        --geo-pagination-active-text: #ffffff;
+        --geo-pagination-hover-bg: #252536;
+    }
+
+    /* ============================================ */
+    /* Table Wrapper & Card                        */
+    /* ============================================ */
+    .geo-datatable-wrapper {
+        background: var(--geo-table-bg);
+        border-radius: 0.75rem;
+        box-shadow: var(--geo-table-card-shadow);
+        overflow: hidden;
+    }
+
+    .geo-datatable-wrapper .table-responsive {
+        margin: 0;
+    }
+
+    /* ============================================ */
+    /* Toolbar Area                                */
+    /* ============================================ */
+    .geo-datatable-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--geo-table-border);
+        background: var(--geo-table-bg);
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    /* ============================================ */
+    /* Table Base Styles                           */
+    /* ============================================ */
+    .geo-datatable-wrapper table {
+        margin-bottom: 0 !important;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .geo-datatable-wrapper table thead {
+        background: var(--geo-table-header-bg);
+    }
+
+    .geo-datatable-wrapper table thead tr th {
+        color: var(--geo-table-header-text) !important;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--geo-table-border) !important;
+        border-top: none !important;
+        white-space: nowrap;
+        background: var(--geo-table-header-bg);
+    }
+
+    .geo-datatable-wrapper table thead tr th:first-child {
+        padding-left: 1.5rem;
+    }
+
+    .geo-datatable-wrapper table thead tr th:last-child {
+        padding-right: 1.5rem;
+    }
+
+    .geo-datatable-wrapper table tbody tr {
+        transition: background-color 0.15s ease;
+    }
+
+    .geo-datatable-wrapper table tbody tr td {
+        color: var(--geo-table-text);
+        padding: 1rem 1.25rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--geo-table-border);
+        background: var(--geo-table-bg);
+    }
+
+    .geo-datatable-wrapper table tbody tr td:first-child {
+        padding-left: 1.5rem;
+    }
+
+    .geo-datatable-wrapper table tbody tr td:last-child {
+        padding-right: 1.5rem;
+    }
+
+    /* Striped Rows */
+    .geo-datatable-wrapper table.table-row-bordered tbody tr:nth-child(even) td {
+        background: var(--geo-table-row-stripe);
+    }
+
+    /* Hover Effect */
+    .geo-datatable-wrapper table tbody tr:hover td {
+        background: var(--geo-table-row-hover) !important;
+    }
+
+    /* Row Clickable */
+    .geo-row-clickable {
+        cursor: pointer;
+    }
+
+    /* ============================================ */
+    /* DataTables Controls                         */
+    /* ============================================ */
     .dataTables_wrapper {
-        padding: 0;
+        padding: 0 !important;
+        background: var(--geo-table-bg);
     }
+
+    /* Top Controls (Length & Filter) */
     .dataTables_wrapper .dataTables_length,
-    .dataTables_wrapper .dataTables_filter,
-    .dataTables_wrapper .dataTables_info,
-    .dataTables_wrapper .dataTables_paginate {
-        padding: 0.75rem 0;
+    .dataTables_wrapper .dataTables_filter {
+        padding: 1.25rem 1.5rem !important;
+        margin: 0;
     }
+
+    .dataTables_wrapper .dataTables_length label,
+    .dataTables_wrapper .dataTables_filter label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        color: var(--geo-table-text-muted);
+        font-size: 0.9rem;
+    }
+
+    .dataTables_wrapper .dataTables_length select,
     .dataTables_wrapper .dataTables_filter input {
-        margin-left: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.475rem;
-        border: 1px solid var(--bs-gray-300);
+        background: var(--geo-input-bg);
+        border: 1px solid var(--geo-input-border);
+        border-radius: 0.5rem;
+        padding: 0.6rem 1rem;
+        color: var(--geo-table-text);
+        font-size: 0.9rem;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    .dataTables_wrapper .dataTables_length select {
-        padding: 0.5rem 2rem 0.5rem 0.75rem;
-        border-radius: 0.475rem;
-        border: 1px solid var(--bs-gray-300);
+
+    .dataTables_wrapper .dataTables_length select:focus,
+    .dataTables_wrapper .dataTables_filter input:focus {
+        outline: none;
+        border-color: var(--geo-input-focus-border);
+        box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.1);
     }
+
+    .dataTables_wrapper .dataTables_filter input {
+        min-width: 200px;
+    }
+
+    /* Bottom Controls (Info & Pagination) */
+    .dataTables_wrapper .dataTables_info {
+        padding: 1.25rem 1.5rem !important;
+        color: var(--geo-table-text-muted);
+        font-size: 0.875rem;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        padding: 1rem 1.5rem !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        background: var(--geo-pagination-bg) !important;
+        border: 1px solid var(--geo-table-border) !important;
+        color: var(--geo-table-text) !important;
+        border-radius: 0.5rem !important;
+        padding: 0.5rem 0.85rem !important;
+        margin: 0 0.2rem !important;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.15s ease;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background: var(--geo-pagination-hover-bg) !important;
+        border-color: var(--geo-input-focus-border) !important;
+        color: var(--geo-table-text) !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+        background: var(--geo-pagination-active-bg) !important;
+        border-color: var(--geo-pagination-active-bg) !important;
+        color: var(--geo-pagination-active-text) !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: var(--geo-pagination-bg) !important;
+    }
+
+    /* ============================================ */
+    /* Sorting Indicators                          */
+    /* ============================================ */
+    .dataTables_wrapper table thead th.sorting,
+    .dataTables_wrapper table thead th.sorting_asc,
+    .dataTables_wrapper table thead th.sorting_desc {
+        cursor: pointer;
+        position: relative;
+        padding-right: 1.75rem !important;
+    }
+
+    .dataTables_wrapper table thead th.sorting::after,
+    .dataTables_wrapper table thead th.sorting_asc::after,
+    .dataTables_wrapper table thead th.sorting_desc::after {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.4;
+        font-size: 0.65rem;
+    }
+
+    .dataTables_wrapper table thead th.sorting::after {
+        content: "▲▼";
+        font-size: 0.5rem;
+        letter-spacing: -1px;
+        opacity: 0.3;
+    }
+
+    .dataTables_wrapper table thead th.sorting_asc::after {
+        content: "▲";
+        opacity: 0.8;
+        color: var(--geo-pagination-active-bg);
+    }
+
+    .dataTables_wrapper table thead th.sorting_desc::after {
+        content: "▼";
+        opacity: 0.8;
+        color: var(--geo-pagination-active-bg);
+    }
+
+    /* ============================================ */
+    /* Empty & Loading States                      */
+    /* ============================================ */
+    .geo-datatable-empty {
+        padding: 4rem 2rem;
+        text-align: center;
+        background: var(--geo-table-bg);
+    }
+
+    .geo-datatable-empty i {
+        font-size: 3.5rem;
+        color: var(--geo-table-text-muted);
+        opacity: 0.5;
+        margin-bottom: 1.25rem;
+        display: block;
+    }
+
+    .geo-datatable-empty div {
+        color: var(--geo-table-text-muted);
+        font-size: 1rem;
+    }
+
     .geo-datatable-loading {
         position: relative;
-        min-height: 200px;
+        min-height: 250px;
     }
+
     .geo-datatable-loading::after {
         content: '';
         position: absolute;
@@ -376,32 +656,87 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(255, 255, 255, 0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        background: var(--geo-table-bg);
+        opacity: 0.8;
         z-index: 10;
     }
+
     .geo-datatable-error {
-        padding: 2rem;
+        padding: 2.5rem;
         text-align: center;
-        color: var(--bs-danger);
+        background: var(--geo-table-bg);
     }
-    .geo-datatable-empty {
-        padding: 3rem;
-        text-align: center;
-        color: var(--bs-gray-500);
-    }
-    .geo-datatable-empty i {
-        font-size: 3rem;
+
+    .geo-datatable-error i {
+        font-size: 2.5rem;
+        color: #f1416c;
         margin-bottom: 1rem;
-        opacity: 0.5;
+        display: block;
     }
-    .geo-row-clickable {
+
+    .geo-datatable-error div {
+        color: #f1416c;
+        font-size: 0.95rem;
+    }
+
+    /* ============================================ */
+    /* Checkbox Styling                            */
+    /* ============================================ */
+    .geo-datatable-wrapper .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid var(--geo-input-border);
+        border-radius: 0.35rem;
+        background-color: var(--geo-input-bg);
         cursor: pointer;
+        transition: all 0.15s ease;
     }
-    .geo-row-clickable:hover {
-        background-color: var(--bs-gray-100) !important;
+
+    .geo-datatable-wrapper .form-check-input:checked {
+        background-color: var(--geo-pagination-active-bg);
+        border-color: var(--geo-pagination-active-bg);
+    }
+
+    .geo-datatable-wrapper .form-check-input:focus {
+        box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.15);
+    }
+
+    /* ============================================ */
+    /* Actions Column                              */
+    /* ============================================ */
+    .geo-datatable-wrapper table td:last-child .btn-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* ============================================ */
+    /* Responsive Adjustments                      */
+    /* ============================================ */
+    @media (max-width: 768px) {
+        .geo-datatable-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            padding: 1rem !important;
+            text-align: left !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            min-width: 100%;
+            width: 100%;
+        }
+
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            padding: 1rem !important;
+            text-align: center !important;
+        }
     }
 </style>
 @endpush
@@ -743,7 +1078,7 @@
 
     {{-- Toolbar Slot --}}
     @if(isset($toolbar))
-    <div class="geo-datatable-toolbar d-flex justify-content-between align-items-center flex-wrap gap-3 mb-5">
+    <div class="geo-datatable-toolbar">
         {{ $toolbar }}
     </div>
     @endif
@@ -846,40 +1181,49 @@
                         $cellValue = $rowIsArray ? ($row[$column['key']] ?? '') : ($row->{$column['key']} ?? '');
                     @endphp
                     <td class="{{ $column['class'] }}">
-                        {{-- Built-in renderers --}}
-                        @switch($column['render'] ?? null)
-                            @case('date')
-                                {{ $cellValue ? \Carbon\Carbon::parse($cellValue)->format($column['format'] ?? 'M d, Y') : '-' }}
-                                @break
-                            @case('datetime')
-                                {{ $cellValue ? \Carbon\Carbon::parse($cellValue)->format($column['format'] ?? 'M d, Y H:i') : '-' }}
-                                @break
-                            @case('currency')
-                                {{ $cellValue ? number_format((float)$cellValue, 2) : '0.00' }}
-                                @break
-                            @case('badge')
-                                <span class="badge badge-light-{{ $cellValue ? 'success' : 'danger' }}">
-                                    {{ $cellValue ?: 'N/A' }}
-                                </span>
-                                @break
-                            @case('boolean')
-                                @if($cellValue)
-                                    <i class="ki-outline ki-check-circle text-success fs-4"></i>
-                                @else
-                                    <i class="ki-outline ki-cross-circle text-danger fs-4"></i>
-                                @endif
-                                @break
-                            @default
-                                {{ $cellValue }}
-                        @endswitch
+                        {{-- Check for custom view path first --}}
+                        @if(!empty($column['view']))
+                            @include($column['view'], ['row' => $row, 'value' => $cellValue, 'column' => $column, 'index' => $index])
+                        @else
+                            {{-- Built-in renderers --}}
+                            @switch($column['render'] ?? null)
+                                @case('date')
+                                    {{ $cellValue ? \Carbon\Carbon::parse($cellValue)->format($column['format'] ?? 'M d, Y') : '-' }}
+                                    @break
+                                @case('datetime')
+                                    {{ $cellValue ? \Carbon\Carbon::parse($cellValue)->format($column['format'] ?? 'M d, Y H:i') : '-' }}
+                                    @break
+                                @case('currency')
+                                    {{ $cellValue ? number_format((float)$cellValue, 2) : '0.00' }}
+                                    @break
+                                @case('badge')
+                                    <span class="badge badge-light-{{ $cellValue ? 'success' : 'danger' }}">
+                                        {{ $cellValue ?: 'N/A' }}
+                                    </span>
+                                    @break
+                                @case('boolean')
+                                    @if($cellValue)
+                                        <i class="ki-outline ki-check-circle text-success fs-4"></i>
+                                    @else
+                                        <i class="ki-outline ki-cross-circle text-danger fs-4"></i>
+                                    @endif
+                                    @break
+                                @default
+                                    {{ $cellValue }}
+                            @endswitch
+                        @endif
                     </td>
                     @endif
                     @endforeach
 
                     {{-- Actions Cell --}}
-                    @if($showActions && isset($actions))
+                    @if($showActions)
                     <td class="text-end">
-                        {{ $actions }}
+                        @if($actionsView)
+                            @include($actionsView, ['row' => $row, 'index' => $index])
+                        @elseif(isset($actions))
+                            {{ $actions }}
+                        @endif
                     </td>
                     @endif
                 </tr>
