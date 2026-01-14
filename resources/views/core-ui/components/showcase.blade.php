@@ -1,12 +1,12 @@
 {{--
     ================================================================================
-    GLOBAL UI COMPONENT SHOWCASE
+    GLOBAL UI COMPONENT SHOWCASE - DataTable Only
     ================================================================================
 
-    This is a DEVELOPER-ONLY page for testing and previewing global UI components.
+    This is a DEVELOPER-ONLY page for testing and previewing DataTable components.
 
     PURPOSE:
-    - Visual validation of components
+    - Visual validation of DataTable component
     - Documentation of usage patterns
     - Testing different prop combinations
     - Design consistency verification
@@ -15,38 +15,25 @@
     - URL: /__components
     - Environment: local, staging, development only
     - No authentication required
-
-    TO ADD NEW COMPONENTS:
-    1. Add navigation link in @section('sidebar-nav')
-    2. Add component section in @section('content')
-    3. Include multiple usage examples
     ================================================================================
 --}}
 
 @extends('core-ui.layouts.showcase')
 
-@section('header-title', 'Component Library')
-@section('header-description', 'Browse, test, and validate all global UI components in one place')
+@section('header-title', 'DataTable Component Library')
+@section('header-description', 'Browse, test, and validate DataTable components')
 
 @section('sidebar-nav')
-    <!-- Forms Category -->
-    <div class="showcase-nav-category">Form Components</div>
-    <a href="#input-base" class="showcase-nav-item active">
-        <i class="ki-outline ki-notepad-edit"></i>
-        Input Base
-    </a>
-    <a href="#input-variants" class="showcase-nav-item">
-        <i class="ki-outline ki-element-11"></i>
-        Input Variants
-    </a>
-    <a href="#input-masks" class="showcase-nav-item">
-        <i class="ki-outline ki-mask"></i>
-        Input Masks
+    <!-- Feature Tracking -->
+    <div class="showcase-nav-category">Development</div>
+    <a href="#feature-tracker" class="showcase-nav-item">
+        <i class="ki-outline ki-chart-simple-2"></i>
+        Feature Tracker
     </a>
 
     <!-- Table Category -->
     <div class="showcase-nav-category">Table Components</div>
-    <a href="#datatable-static" class="showcase-nav-item">
+    <a href="#datatable-static" class="showcase-nav-item active">
         <i class="ki-outline ki-row-horizontal"></i>
         DataTable (Static)
     </a>
@@ -58,509 +45,256 @@
         <i class="ki-outline ki-setting-2"></i>
         DataTable Features
     </a>
-
-    <!-- Future Components -->
-    <div class="showcase-nav-category">Coming Soon</div>
-    <a href="#" class="showcase-nav-item" style="opacity: 0.5; pointer-events: none;">
-        <i class="ki-outline ki-tag"></i>
-        Tagify
-    </a>
-    <a href="#" class="showcase-nav-item" style="opacity: 0.5; pointer-events: none;">
-        <i class="ki-outline ki-folder-up"></i>
-        Dropzone
-    </a>
-    <a href="#" class="showcase-nav-item" style="opacity: 0.5; pointer-events: none;">
-        <i class="ki-outline ki-calendar"></i>
-        Date Picker
+    <a href="#empty-states" class="showcase-nav-item">
+        <i class="ki-outline ki-file-deleted"></i>
+        Empty States
     </a>
 @endsection
 
 @section('content')
     {{-- ================================================================== --}}
-    {{-- FORM INPUTS                                                       --}}
+    {{-- FEATURE TRACKER                                                    --}}
     {{-- ================================================================== --}}
 
-    <!-- Basic Input -->
-    <section id="input-base" class="showcase-section">
+    <section id="feature-tracker" class="showcase-section">
         <div class="showcase-section-header">
             <h3 class="showcase-section-title">
-                <i class="ki-outline ki-notepad-edit me-2 text-primary"></i>
-                Input Base
-                <code>x-form.input.base</code>
+                <i class="ki-outline ki-chart-simple-2 me-2 text-primary"></i>
+                DataTable Component - Feature Tracker
             </h3>
-            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-input-base">
-                Show Code
-            </button>
         </div>
         <div class="showcase-section-body">
             <p class="text-muted mb-5">
-                The foundation input component with support for labels, icons, validation, and various input types.
+                Track implemented and pending features for the <code>x-table.datatable.base</code> component.
+                <br><small class="text-warning">Last Updated: January 14, 2026</small>
             </p>
 
-            <!-- Example: Basic Input -->
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Basic Text Input
-                    <span class="badge badge-light-primary">Default</span>
+            <div class="row g-5">
+                {{-- Implemented Features --}}
+                <div class="col-lg-6">
+                    <div class="card card-bordered border-success">
+                        <div class="card-header bg-light-success">
+                            <h4 class="card-title">
+                                <i class="ki-outline ki-check-circle text-success me-2"></i>
+                                Implemented Features
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-row-bordered">
+                                <thead>
+                                    <tr class="fw-bold text-muted">
+                                        <th>Feature</th>
+                                        <th>Props</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Static Data Rendering</td>
+                                        <td><code>:data="$array"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Column Configuration</td>
+                                        <td><code>:columns="[...]"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>DataTables.js Integration</td>
+                                        <td><code>:datatable="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Search Functionality</td>
+                                        <td><code>:searchable="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Column Sorting</td>
+                                        <td><code>:sortable="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Pagination</td>
+                                        <td><code>:pagination="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Built-in Renderers</td>
+                                        <td><code>render => 'date|datetime|currency|badge|boolean'</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Row Selection (Checkboxes)</td>
+                                        <td><code>:selectable="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Row Index Column</td>
+                                        <td><code>:show-index="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Server-Side Processing</td>
+                                        <td><code>ajax-url, :server-side="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Export Buttons</td>
+                                        <td><code>:exportable="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>State Save</td>
+                                        <td><code>:state-save="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Responsive Mode</td>
+                                        <td><code>:responsive="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Row Click Handler</td>
+                                        <td><code>:row-clickable="true", row-url</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Toolbar Slot</td>
+                                        <td><code>&lt;x-slot:toolbar&gt;</code> <span class="badge badge-light-warning">No row context</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Empty Slot</td>
+                                        <td><code>&lt;x-slot:empty&gt;</code> <span class="badge badge-light-warning">No row context</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Deferred Loading</td>
+                                        <td><code>:defer-loading="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>GeoTable JS API</td>
+                                        <td><code>GeoTable.reload(), .getSelected(), .destroy()</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="showcase-example-preview">
-                    <x-form.input.base
-                        name="demo_name"
-                        label="Full Name"
-                        placeholder="Enter your name"
-                    />
+
+                {{-- Missing / Pending Features --}}
+                <div class="col-lg-6">
+                    <div class="card card-bordered border-danger">
+                        <div class="card-header bg-light-danger">
+                            <h4 class="card-title">
+                                <i class="ki-outline ki-cross-circle text-danger me-2"></i>
+                                Missing / Pending Features
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-row-bordered">
+                                <thead>
+                                    <tr class="fw-bold text-muted">
+                                        <th>Feature</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <span class="text-danger fw-bold">Custom Cell Slots</span>
+                                        </td>
+                                        <td>
+                                            <code>&lt;x-slot:cell-{key}&gt;</code> with <code>$row</code> and <code>$value</code>
+                                            <br><small class="text-warning">Documented (lines 53-68) but NOT implemented in render loop (lines 843-876)</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <span class="text-danger fw-bold">Actions Slot with Row Context</span>
+                                        </td>
+                                        <td>
+                                            <code>&lt;x-slot:actions="['row' => $row]"&gt;</code>
+                                            <br><small class="text-warning">Actions slot renders once globally, not per-row (line 879)</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Bulk Actions</td>
+                                        <td>
+                                            Delete/Export selected via toolbar + selectable
+                                            <br><small class="text-muted">Requires custom cell slots + JS</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Column Visibility Toggle</td>
+                                        <td>
+                                            Show/hide columns dynamically via UI
+                                            <br><small class="text-muted">DataTables supports it, needs UI component</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Inline Editing</td>
+                                        <td>
+                                            Edit cells directly in the table
+                                            <br><small class="text-muted">Future enhancement</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Row Grouping</td>
+                                        <td>
+                                            Group rows by a column value
+                                            <br><small class="text-muted">Future enhancement</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Row Reordering (Drag & Drop)</td>
+                                        <td>
+                                            Reorder rows via drag handles
+                                            <br><small class="text-muted">Future enhancement</small>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="alert alert-danger d-flex mt-5 p-4">
+                                <i class="ki-outline ki-information-5 fs-2 me-3"></i>
+                                <div>
+                                    <strong>Priority Fix Required:</strong>
+                                    <br>Custom cell slots (<code>cell-{key}</code>) are critical for rich table UIs (avatars, badges, action menus per row).
+                                    The component documentation shows this feature but the render loop doesn't implement it.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Example: With Icon -->
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Input with Icon
+            {{-- Implementation Notes --}}
+            <div class="card card-bordered mt-5">
+                <div class="card-header bg-light">
+                    <h4 class="card-title">
+                        <i class="ki-outline ki-code me-2"></i>
+                        Implementation Notes
+                    </h4>
                 </div>
-                <div class="showcase-example-preview">
+                <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <x-form.input.base
-                                name="demo_email"
-                                label="Email Address"
-                                type="email"
-                                placeholder="name@example.com"
-                                icon="ki-outline ki-sms"
-                            />
+                            <h6 class="text-gray-800">To Fix Custom Cell Slots:</h6>
+                            <p class="text-muted fs-7">
+                                In <code>base.blade.php</code> lines 843-876, the render loop needs to check for slot existence before using built-in renderers:
+                            </p>
+                            <pre class="bg-light-dark text-white p-3 rounded fs-8"><code>@verbatim{{-- Inside @foreach($normalizedColumns as $column) --}}
+@php $slotName = 'cell-' . $column['key']; @endphp
+
+@if(isset($$slotName))
+    {{ $$slotName(['row' => $row, 'value' => $cellValue]) }}
+@else
+    {{-- Existing switch for built-in renderers --}}
+    @switch($column['render'] ?? null)
+        ...
+    @endswitch
+@endif@endverbatim</code></pre>
                         </div>
                         <div class="col-md-6">
-                            <x-form.input.base
-                                name="demo_phone"
-                                label="Phone Number"
-                                type="tel"
-                                placeholder="+1 (555) 000-0000"
-                                icon="ki-outline ki-phone"
-                                icon-position="end"
-                            />
+                            <h6 class="text-gray-800">To Fix Actions Per-Row:</h6>
+                            <p class="text-muted fs-7">
+                                The actions slot needs to be invoked inside the row loop with row context:
+                            </p>
+                            <pre class="bg-light-dark text-white p-3 rounded fs-8"><code>@verbatim{{-- Inside the <tr> loop, replace static actions slot --}}
+@if($showActions && isset($actions))
+<td class="text-end">
+    {{ $actions(['row' => $row]) }}
+</td>
+@endif@endverbatim</code></pre>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Example: Required with Tooltip -->
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Required Field with Tooltip
-                </div>
-                <div class="showcase-example-preview">
-                    <x-form.input.base
-                        name="demo_required"
-                        label="Company Name"
-                        placeholder="Enter company name"
-                        :required="true"
-                        tooltip="This field is required for registration"
-                        hint="Your official business name as registered"
-                    />
-                </div>
-            </div>
-
-            <!-- Example: Different Types -->
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Different Input Types
-                </div>
-                <div class="showcase-example-preview">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_number"
-                                label="Quantity"
-                                type="number"
-                                :min="1"
-                                :max="100"
-                                value="10"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_date"
-                                label="Date"
-                                type="date"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_color"
-                                label="Brand Color"
-                                type="color"
-                                value="#3699FF"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Code Example -->
-        <div id="code-input-base" class="showcase-code-wrapper">
-            <div class="showcase-code-header">
-                <span class="showcase-code-label">Blade Usage</span>
-                <button class="showcase-code-copy">Copy</button>
-            </div>
-            <pre class="showcase-code">&lt;x-form.input.base
-    name="email"
-    label="Email Address"
-    type="email"
-    placeholder="name@example.com"
-    icon="ki-outline ki-sms"
-    :required="true"
-    tooltip="Your primary contact email"
-    hint="We'll never share your email"
-/&gt;
-
-{{-- With Icon at End --}}
-&lt;x-form.input.base
-    name="phone"
-    label="Phone"
-    icon="ki-outline ki-phone"
-    icon-position="end"
-/&gt;
-
-{{-- Number Input with Min/Max --}}
-&lt;x-form.input.base
-    name="quantity"
-    label="Quantity"
-    type="number"
-    :min="1"
-    :max="100"
-    value="10"
-/&gt;</pre>
-        </div>
-    </section>
-
-    <!-- Input Variants -->
-    <section id="input-variants" class="showcase-section">
-        <div class="showcase-section-header">
-            <h3 class="showcase-section-title">
-                <i class="ki-outline ki-element-11 me-2 text-primary"></i>
-                Input Variants
-                <code>variant, size</code>
-            </h3>
-            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-input-variants">
-                Show Code
-            </button>
-        </div>
-        <div class="showcase-section-body">
-
-            <!-- Variants -->
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Style Variants
-                </div>
-                <div class="showcase-example-preview">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_solid"
-                                label="Solid (Default)"
-                                variant="solid"
-                                placeholder="Solid variant"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_transparent"
-                                label="Transparent"
-                                variant="transparent"
-                                placeholder="Transparent variant"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_flush"
-                                label="Flush"
-                                variant="flush"
-                                placeholder="Flush variant"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sizes -->
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Size Options
-                </div>
-                <div class="showcase-example-preview">
-                    <div class="row align-items-end">
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_sm"
-                                label="Small"
-                                size="sm"
-                                placeholder="Small input"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_default"
-                                label="Default"
-                                placeholder="Default input"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_lg"
-                                label="Large"
-                                size="lg"
-                                placeholder="Large input"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Prepend/Append -->
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Prepend & Append
-                </div>
-                <div class="showcase-example-preview">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_prepend"
-                                label="Website"
-                                prepend="https://"
-                                placeholder="example.com"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_append"
-                                label="Price"
-                                type="number"
-                                append=".00 USD"
-                                placeholder="0"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_both"
-                                label="Subdomain"
-                                prepend="https://"
-                                append=".myapp.com"
-                                placeholder="yourcompany"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- States -->
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Input States
-                </div>
-                <div class="showcase-example-preview">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_disabled"
-                                label="Disabled"
-                                value="Cannot edit this"
-                                :disabled="true"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_readonly"
-                                label="Readonly"
-                                value="Read only value"
-                                :readonly="true"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_error"
-                                label="With Error"
-                                value="invalid@"
-                                error="Please enter a valid email address"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="code-input-variants" class="showcase-code-wrapper">
-            <div class="showcase-code-header">
-                <span class="showcase-code-label">Blade Usage</span>
-                <button class="showcase-code-copy">Copy</button>
-            </div>
-            <pre class="showcase-code">&lt;!-- Style Variants --&gt;
-&lt;x-form.input.base name="field" variant="solid" /&gt;
-&lt;x-form.input.base name="field" variant="transparent" /&gt;
-&lt;x-form.input.base name="field" variant="flush" /&gt;
-
-&lt;!-- Size Options --&gt;
-&lt;x-form.input.base name="field" size="sm" /&gt;
-&lt;x-form.input.base name="field" size="lg" /&gt;
-
-&lt;!-- Prepend & Append --&gt;
-&lt;x-form.input.base
-    name="website"
-    prepend="https://"
-    placeholder="example.com"
-/&gt;
-
-&lt;x-form.input.base
-    name="price"
-    append=".00 USD"
-    type="number"
-/&gt;
-
-&lt;x-form.input.base
-    name="subdomain"
-    prepend="https://"
-    append=".myapp.com"
-/&gt;
-
-&lt;!-- States --&gt;
-&lt;x-form.input.base name="disabled_field" :disabled="true" /&gt;
-&lt;x-form.input.base name="readonly_field" :readonly="true" /&gt;
-&lt;x-form.input.base name="error_field" error="Validation error message" /&gt;</pre>
-        </div>
-    </section>
-
-    <!-- Input Masks -->
-    <section id="input-masks" class="showcase-section">
-        <div class="showcase-section-header">
-            <h3 class="showcase-section-title">
-                <i class="ki-outline ki-mask me-2 text-primary"></i>
-                Input Masks
-                <code>mask, maskOptions</code>
-            </h3>
-            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-input-masks">
-                Show Code
-            </button>
-        </div>
-        <div class="showcase-section-body">
-            <p class="text-muted mb-5">
-                Input masking using jQuery Mask Plugin for formatted input like phone numbers, dates, and custom patterns.
-            </p>
-
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Common Mask Patterns
-                </div>
-                <div class="showcase-example-preview">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_phone_mask"
-                                label="Phone (US)"
-                                mask="(000) 000-0000"
-                                placeholder="(555) 123-4567"
-                                icon="ki-outline ki-phone"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_date_mask"
-                                label="Date"
-                                mask="00/00/0000"
-                                placeholder="MM/DD/YYYY"
-                                icon="ki-outline ki-calendar"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_ssn_mask"
-                                label="SSN"
-                                mask="000-00-0000"
-                                placeholder="123-45-6789"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="showcase-example">
-                <div class="showcase-example-label">
-                    Business Formats
-                </div>
-                <div class="showcase-example-preview">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_credit_mask"
-                                label="Credit Card"
-                                mask="0000 0000 0000 0000"
-                                placeholder="1234 5678 9012 3456"
-                                icon="ki-outline ki-credit-cart"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_zip_mask"
-                                label="ZIP Code"
-                                mask="00000-0000"
-                                placeholder="12345-6789"
-                            />
-                        </div>
-                        <div class="col-md-4">
-                            <x-form.input.base
-                                name="demo_tax_mask"
-                                label="Tax ID (EIN)"
-                                mask="00-0000000"
-                                placeholder="12-3456789"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="code-input-masks" class="showcase-code-wrapper">
-            <div class="showcase-code-header">
-                <span class="showcase-code-label">Blade Usage</span>
-                <button class="showcase-code-copy">Copy</button>
-            </div>
-            <pre class="showcase-code">&lt;!-- Phone Mask (US Format) --&gt;
-&lt;x-form.input.base
-    name="phone"
-    label="Phone"
-    mask="(000) 000-0000"
-    placeholder="(555) 123-4567"
-    icon="ki-outline ki-phone"
-/&gt;
-
-&lt;!-- Date Mask --&gt;
-&lt;x-form.input.base
-    name="date"
-    label="Date"
-    mask="00/00/0000"
-    placeholder="MM/DD/YYYY"
-/&gt;
-
-&lt;!-- Credit Card Mask --&gt;
-&lt;x-form.input.base
-    name="card"
-    label="Credit Card"
-    mask="0000 0000 0000 0000"
-    placeholder="1234 5678 9012 3456"
-/&gt;
-
-&lt;!-- ZIP Code with Extension --&gt;
-&lt;x-form.input.base
-    name="zip"
-    label="ZIP Code"
-    mask="00000-0000"
-/&gt;
-
-&lt;!-- Tax ID / EIN --&gt;
-&lt;x-form.input.base
-    name="ein"
-    label="Tax ID (EIN)"
-    mask="00-0000000"
-/&gt;</pre>
         </div>
     </section>
 

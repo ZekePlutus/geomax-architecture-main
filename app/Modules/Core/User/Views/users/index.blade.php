@@ -2,6 +2,28 @@
 
 @section('title', 'Users')
 
+@php
+    // Column configuration for DataTable - using built-in renderers only
+    // NOTE: Custom cell slots (cell-{key}) are documented but NOT implemented in the component
+    $tableColumns = [
+        ['key' => 'name', 'label' => 'Name', 'searchable' => true, 'sortable' => true],
+        ['key' => 'email', 'label' => 'Email', 'searchable' => true],
+        ['key' => 'type', 'label' => 'Type', 'sortable' => true],
+        ['key' => 'last_login', 'label' => 'Last Login', 'sortable' => true, 'render' => 'datetime', 'format' => 'M d, Y H:i'],
+        ['key' => 'status', 'label' => 'Status', 'sortable' => true, 'render' => 'boolean', 'class' => 'text-center'],
+    ];
+
+    // Transform data for DataTable - flatten to simple values for built-in renderers
+    $tableData = $users->map(fn($user) => [
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'type' => ucwords(str_replace('_', ' ', $user->userType?->name ?? 'N/A')),
+        'last_login' => $user->last_login_at,
+        'status' => $user->is_active,
+    ])->toArray();
+@endphp
+
 @section('content')
 <!--begin::Toolbar-->
 <div class="d-flex flex-wrap flex-stack mb-6">
@@ -11,7 +33,7 @@
         <span class="fs-6 text-gray-500 fw-semibold ms-1">({{ $users->count() }})</span>
     </h3>
     <!--end::Title-->
-    
+
     <!--begin::Actions-->
     <div class="d-flex flex-wrap my-2">
         <!--begin::Filter Status-->
@@ -23,7 +45,7 @@
             </select>
         </div>
         <!--end::Filter Status-->
-        
+
         <!--begin::View Toggle-->
         <div class="btn-group me-4" role="group">
             <button type="button" class="btn btn-sm btn-icon btn-light-primary" id="viewGrid" data-bs-toggle="tooltip" title="Grid View">
@@ -34,7 +56,7 @@
             </button>
         </div>
         <!--end::View Toggle-->
-        
+
         <!--begin::Add User-->
         <a href="{{ route('user.users.create') }}" class="btn btn-sm btn-primary">
             <i class="ki-outline ki-plus fs-5"></i>
@@ -218,145 +240,38 @@
 
     <!--begin::List View-->
     <div id="listView" class="card" style="display: none;">
-        <!--begin::Card header-->
-        <div class="card-header border-0 pt-6">
-            <div class="card-title">
-                <!--begin::Search-->
-                <div class="d-flex align-items-center position-relative my-1">
-                    <i class="ki-outline ki-magnifier fs-3 position-absolute ms-5"></i>
-                    <input type="text" class="form-control form-control-solid w-250px ps-13" placeholder="Search users..." id="searchUsers"/>
+        <x-table.datatable.base
+            id="users-datatable"
+            :columns="$tableColumns"
+            :data="$tableData"
+            :datatable="true"
+            :searchable="true"
+            :sortable="true"
+            :pagination="true"
+            :page-length="10"
+            :show-actions="false"
+            row-key="id"
+        >
+            {{-- Toolbar Slot --}}
+            <x-slot:toolbar>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted fs-7">{{ $users->count() }} users</span>
                 </div>
-                <!--end::Search-->
-            </div>
-        </div>
-        <!--end::Card header-->
-        <!--begin::Card body-->
-        <div class="card-body py-4">
-            <!--begin::Table-->
-            <table class="table align-middle table-row-dashed fs-6 gy-5" id="usersTable">
-                <thead>
-                    <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                        <th class="min-w-200px">User</th>
-                        <th class="min-w-125px">Type</th>
-                        <th class="min-w-150px">Roles</th>
-                        <th class="min-w-125px">Last Login</th>
-                        <th class="min-w-100px">Status</th>
-                        <th class="text-end min-w-100px">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="text-gray-600 fw-semibold">
-                    @foreach ($users as $user)
-                    <tr>
-                        <!--begin::User-->
-                        <td class="d-flex align-items-center">
-                            <!--begin::Avatar-->
-                            <div class="symbol symbol-circle symbol-45px overflow-hidden me-3">
-                                <div class="symbol-label bg-light-{{ $user->is_active ? 'success' : 'warning' }}">
-                                    <span class="fs-5 fw-bold text-{{ $user->is_active ? 'success' : 'warning' }}">
-                                        {{ strtoupper(substr($user->name, 0, 1)) }}
-                                    </span>
-                                </div>
-                            </div>
-                            <!--end::Avatar-->
-                            <!--begin::User details-->
-                            <div class="d-flex flex-column">
-                                <a href="{{ route('user.users.show', $user->id) }}" class="text-gray-800 text-hover-primary mb-1">
-                                    {{ $user->name }}
-                                </a>
-                                <span class="text-gray-500 fs-7">{{ $user->email }}</span>
-                            </div>
-                            <!--end::User details-->
-                        </td>
-                        <!--end::User-->
-                        <!--begin::Type-->
-                        <td>
-                            <span class="badge badge-light-dark fs-7">
-                                {{ ucwords(str_replace('_', ' ', $user->userType?->name ?? 'N/A')) }}
-                            </span>
-                        </td>
-                        <!--end::Type-->
-                        <!--begin::Roles-->
-                        <td>
-                            @forelse ($user->roles as $role)
-                                <span class="badge badge-light-{{ $role->is_system ? 'primary' : 'info' }} fs-8 me-1">
-                                    {{ $role->name }}
-                                </span>
-                            @empty
-                                <span class="text-gray-500">—</span>
-                            @endforelse
-                        </td>
-                        <!--end::Roles-->
-                        <!--begin::Last Login-->
-                        <td>
-                            <span class="text-gray-600">{{ $user->last_login_at?->diffForHumans() ?? 'Never' }}</span>
-                        </td>
-                        <!--end::Last Login-->
-                        <!--begin::Status-->
-                        <td>
-                            @if ($user->is_active)
-                                <span class="badge badge-light-success fs-7 fw-bold">Active</span>
-                            @else
-                                <span class="badge badge-light-warning fs-7 fw-bold">Inactive</span>
-                            @endif
-                        </td>
-                        <!--end::Status-->
-                        <!--begin::Actions-->
-                        <td class="text-end">
-                            <a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                                Actions
-                                <i class="ki-outline ki-down fs-5 ms-1"></i>
-                            </a>
-                            <!--begin::Menu-->
-                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4" data-kt-menu="true">
-                                <div class="menu-item px-3">
-                                    <a href="{{ route('user.users.show', $user->id) }}" class="menu-link px-3">
-                                        <i class="ki-outline ki-eye fs-5 me-2"></i>View
-                                    </a>
-                                </div>
-                                <div class="menu-item px-3">
-                                    <a href="{{ route('user.users.edit', $user->id) }}" class="menu-link px-3">
-                                        <i class="ki-outline ki-pencil fs-5 me-2"></i>Edit
-                                    </a>
-                                </div>
-                                <div class="menu-item px-3">
-                                    <a href="{{ route('user.users.permissions', $user->id) }}" class="menu-link px-3">
-                                        <i class="ki-outline ki-security-user fs-5 me-2"></i>Permissions
-                                    </a>
-                                </div>
-                                <div class="menu-item px-3">
-                                    <a href="{{ route('user.users.restrictions', $user->id) }}" class="menu-link px-3">
-                                        <i class="ki-outline ki-shield-tick fs-5 me-2"></i>Restrictions
-                                    </a>
-                                </div>
-                                <div class="separator my-2"></div>
-                                <div class="menu-item px-3">
-                                    @if ($user->is_active)
-                                        <form action="{{ route('user.users.deactivate', $user->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="menu-link px-3 w-100 border-0 bg-transparent text-start text-warning">
-                                                <i class="ki-outline ki-cross-circle fs-5 me-2"></i>Deactivate
-                                            </button>
-                                        </form>
-                                    @else
-                                        <form action="{{ route('user.users.activate', $user->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="menu-link px-3 w-100 border-0 bg-transparent text-start text-success">
-                                                <i class="ki-outline ki-check-circle fs-5 me-2"></i>Activate
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </div>
-                            <!--end::Menu-->
-                        </td>
-                        <!--end::Actions-->
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            <!--end::Table-->
-        </div>
-        <!--end::Card body-->
+            </x-slot:toolbar>
+
+            {{-- Empty State Slot --}}
+            <x-slot:empty>
+                <div class="text-center py-10">
+                    <div class="symbol symbol-100px symbol-circle mb-5 bg-light-primary">
+                        <span class="symbol-label">
+                            <i class="ki-outline ki-people fs-1 text-primary"></i>
+                        </span>
+                    </div>
+                    <h4 class="text-gray-700">No Users Found</h4>
+                    <p class="text-muted">Try adjusting your search or filters.</p>
+                </div>
+            </x-slot:empty>
+        </x-table.datatable.base>
     </div>
     <!--end::List View-->
 @endif
@@ -369,23 +284,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const listView = document.getElementById('listView');
     const gridBtn = document.getElementById('viewGrid');
     const listBtn = document.getElementById('viewList');
-    
+
     // Load saved preference
     const savedView = localStorage.getItem('usersViewMode') || 'grid';
     if (savedView === 'list') {
         showListView();
     }
-    
+
     gridBtn?.addEventListener('click', function() {
         showGridView();
         localStorage.setItem('usersViewMode', 'grid');
     });
-    
+
     listBtn?.addEventListener('click', function() {
         showListView();
         localStorage.setItem('usersViewMode', 'list');
     });
-    
+
     function showGridView() {
         gridView.style.display = '';
         listView.style.display = 'none';
@@ -394,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
         listBtn.classList.remove('btn-light-primary');
         listBtn.classList.add('btn-light');
     }
-    
+
     function showListView() {
         gridView.style.display = 'none';
         listView.style.display = '';
@@ -402,18 +317,12 @@ document.addEventListener('DOMContentLoaded', function() {
         listBtn.classList.add('btn-light-primary');
         gridBtn.classList.remove('btn-light-primary');
         gridBtn.classList.add('btn-light');
+
+        // Trigger DataTable column adjustment after showing (handles responsive)
+        if (window.GeoTable) {
+            setTimeout(() => GeoTable.adjustColumns('users-datatable'), 100);
+        }
     }
-    
-    // Search functionality for list view
-    const searchInput = document.getElementById('searchUsers');
-    searchInput?.addEventListener('keyup', function() {
-        const value = this.value.toLowerCase();
-        const rows = document.querySelectorAll('#usersTable tbody tr');
-        rows.forEach(function(row) {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(value) ? '' : 'none';
-        });
-    });
 });
 </script>
 @endpush

@@ -340,7 +340,7 @@ class UserController extends Controller
         if ($this->useMockData()) {
             $users = $this->getMockUsers();
             $activeOnly = $request->has('active_only') ? (bool) $request->get('active_only') : null;
-            
+
             if ($activeOnly === true) {
                 $users = $users->where('is_active', true);
             } elseif ($activeOnly === false) {
@@ -639,11 +639,11 @@ class UserController extends Controller
         if ($this->useMockData()) {
             $mockUsers = $this->getMockUsers();
             $mockUser = collect($mockUsers)->firstWhere('id', (int) $user) ?? $mockUsers[0];
-            
+
             // Mock user permissions (randomly assign some modules as enabled)
             $modules = $this->getMockModules();
             $userModuleIds = collect([1, 2, 3, 4, 7]); // Default enabled modules for mock
-            
+
             return view('user::users.permissions', [
                 'user' => $mockUser,
                 'modules' => $modules,
