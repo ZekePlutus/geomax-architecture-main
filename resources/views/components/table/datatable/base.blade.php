@@ -135,6 +135,41 @@
     />
     <!-- Later trigger: window.GeoTable.reload('lazy-table') -->
 
+    9. TABLE WITH BULK ACTIONS
+    --------------------------
+    <x-table.datatable.base
+        :columns="$columns"
+        :data="$users"
+        :selectable="true"
+        :bulk-actions="[
+            ['key' => 'delete', 'label' => 'Delete', 'icon' => 'ki-outline ki-trash', 'class' => 'btn-light-danger', 'confirm' => 'Delete selected?'],
+            ['key' => 'export', 'label' => 'Export', 'icon' => 'ki-outline ki-file-down', 'class' => 'btn-light-primary'],
+        ]"
+        on-bulk-action="handleBulkAction"
+        row-key="id"
+    />
+
+    10. TABLE WITH COLUMN VISIBILITY TOGGLE
+    ---------------------------------------
+    <x-table.datatable.base
+        :columns="$columns"
+        :data="$users"
+        :datatable="true"
+        :show-column-toggle="true"
+        :hidden-columns="['created_at']"
+    />
+
+    11. TABLE WITH COLUMN REORDERING (Drag & Drop)
+    ----------------------------------------------
+    <x-table.datatable.base
+        :columns="$columns"
+        :data="$users"
+        :datatable="true"
+        :column-reorderable="true"
+        :state-save="true"
+    />
+    <!-- JS API: GeoTable.getColumnOrder(id), GeoTable.setColumnOrder(id, ['col1', 'col2']), GeoTable.resetColumnOrder(id) -->
+
     ================================================================================
     COLUMN DEFINITION SCHEMA (Abstract - Not DataTables Specific)
     ================================================================================
@@ -151,9 +186,47 @@
         'class'       => 'text-center',     // Optional: cell CSS class
         'headerClass' => 'bg-light',        // Optional: header CSS class
         'orderable'   => true|false,        // Optional: alias for sortable
-        'render'      => 'date|currency|badge', // Optional: built-in renderers
+        'render'      => 'date|currency|badge', // Optional: built-in renderers (see list below)
+        'view'        => 'path.to.blade',   // Optional: custom view partial for cell rendering
         'format'      => 'Y-m-d',           // Optional: format parameter for render
+
+        // Renderer-specific options:
+        'symbol'      => '$',               // For currency renderer
+        'decimals'    => 2,                 // For currency, number, percent renderers
+        'prefix'      => '',                // For number renderer
+        'suffix'      => '',                // For number renderer
+        'colors'      => [],                // For badge renderer: ['value' => 'color']
+        'statuses'    => [],                // For status renderer: ['key' => ['label' => '', 'color' => '']]
+        'yes'         => 'Yes',             // For yesno renderer
+        'no'          => 'No',              // For yesno renderer
+        'imageWidth'  => '40px',            // For image renderer
+        'imageHeight' => '40px',            // For image renderer
+        'size'        => '35px',            // For avatar renderer
+        'nameField'   => 'name',            // For avatar renderer (field to generate initials from)
+        'url'         => '/path/{id}',      // For link renderer (supports placeholders)
+        'target'      => '_self',           // For link renderer
+        'maxLength'   => 50,                // For truncate renderer
     ]
+
+    BUILT-IN RENDERERS:
+    - date          : Format date (M d, Y)
+    - datetime      : Format datetime (M d, Y H:i)
+    - time          : Format time (H:i)
+    - relative      : Human readable time (2 hours ago)
+    - currency      : Format as currency with symbol
+    - number        : Format number with decimals, prefix, suffix
+    - percent       : Format as percentage
+    - badge         : Display as badge with color
+    - status        : Display as status badge with configurable mapping
+    - boolean       : Show check/cross icon
+    - yesno         : Show Yes/No badge
+    - image         : Display image thumbnail
+    - avatar        : Display avatar with fallback initials
+    - link          : Clickable link
+    - email         : Mailto link
+    - phone         : Tel link
+    - truncate      : Truncate text with tooltip
+    - html          : Render raw HTML
 
     ================================================================================
 --}}
@@ -198,6 +271,7 @@
     'responsive' => false,                  // Enable responsive mode
     'stateSave' => false,                   // Save table state in localStorage
     'ordering' => null,                     // Default ordering [['column', 'asc']]
+    'columnReorderable' => false,           // Enable column drag & drop reordering
 
     // ============================================
     // EXPORT OPTIONS (Opt-in)
@@ -244,6 +318,21 @@
     'onRowClick' => null,                   // Callback for row click
     'onSelectionChange' => null,            // Callback when selection changes
     'onAjaxError' => null,                  // Callback for AJAX errors
+
+    // ============================================
+    // BULK ACTIONS
+    // ============================================
+    'bulkActions' => [],                    // Array of bulk action configs: ['key' => 'delete', 'label' => 'Delete', 'icon' => 'ki-trash', 'class' => 'btn-danger', 'confirm' => 'Are you sure?']
+    'onBulkAction' => null,                 // Callback for bulk action: function(action, selectedIds)
+    'bulkActionsLabel' => 'Bulk Actions',   // Label for bulk actions dropdown
+    'showBulkActionsCount' => true,         // Show selected count in bulk toolbar
+
+    // ============================================
+    // COLUMN VISIBILITY
+    // ============================================
+    'showColumnToggle' => false,            // Show column visibility toggle dropdown
+    'hiddenColumns' => [],                  // Initially hidden column keys
+    'columnToggleLabel' => 'Columns',       // Label for column toggle dropdown
 ])
 
 @php
@@ -324,14 +413,29 @@
         'columns' => $normalizedColumns,
         'selectable' => $selectable,
         'rowKey' => $rowKey,
+        'showIndex' => $showIndex,
+        'showActions' => $showActions,
+        // Bulk Actions
+        'bulkActions' => $bulkActions,
+        'onBulkAction' => $onBulkAction,
+        'showBulkActionsCount' => $showBulkActionsCount,
+        // Column Visibility
+        'showColumnToggle' => $showColumnToggle,
+        'hiddenColumns' => $hiddenColumns,
+        // Column Reordering
+        'columnReorderable' => $columnReorderable,
         'callbacks' => [
             'onInit' => $onInit,
             'onDraw' => $onDraw,
             'onRowClick' => $onRowClick,
             'onSelectionChange' => $onSelectionChange,
             'onAjaxError' => $onAjaxError,
+            'onBulkAction' => $onBulkAction,
         ],
     ];
+
+    // Check if bulk actions toolbar should be available
+    $hasBulkActions = !empty($bulkActions) && $selectable;
 @endphp
 
 {{-- ============================================ --}}
@@ -713,12 +817,296 @@
     }
 
     /* ============================================ */
+    /* Bulk Actions Toolbar                        */
+    /* ============================================ */
+    .geo-bulk-toolbar {
+        display: none;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, rgba(54, 153, 255, 0.08) 0%, rgba(54, 153, 255, 0.04) 100%);
+        border-bottom: 1px solid rgba(54, 153, 255, 0.2);
+        animation: slideDown 0.2s ease;
+    }
+
+    .geo-bulk-toolbar.active {
+        display: flex;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .geo-bulk-count {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--geo-pagination-active-bg);
+    }
+
+    .geo-bulk-count .count-badge {
+        background: var(--geo-pagination-active-bg);
+        color: var(--geo-pagination-active-text);
+        padding: 0.2rem 0.6rem;
+        border-radius: 0.35rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        min-width: 28px;
+        text-align: center;
+    }
+
+    .geo-bulk-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
+    .geo-bulk-actions .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.15s ease;
+    }
+
+    .geo-bulk-clear {
+        background: transparent;
+        border: 1px solid var(--geo-input-border);
+        color: var(--geo-table-text-muted);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .geo-bulk-clear:hover {
+        background: var(--geo-table-row-hover);
+        color: var(--geo-table-text);
+    }
+
+    /* ============================================ */
+    /* Column Visibility Toggle                    */
+    /* ============================================ */
+    .geo-column-toggle {
+        position: relative;
+    }
+
+    .geo-column-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--geo-input-bg);
+        border: 1px solid var(--geo-input-border);
+        border-radius: 0.5rem;
+        color: var(--geo-table-text);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .geo-column-toggle-btn:hover {
+        border-color: var(--geo-input-focus-border);
+        background: var(--geo-table-row-hover);
+    }
+
+    .geo-column-toggle-btn i {
+        font-size: 1rem;
+        opacity: 0.7;
+    }
+
+    .geo-column-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 1000;
+        min-width: 200px;
+        background: var(--geo-table-bg);
+        border: 1px solid var(--geo-table-border);
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        margin-top: 0.5rem;
+        display: none;
+        animation: fadeIn 0.15s ease;
+    }
+
+    .geo-column-dropdown.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .geo-column-dropdown-header {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--geo-table-border);
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--geo-table-header-text);
+    }
+
+    .geo-column-dropdown-body {
+        padding: 0.5rem 0;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .geo-column-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .geo-column-item:hover {
+        background: var(--geo-table-row-hover);
+    }
+
+    .geo-column-item input[type="checkbox"] {
+        width: 1rem;
+        height: 1rem;
+        cursor: pointer;
+    }
+
+    .geo-column-item label {
+        flex: 1;
+        cursor: pointer;
+        font-size: 0.875rem;
+        color: var(--geo-table-text);
+    }
+
+    .geo-column-dropdown-footer {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--geo-table-border);
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .geo-column-dropdown-footer button {
+        flex: 1;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.35rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .geo-column-show-all {
+        background: var(--geo-input-bg);
+        border: 1px solid var(--geo-input-border);
+        color: var(--geo-table-text);
+    }
+
+    .geo-column-show-all:hover {
+        background: var(--geo-table-row-hover);
+    }
+
+    /* ============================================ */
+    /* Column Reordering (Drag & Drop)             */
+    /* ============================================ */
+    .geo-datatable-wrapper.column-reorderable table thead th {
+        cursor: grab;
+        user-select: none;
+        position: relative;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead th:active {
+        cursor: grabbing;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead th.geo-col-dragging {
+        opacity: 0.5;
+        background: var(--geo-pagination-active-bg) !important;
+        color: var(--geo-pagination-active-text) !important;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead th.geo-col-drag-over {
+        background: rgba(54, 153, 255, 0.15) !important;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead th.geo-col-drag-over::before {
+        content: '';
+        position: absolute;
+        left: -2px;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--geo-pagination-active-bg);
+        border-radius: 2px;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead th.geo-col-drag-over-right::before {
+        left: auto;
+        right: -2px;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead th .geo-drag-handle {
+        display: inline-block;
+        margin-right: 0.5rem;
+        opacity: 0.4;
+        transition: opacity 0.15s ease;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead th:hover .geo-drag-handle {
+        opacity: 0.8;
+    }
+
+    /* Don't allow drag on checkbox/index columns */
+    .geo-datatable-wrapper.column-reorderable table thead th.geo-col-fixed {
+        cursor: default;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead th.geo-col-fixed .geo-drag-handle {
+        display: none;
+    }
+
+    /* ============================================ */
     /* Responsive Adjustments                      */
     /* ============================================ */
     @media (max-width: 768px) {
         .geo-datatable-toolbar {
             flex-direction: column;
             align-items: stretch;
+        }
+
+        .geo-bulk-toolbar {
+            flex-wrap: wrap;
+            padding: 0.75rem 1rem;
+        }
+
+        .geo-bulk-actions {
+            margin-left: 0;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .geo-column-dropdown {
+            position: fixed;
+            top: auto;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-radius: 1rem 1rem 0 0;
+            max-height: 60vh;
         }
 
         .dataTables_wrapper .dataTables_length,
@@ -805,6 +1193,7 @@
                     var selectAll = table.querySelector('.geo-select-all');
                     if (selectAll) selectAll.checked = false;
                 }
+                this._updateBulkToolbar(tableId, []);
                 this._triggerCallback(instance.config.callbacks.onSelectionChange, [[]]);
             }
         },
@@ -837,6 +1226,457 @@
         hideLoading: function(tableId) {
             var wrapper = document.querySelector('[data-geo-table="' + tableId + '"]');
             if (wrapper) wrapper.classList.remove('geo-datatable-loading');
+        },
+
+        // ========================================
+        // BULK ACTIONS
+        // ========================================
+
+        /**
+         * Execute a bulk action on selected rows
+         * @param {string} tableId - The table element ID
+         * @param {string} actionKey - The action key
+         * @param {string|null} confirmMessage - Optional confirmation message
+         */
+        executeBulkAction: function(tableId, actionKey, confirmMessage) {
+            var instance = this.instances[tableId];
+            if (!instance || !instance.selected.length) {
+                console.warn('GeoTable: No rows selected for bulk action');
+                return;
+            }
+
+            var proceed = true;
+            if (confirmMessage) {
+                proceed = confirm(confirmMessage);
+            }
+
+            if (proceed) {
+                this._triggerCallback(instance.config.callbacks.onBulkAction, [actionKey, instance.selected, tableId]);
+            }
+        },
+
+        /**
+         * Update bulk actions toolbar visibility and count
+         * @param {string} tableId - The table element ID
+         * @param {array} selected - Array of selected row keys
+         */
+        _updateBulkToolbar: function(tableId, selected) {
+            var toolbar = document.getElementById(tableId + '_bulk_toolbar');
+            var countEl = document.getElementById(tableId + '_selected_count');
+
+            if (toolbar) {
+                if (selected.length > 0) {
+                    toolbar.classList.add('active');
+                    if (countEl) countEl.textContent = selected.length;
+                } else {
+                    toolbar.classList.remove('active');
+                }
+            }
+        },
+
+        // ========================================
+        // COLUMN VISIBILITY
+        // ========================================
+
+        /**
+         * Toggle column dropdown visibility
+         * @param {string} tableId - The table element ID
+         */
+        toggleColumnDropdown: function(tableId) {
+            var dropdown = document.getElementById(tableId + '_column_dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+
+                // Close dropdown when clicking outside
+                if (dropdown.classList.contains('active')) {
+                    var closeHandler = function(e) {
+                        if (!dropdown.contains(e.target) && !e.target.closest('.geo-column-toggle-btn')) {
+                            dropdown.classList.remove('active');
+                            document.removeEventListener('click', closeHandler);
+                        }
+                    };
+                    setTimeout(function() {
+                        document.addEventListener('click', closeHandler);
+                    }, 10);
+                }
+            }
+        },
+
+        /**
+         * Toggle a column's visibility
+         * @param {string} tableId - The table element ID
+         * @param {number} columnIndex - The column index
+         * @param {boolean} visible - Whether to show or hide the column
+         */
+        toggleColumn: function(tableId, columnIndex, visible) {
+            var instance = this.instances[tableId];
+            if (instance && instance.dt) {
+                // Account for selectable/index columns offset
+                var offset = 0;
+                if (instance.config.selectable) offset++;
+                // Note: showIndex is not tracked in config, so check the table
+                var indexCol = document.querySelector('#' + tableId + ' th.w-50px');
+                if (indexCol) offset++;
+
+                var dtColumn = instance.dt.column(columnIndex + offset);
+                dtColumn.visible(visible);
+            }
+        },
+
+        /**
+         * Show all columns
+         * @param {string} tableId - The table element ID
+         */
+        showAllColumns: function(tableId) {
+            var instance = this.instances[tableId];
+            if (instance && instance.dt) {
+                instance.dt.columns().visible(true);
+
+                // Update checkboxes
+                var dropdown = document.getElementById(tableId + '_column_dropdown');
+                if (dropdown) {
+                    var checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(function(cb) { cb.checked = true; });
+                }
+            }
+        },
+
+        /**
+         * Hide specific columns by keys
+         * @param {string} tableId - The table element ID
+         * @param {array} columnKeys - Array of column keys to hide
+         */
+        hideColumns: function(tableId, columnKeys) {
+            var instance = this.instances[tableId];
+            if (instance && instance.dt && instance.config.columns) {
+                instance.config.columns.forEach(function(col, index) {
+                    if (columnKeys.indexOf(col.key) !== -1) {
+                        instance.dt.column(index).visible(false);
+                    }
+                });
+            }
+        },
+
+        // ========================================
+        // COLUMN REORDERING
+        // ========================================
+
+        /**
+         * Get current column order
+         * @param {string} tableId - The table element ID
+         * @returns {array} Array of column keys in current order
+         */
+        getColumnOrder: function(tableId) {
+            var instance = this.instances[tableId];
+            return instance && instance.columnOrder ? instance.columnOrder : [];
+        },
+
+        /**
+         * Set column order programmatically
+         * @param {string} tableId - The table element ID
+         * @param {array} columnKeys - Array of column keys in desired order
+         */
+        setColumnOrder: function(tableId, columnKeys) {
+            var instance = this.instances[tableId];
+            if (!instance) return;
+
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            // Build index mapping
+            var currentOrder = instance.columnOrder || instance.config.columns.map(function(c) { return c.key; });
+            var newOrder = columnKeys.filter(function(key) {
+                return currentOrder.indexOf(key) !== -1;
+            });
+
+            // Add any missing columns at the end
+            currentOrder.forEach(function(key) {
+                if (newOrder.indexOf(key) === -1) {
+                    newOrder.push(key);
+                }
+            });
+
+            instance.columnOrder = newOrder;
+            this._reorderTableColumns(tableId, newOrder);
+            this._saveColumnOrder(tableId, newOrder);
+        },
+
+        /**
+         * Reset column order to original
+         * @param {string} tableId - The table element ID
+         */
+        resetColumnOrder: function(tableId) {
+            var instance = this.instances[tableId];
+            if (!instance) return;
+
+            var originalOrder = instance.config.columns.map(function(c) { return c.key; });
+            instance.columnOrder = originalOrder;
+            this._reorderTableColumns(tableId, originalOrder);
+            this._clearColumnOrder(tableId);
+        },
+
+        /**
+         * Setup column reordering drag & drop
+         * @param {string} tableId - The table element ID
+         */
+        _setupColumnReorder: function(tableId) {
+            var self = this;
+            var instance = this.instances[tableId];
+            var table = document.getElementById(tableId);
+            if (!table || !instance) return;
+
+            var wrapper = table.closest('.geo-datatable-wrapper');
+            if (wrapper) {
+                wrapper.classList.add('column-reorderable');
+            }
+
+            // Load saved column order
+            var savedOrder = this._loadColumnOrder(tableId);
+            if (savedOrder && savedOrder.length) {
+                instance.columnOrder = savedOrder;
+                this._reorderTableColumns(tableId, savedOrder);
+            } else {
+                instance.columnOrder = instance.config.columns.map(function(c) { return c.key; });
+            }
+
+            // Get all draggable header cells (skip fixed columns like checkbox/index)
+            var headers = table.querySelectorAll('thead th');
+            var dragState = { dragging: null, dragIndex: -1 };
+
+            headers.forEach(function(th, index) {
+                // Skip fixed columns (checkbox, index, actions)
+                if (th.classList.contains('geo-col-fixed')) return;
+
+                th.setAttribute('draggable', 'true');
+                th.dataset.colIndex = index;
+
+                // Drag start
+                th.addEventListener('dragstart', function(e) {
+                    dragState.dragging = th;
+                    dragState.dragIndex = index;
+                    th.classList.add('geo-col-dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', index);
+                });
+
+                // Drag over
+                th.addEventListener('dragover', function(e) {
+                    if (!dragState.dragging || dragState.dragging === th) return;
+                    if (th.classList.contains('geo-col-fixed')) return;
+
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+
+                    // Determine if drop should be before or after
+                    var rect = th.getBoundingClientRect();
+                    var midpoint = rect.left + rect.width / 2;
+                    var isRight = e.clientX > midpoint;
+
+                    th.classList.add('geo-col-drag-over');
+                    th.classList.toggle('geo-col-drag-over-right', isRight);
+                });
+
+                // Drag leave
+                th.addEventListener('dragleave', function(e) {
+                    th.classList.remove('geo-col-drag-over', 'geo-col-drag-over-right');
+                });
+
+                // Drop
+                th.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    if (!dragState.dragging || dragState.dragging === th) return;
+                    if (th.classList.contains('geo-col-fixed')) return;
+
+                    var fromIndex = dragState.dragIndex;
+                    var toIndex = parseInt(th.dataset.colIndex);
+
+                    // Determine insert position
+                    var rect = th.getBoundingClientRect();
+                    var midpoint = rect.left + rect.width / 2;
+                    if (e.clientX > midpoint) {
+                        toIndex++;
+                    }
+
+                    // Reorder columns
+                    self._moveColumn(tableId, fromIndex, toIndex);
+
+                    // Clean up
+                    th.classList.remove('geo-col-drag-over', 'geo-col-drag-over-right');
+                });
+
+                // Drag end
+                th.addEventListener('dragend', function(e) {
+                    th.classList.remove('geo-col-dragging');
+                    dragState.dragging = null;
+                    dragState.dragIndex = -1;
+
+                    // Clean up all drag-over classes
+                    headers.forEach(function(h) {
+                        h.classList.remove('geo-col-drag-over', 'geo-col-drag-over-right');
+                    });
+                });
+            });
+        },
+
+        /**
+         * Move a column from one position to another
+         * @param {string} tableId - The table element ID
+         * @param {number} fromIndex - Source column index
+         * @param {number} toIndex - Destination column index
+         */
+        _moveColumn: function(tableId, fromIndex, toIndex) {
+            var instance = this.instances[tableId];
+            var table = document.getElementById(tableId);
+            if (!table || !instance) return;
+
+            if (fromIndex === toIndex) return;
+
+            // Calculate actual data column indices (accounting for fixed columns)
+            var fixedCount = this._getFixedColumnCount(tableId);
+            var dataFromIndex = fromIndex - fixedCount;
+            var dataToIndex = toIndex - fixedCount;
+
+            if (dataFromIndex < 0 || dataToIndex < 0) return;
+
+            // Update column order array
+            var order = instance.columnOrder.slice();
+            var moved = order.splice(dataFromIndex, 1)[0];
+            if (dataToIndex > dataFromIndex) dataToIndex--;
+            order.splice(dataToIndex, 0, moved);
+            instance.columnOrder = order;
+
+            // Reorder DOM
+            this._reorderTableColumns(tableId, order);
+
+            // Save to localStorage if stateSave is enabled
+            if (instance.config.stateSave) {
+                this._saveColumnOrder(tableId, order);
+            }
+        },
+
+        /**
+         * Get count of fixed (non-reorderable) columns
+         * @param {string} tableId - The table element ID
+         * @returns {number} Number of fixed columns
+         */
+        _getFixedColumnCount: function(tableId) {
+            var table = document.getElementById(tableId);
+            if (!table) return 0;
+            return table.querySelectorAll('thead th.geo-col-fixed').length;
+        },
+
+        /**
+         * Reorder table columns in DOM
+         * @param {string} tableId - The table element ID
+         * @param {array} order - Array of column keys in order
+         */
+        _reorderTableColumns: function(tableId, order) {
+            var instance = this.instances[tableId];
+            var table = document.getElementById(tableId);
+            if (!table || !instance) return;
+
+            var fixedCount = this._getFixedColumnCount(tableId);
+
+            // Build index mapping from key to original position
+            var keyToOriginal = {};
+            instance.config.columns.forEach(function(col, i) {
+                keyToOriginal[col.key] = i;
+            });
+
+            // Reorder header
+            var headerRow = table.querySelector('thead tr');
+            if (headerRow) {
+                var headerCells = Array.from(headerRow.children);
+                var fixedHeaders = headerCells.slice(0, fixedCount);
+                var dataHeaders = headerCells.slice(fixedCount);
+
+                // Check if there's an actions column at the end
+                var hasActions = instance.config.showActions || table.querySelector('thead th:last-child')?.textContent?.toLowerCase().includes('action');
+                var actionsHeader = null;
+                if (hasActions && dataHeaders.length > order.length) {
+                    actionsHeader = dataHeaders.pop();
+                }
+
+                // Sort data headers according to order
+                var sortedHeaders = order.map(function(key) {
+                    var origIndex = keyToOriginal[key];
+                    return dataHeaders[origIndex];
+                }).filter(Boolean);
+
+                // Rebuild header row
+                headerRow.innerHTML = '';
+                fixedHeaders.forEach(function(h) { headerRow.appendChild(h); });
+                sortedHeaders.forEach(function(h) { if (h) headerRow.appendChild(h); });
+                if (actionsHeader) headerRow.appendChild(actionsHeader);
+
+                // Update data-col-index attributes
+                Array.from(headerRow.children).forEach(function(th, i) {
+                    th.dataset.colIndex = i;
+                });
+            }
+
+            // Reorder body rows
+            var bodyRows = table.querySelectorAll('tbody tr');
+            bodyRows.forEach(function(row) {
+                var cells = Array.from(row.children);
+                var fixedCells = cells.slice(0, fixedCount);
+                var dataCells = cells.slice(fixedCount);
+
+                // Check for actions column
+                var actionsCell = null;
+                if (dataCells.length > order.length) {
+                    actionsCell = dataCells.pop();
+                }
+
+                // Sort data cells according to order
+                var sortedCells = order.map(function(key) {
+                    var origIndex = keyToOriginal[key];
+                    return dataCells[origIndex];
+                }).filter(Boolean);
+
+                // Rebuild row
+                row.innerHTML = '';
+                fixedCells.forEach(function(c) { row.appendChild(c); });
+                sortedCells.forEach(function(c) { if (c) row.appendChild(c); });
+                if (actionsCell) row.appendChild(actionsCell);
+            });
+        },
+
+        /**
+         * Save column order to localStorage
+         * @param {string} tableId - The table element ID
+         * @param {array} order - Array of column keys
+         */
+        _saveColumnOrder: function(tableId, order) {
+            try {
+                localStorage.setItem('geo_table_col_order_' + tableId, JSON.stringify(order));
+            } catch (e) {
+                console.warn('GeoTable: Could not save column order', e);
+            }
+        },
+
+        /**
+         * Load column order from localStorage
+         * @param {string} tableId - The table element ID
+         * @returns {array|null} Array of column keys or null
+         */
+        _loadColumnOrder: function(tableId) {
+            try {
+                var saved = localStorage.getItem('geo_table_col_order_' + tableId);
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                return null;
+            }
+        },
+
+        /**
+         * Clear saved column order
+         * @param {string} tableId - The table element ID
+         */
+        _clearColumnOrder: function(tableId) {
+            try {
+                localStorage.removeItem('geo_table_col_order_' + tableId);
+            } catch (e) {}
         },
 
         // ========================================
@@ -885,6 +1725,11 @@
             // Setup row click handling
             if (config.callbacks.onRowClick) {
                 this._setupRowClick(tableId, config);
+            }
+
+            // Setup column reordering
+            if (config.columnReorderable) {
+                this._setupColumnReorder(tableId);
             }
 
             // Trigger init callback
@@ -987,6 +1832,7 @@
                         checkboxes.forEach(function(cb) { cb.checked = false; });
                     }
 
+                    self._updateBulkToolbar(tableId, instance.selected);
                     self._triggerCallback(config.callbacks.onSelectionChange, [instance.selected]);
                 });
             }
@@ -1006,6 +1852,7 @@
                         if (selectAll) selectAll.checked = false;
                     }
 
+                    self._updateBulkToolbar(tableId, instance.selected);
                     self._triggerCallback(config.callbacks.onSelectionChange, [instance.selected]);
                 }
             });
@@ -1077,9 +1924,82 @@
     @else
 
     {{-- Toolbar Slot --}}
-    @if(isset($toolbar))
+    @if(isset($toolbar) || $showColumnToggle)
     <div class="geo-datatable-toolbar">
-        {{ $toolbar }}
+        {{-- Custom Toolbar Content --}}
+        @if(isset($toolbar))
+            {{ $toolbar }}
+        @else
+            <div></div>
+        @endif
+
+        {{-- Column Visibility Toggle --}}
+        @if($showColumnToggle)
+        <div class="geo-column-toggle" data-table-id="{{ $tableId }}">
+            <button type="button" class="geo-column-toggle-btn" onclick="GeoTable.toggleColumnDropdown('{{ $tableId }}')">
+                <i class="ki-outline ki-setting-2"></i>
+                <span>{{ $columnToggleLabel }}</span>
+                <i class="ki-outline ki-down fs-7"></i>
+            </button>
+            <div class="geo-column-dropdown" id="{{ $tableId }}_column_dropdown">
+                <div class="geo-column-dropdown-header">Toggle Columns</div>
+                <div class="geo-column-dropdown-body">
+                    @foreach($normalizedColumns as $colIndex => $column)
+                    <div class="geo-column-item">
+                        <input
+                            type="checkbox"
+                            id="{{ $tableId }}_col_{{ $colIndex }}"
+                            data-column-index="{{ $colIndex }}"
+                            {{ !in_array($column['key'], $hiddenColumns) && ($column['visible'] !== false) ? 'checked' : '' }}
+                            onchange="GeoTable.toggleColumn('{{ $tableId }}', {{ $colIndex }}, this.checked)"
+                        />
+                        <label for="{{ $tableId }}_col_{{ $colIndex }}">{{ $column['label'] }}</label>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="geo-column-dropdown-footer">
+                    <button type="button" class="geo-column-show-all" onclick="GeoTable.showAllColumns('{{ $tableId }}')">
+                        Show All
+                    </button>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+    @endif
+
+    {{-- Bulk Actions Toolbar --}}
+    @if($hasBulkActions)
+    <div class="geo-bulk-toolbar" id="{{ $tableId }}_bulk_toolbar">
+        @if($showBulkActionsCount)
+        <div class="geo-bulk-count">
+            <span class="count-badge" id="{{ $tableId }}_selected_count">0</span>
+            <span>items selected</span>
+        </div>
+        @endif
+
+        <button type="button" class="geo-bulk-clear" onclick="GeoTable.clearSelection('{{ $tableId }}')">
+            <i class="ki-outline ki-cross-square fs-6"></i>
+            Clear
+        </button>
+
+        <div class="geo-bulk-actions">
+            @foreach($bulkActions as $action)
+            @php
+                $confirmParam = isset($action['confirm']) ? "'" . addslashes($action['confirm']) . "'" : 'null';
+            @endphp
+            <button
+                type="button"
+                class="btn {{ $action['class'] ?? 'btn-light-primary' }}"
+                onclick="GeoTable.executeBulkAction('{{ $tableId }}', '{{ $action['key'] }}', {{ $confirmParam }})"
+            >
+                @if(!empty($action['icon']))
+                <i class="{{ $action['icon'] }}"></i>
+                @endif
+                {{ $action['label'] }}
+            </button>
+            @endforeach
+        </div>
     </div>
     @endif
 
@@ -1095,7 +2015,7 @@
                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase">
                     {{-- Checkbox Column --}}
                     @if($selectable)
-                    <th class="w-10px pe-2">
+                    <th class="w-10px pe-2 geo-col-fixed">
                         <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
                             <input
                                 class="form-check-input geo-select-all"
@@ -1109,14 +2029,15 @@
 
                     {{-- Index Column --}}
                     @if($showIndex)
-                    <th class="w-50px">{{ $indexLabel }}</th>
+                    <th class="w-50px geo-col-fixed">{{ $indexLabel }}</th>
                     @endif
 
                     {{-- Data Columns --}}
-                    @foreach($normalizedColumns as $column)
+                    @foreach($normalizedColumns as $colIdx => $column)
                     @if($column['visible'] !== false)
                     <th
                         class="{{ $column['headerClass'] }}"
+                        data-column-key="{{ $column['key'] }}"
                         @if($column['width']) style="width: {{ $column['width'] }}" @endif
                     >
                         {{ $column['label'] }}
@@ -1127,7 +2048,7 @@
                     {{-- Actions Column --}}
                     @if($showActions)
                     <th
-                        class="text-end"
+                        class="text-end geo-col-fixed"
                         @if($actionsWidth) style="width: {{ $actionsWidth }}" @endif
                     >
                         {{ $actionsLabel }}
@@ -1193,12 +2114,59 @@
                                 @case('datetime')
                                     {{ $cellValue ? \Carbon\Carbon::parse($cellValue)->format($column['format'] ?? 'M d, Y H:i') : '-' }}
                                     @break
+                                @case('time')
+                                    {{ $cellValue ? \Carbon\Carbon::parse($cellValue)->format($column['format'] ?? 'H:i') : '-' }}
+                                    @break
+                                @case('relative')
+                                    <span title="{{ $cellValue ? \Carbon\Carbon::parse($cellValue)->format('M d, Y H:i') : '' }}">
+                                        {{ $cellValue ? \Carbon\Carbon::parse($cellValue)->diffForHumans() : '-' }}
+                                    </span>
+                                    @break
                                 @case('currency')
-                                    {{ $cellValue ? number_format((float)$cellValue, 2) : '0.00' }}
+                                    @php
+                                        $currencySymbol = $column['symbol'] ?? '$';
+                                        $decimals = $column['decimals'] ?? 2;
+                                    @endphp
+                                    {{ $currencySymbol }}{{ $cellValue ? number_format((float)$cellValue, $decimals) : '0.00' }}
+                                    @break
+                                @case('number')
+                                    @php
+                                        $decimals = $column['decimals'] ?? 0;
+                                        $suffix = $column['suffix'] ?? '';
+                                        $prefix = $column['prefix'] ?? '';
+                                    @endphp
+                                    {{ $prefix }}{{ $cellValue !== null && $cellValue !== '' ? number_format((float)$cellValue, $decimals) : '-' }}{{ $suffix }}
+                                    @break
+                                @case('percent')
+                                    @php
+                                        $decimals = $column['decimals'] ?? 1;
+                                    @endphp
+                                    {{ $cellValue !== null && $cellValue !== '' ? number_format((float)$cellValue, $decimals) . '%' : '-' }}
                                     @break
                                 @case('badge')
-                                    <span class="badge badge-light-{{ $cellValue ? 'success' : 'danger' }}">
+                                    @php
+                                        // Support custom badge colors via 'colors' array in column config
+                                        $colors = $column['colors'] ?? [];
+                                        $badgeColor = $colors[$cellValue] ?? ($cellValue ? 'success' : 'danger');
+                                    @endphp
+                                    <span class="badge badge-light-{{ $badgeColor }}">
                                         {{ $cellValue ?: 'N/A' }}
+                                    </span>
+                                    @break
+                                @case('status')
+                                    @php
+                                        // Status with configurable label/color mappings
+                                        $statuses = $column['statuses'] ?? [
+                                            'active' => ['label' => 'Active', 'color' => 'success'],
+                                            'inactive' => ['label' => 'Inactive', 'color' => 'danger'],
+                                            'pending' => ['label' => 'Pending', 'color' => 'warning'],
+                                            'draft' => ['label' => 'Draft', 'color' => 'secondary'],
+                                        ];
+                                        $statusKey = strtolower($cellValue ?? '');
+                                        $status = $statuses[$statusKey] ?? ['label' => $cellValue, 'color' => 'secondary'];
+                                    @endphp
+                                    <span class="badge badge-light-{{ $status['color'] }}">
+                                        {{ $status['label'] }}
                                     </span>
                                     @break
                                 @case('boolean')
@@ -1207,6 +2175,93 @@
                                     @else
                                         <i class="ki-outline ki-cross-circle text-danger fs-4"></i>
                                     @endif
+                                    @break
+                                @case('yesno')
+                                    <span class="badge badge-light-{{ $cellValue ? 'success' : 'danger' }}">
+                                        {{ $cellValue ? ($column['yes'] ?? 'Yes') : ($column['no'] ?? 'No') }}
+                                    </span>
+                                    @break
+                                @case('image')
+                                    @if($cellValue)
+                                        <img
+                                            src="{{ $cellValue }}"
+                                            alt=""
+                                            class="rounded {{ $column['imageClass'] ?? '' }}"
+                                            style="width: {{ $column['imageWidth'] ?? '40px' }}; height: {{ $column['imageHeight'] ?? '40px' }}; object-fit: cover;"
+                                        />
+                                    @else
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: {{ $column['imageWidth'] ?? '40px' }}; height: {{ $column['imageHeight'] ?? '40px' }};">
+                                            <i class="ki-outline ki-picture text-muted fs-5"></i>
+                                        </div>
+                                    @endif
+                                    @break
+                                @case('avatar')
+                                    @php
+                                        $size = $column['size'] ?? '35px';
+                                        $nameField = $column['nameField'] ?? null;
+                                        $name = $nameField ? ($rowIsArray ? ($row[$nameField] ?? '') : ($row->{$nameField} ?? '')) : '';
+                                        $initials = collect(explode(' ', $name))->take(2)->map(fn($w) => strtoupper(substr($w, 0, 1)))->join('');
+                                    @endphp
+                                    @if($cellValue)
+                                        <img src="{{ $cellValue }}" alt="{{ $name }}" class="rounded-circle" style="width: {{ $size }}; height: {{ $size }}; object-fit: cover;" />
+                                    @else
+                                        <div class="symbol symbol-circle bg-light-primary" style="width: {{ $size }}; height: {{ $size }};">
+                                            <span class="symbol-label fs-7 fw-semibold text-primary">{{ $initials ?: '?' }}</span>
+                                        </div>
+                                    @endif
+                                    @break
+                                @case('link')
+                                    @php
+                                        $linkUrl = $column['url'] ?? $cellValue;
+                                        $linkTarget = $column['target'] ?? '_self';
+                                        $linkLabel = $column['linkLabel'] ?? $cellValue;
+                                        // Support placeholders like {id}, {slug} in URL
+                                        foreach ($row as $key => $val) {
+                                            if (is_scalar($val)) {
+                                                $linkUrl = str_replace('{' . $key . '}', $val, $linkUrl);
+                                            }
+                                        }
+                                    @endphp
+                                    @if($cellValue)
+                                        <a href="{{ $linkUrl }}" target="{{ $linkTarget }}" class="text-primary fw-semibold text-hover-primary">
+                                            {{ $linkLabel }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                    @break
+                                @case('email')
+                                    @if($cellValue)
+                                        <a href="mailto:{{ $cellValue }}" class="text-primary text-hover-primary">
+                                            {{ $cellValue }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                    @break
+                                @case('phone')
+                                    @if($cellValue)
+                                        <a href="tel:{{ preg_replace('/[^0-9+]/', '', $cellValue) }}" class="text-primary text-hover-primary">
+                                            {{ $cellValue }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
+                                    @break
+                                @case('truncate')
+                                    @php
+                                        $maxLength = $column['maxLength'] ?? 50;
+                                    @endphp
+                                    @if(strlen($cellValue) > $maxLength)
+                                        <span title="{{ $cellValue }}">
+                                            {{ substr($cellValue, 0, $maxLength) }}...
+                                        </span>
+                                    @else
+                                        {{ $cellValue }}
+                                    @endif
+                                    @break
+                                @case('html')
+                                    {!! $cellValue !!}
                                     @break
                                 @default
                                     {{ $cellValue }}

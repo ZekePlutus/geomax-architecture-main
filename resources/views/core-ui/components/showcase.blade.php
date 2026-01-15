@@ -66,7 +66,7 @@
         <div class="showcase-section-body">
             <p class="text-muted mb-5">
                 Track implemented and pending features for the <code>x-table.datatable.base</code> component.
-                <br><small class="text-warning">Last Updated: January 14, 2026</small>
+                <br><small class="text-warning">Last Updated: January 15, 2026</small>
             </p>
 
             <div class="row g-5">
@@ -113,8 +113,8 @@
                                         <td><code>:pagination="true"</code></td>
                                     </tr>
                                     <tr>
-                                        <td>Built-in Renderers</td>
-                                        <td><code>render => 'date|datetime|currency|badge|boolean'</code></td>
+                                        <td>Built-in Renderers (16+)</td>
+                                        <td><code>date, datetime, time, relative, currency, number, percent, badge, status, boolean, yesno, image, avatar, link, email, phone, truncate, html</code></td>
                                     </tr>
                                     <tr>
                                         <td>Row Selection (Checkboxes)</td>
@@ -146,11 +146,11 @@
                                     </tr>
                                     <tr>
                                         <td>Toolbar Slot</td>
-                                        <td><code>&lt;x-slot:toolbar&gt;</code> <span class="badge badge-light-warning">No row context</span></td>
+                                        <td><code>&lt;x-slot:toolbar&gt;</code></td>
                                     </tr>
                                     <tr>
                                         <td>Empty Slot</td>
-                                        <td><code>&lt;x-slot:empty&gt;</code> <span class="badge badge-light-warning">No row context</span></td>
+                                        <td><code>&lt;x-slot:empty&gt;</code></td>
                                     </tr>
                                     <tr>
                                         <td>Deferred Loading</td>
@@ -167,6 +167,18 @@
                                     <tr>
                                         <td>Custom Actions View</td>
                                         <td><code>actions-view="path.to.blade"</code> prop</td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Bulk Actions</td>
+                                        <td><code>:bulk-actions="[...]", on-bulk-action="callback"</code></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Column Visibility Toggle</td>
+                                        <td><code>:show-column-toggle="true"</code></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Column Reordering (Drag & Drop)</td>
+                                        <td><code>:column-reorderable="true"</code></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -193,20 +205,6 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>Bulk Actions</td>
-                                        <td>
-                                            Delete/Export selected via toolbar + selectable
-                                            <br><small class="text-muted">Requires custom cell slots + JS</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>Column Visibility Toggle</td>
-                                        <td>
-                                            Show/hide columns dynamically via UI
-                                            <br><small class="text-muted">DataTables supports it, needs UI component</small>
-                                        </td>
-                                    </tr>
-                                    <tr>
                                         <td>Inline Editing</td>
                                         <td>
                                             Edit cells directly in the table
@@ -230,11 +228,11 @@
                                 </tbody>
                             </table>
 
-                            <div class="alert alert-info d-flex mt-5 p-4">
-                                <i class="ki-outline ki-information-5 fs-2 me-3"></i>
+                            <div class="alert alert-success d-flex mt-5 p-4">
+                                <i class="ki-outline ki-check-circle fs-2 me-3 text-success"></i>
                                 <div>
-                                    <strong>Note:</strong>
-                                    <br>Features listed here are planned for future implementation. Prioritize based on real consumption needs.
+                                    <strong>Core Features Complete!</strong>
+                                    <br>All essential DataTable features are implemented. Remaining items are advanced enhancements.
                                 </div>
                             </div>
                         </div>
@@ -645,6 +643,125 @@
                     />
                 </div>
             </div>
+
+            {{-- Bulk Actions Example --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    <span class="badge badge-success me-2">NEW</span> Bulk Actions
+                    <span class="badge badge-light-primary ms-2">Select rows to see toolbar</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.datatable.base
+                        id="demo-bulk-actions"
+                        :columns="[
+                            ['key' => 'name', 'label' => 'Product'],
+                            ['key' => 'price', 'label' => 'Price', 'render' => 'currency'],
+                            ['key' => 'stock', 'label' => 'Stock'],
+                            ['key' => 'active', 'label' => 'Status', 'render' => 'yesno'],
+                        ]"
+                        :data="$sampleProducts"
+                        :selectable="true"
+                        :bulk-actions="[
+                            ['key' => 'delete', 'label' => 'Delete', 'icon' => 'ki-outline ki-trash', 'class' => 'btn-light-danger', 'confirm' => 'Delete selected items?'],
+                            ['key' => 'export', 'label' => 'Export', 'icon' => 'ki-outline ki-file-down', 'class' => 'btn-light-primary'],
+                            ['key' => 'archive', 'label' => 'Archive', 'icon' => 'ki-outline ki-archive', 'class' => 'btn-light-warning'],
+                        ]"
+                        on-bulk-action="handleBulkAction"
+                        row-key="id"
+                    />
+                </div>
+            </div>
+
+            {{-- Column Visibility Example --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    <span class="badge badge-success me-2">NEW</span> Column Visibility Toggle
+                    <span class="badge badge-light-info ms-2">Click "Columns" button</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.datatable.base
+                        id="demo-column-toggle"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => '60px'],
+                            ['key' => 'name', 'label' => 'Name'],
+                            ['key' => 'email', 'label' => 'Email'],
+                            ['key' => 'role', 'label' => 'Role'],
+                            ['key' => 'status', 'label' => 'Status'],
+                            ['key' => 'created_at', 'label' => 'Created', 'render' => 'date'],
+                        ]"
+                        :data="$sampleUsers"
+                        :datatable="true"
+                        :show-column-toggle="true"
+                        :hidden-columns="['created_at']"
+                    />
+                </div>
+            </div>
+
+            {{-- Column Reordering Example --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    <span class="badge badge-success me-2">NEW</span> Column Reordering (Drag & Drop)
+                    <span class="badge badge-light-info ms-2">Drag column headers to reorder</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.datatable.base
+                        id="demo-column-reorder"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => '60px'],
+                            ['key' => 'name', 'label' => 'Name'],
+                            ['key' => 'email', 'label' => 'Email'],
+                            ['key' => 'role', 'label' => 'Role'],
+                            ['key' => 'status', 'label' => 'Status'],
+                        ]"
+                        :data="$sampleUsers"
+                        :datatable="true"
+                        :column-reorderable="true"
+                        :state-save="true"
+                    />
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-sm btn-light-primary" onclick="alert('Column Order: ' + GeoTable.getColumnOrder('demo-column-reorder').join(', '))">
+                            <i class="ki-outline ki-information-5 me-1"></i> Get Column Order
+                        </button>
+                        <button class="btn btn-sm btn-light-warning" onclick="GeoTable.resetColumnOrder('demo-column-reorder')">
+                            <i class="ki-outline ki-arrows-loop me-1"></i> Reset Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- New Renderers Example --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    <span class="badge badge-success me-2">NEW</span> Extended Built-in Renderers
+                </div>
+                <div class="showcase-example-preview">
+                    @php
+                        $renderersDemo = [
+                            ['id' => 1, 'name' => 'John Doe', 'avatar' => null, 'email' => 'john@example.com', 'phone' => '+1 (555) 123-4567', 'salary' => 75000, 'rating' => 92.5, 'status' => 'active', 'bio' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.', 'created_at' => now()->subDays(2)],
+                            ['id' => 2, 'name' => 'Jane Smith', 'avatar' => 'https://i.pravatar.cc/100?u=jane', 'email' => 'jane@example.com', 'phone' => '+1 (555) 987-6543', 'salary' => 85000, 'rating' => 88.3, 'status' => 'pending', 'bio' => 'Short bio', 'created_at' => now()->subHours(5)],
+                            ['id' => 3, 'name' => 'Bob Wilson', 'avatar' => 'https://i.pravatar.cc/100?u=bob', 'email' => 'bob@example.com', 'phone' => '+1 (555) 456-7890', 'salary' => 65000, 'rating' => 75.0, 'status' => 'inactive', 'bio' => 'Another longer biography that needs truncation for proper display in the table cell.', 'created_at' => now()->subMinutes(30)],
+                        ];
+                    @endphp
+                    <x-table.datatable.base
+                        :columns="[
+                            ['key' => 'avatar', 'label' => 'Avatar', 'render' => 'avatar', 'nameField' => 'name', 'size' => '40px'],
+                            ['key' => 'name', 'label' => 'Name'],
+                            ['key' => 'email', 'label' => 'Email', 'render' => 'email'],
+                            ['key' => 'phone', 'label' => 'Phone', 'render' => 'phone'],
+                            ['key' => 'salary', 'label' => 'Salary', 'render' => 'currency', 'symbol' => '$', 'decimals' => 0],
+                            ['key' => 'rating', 'label' => 'Score', 'render' => 'percent', 'decimals' => 1],
+                            ['key' => 'status', 'label' => 'Status', 'render' => 'status', 'statuses' => [
+                                'active' => ['label' => 'Active', 'color' => 'success'],
+                                'pending' => ['label' => 'Pending', 'color' => 'warning'],
+                                'inactive' => ['label' => 'Inactive', 'color' => 'danger'],
+                            ]],
+                            ['key' => 'bio', 'label' => 'Bio', 'render' => 'truncate', 'maxLength' => 30],
+                            ['key' => 'created_at', 'label' => 'Added', 'render' => 'relative'],
+                        ]"
+                        :data="$renderersDemo"
+                    />
+                </div>
+            </div>
         </div>
 
         <div id="code-datatable-features" class="showcase-code-wrapper">
@@ -786,3 +903,24 @@
     </section>
 
 @endsection
+
+@push('scripts')
+<script>
+    // Demo handler for bulk actions
+    function handleBulkAction(actionKey, selectedIds, tableId) {
+        console.log('Bulk Action:', actionKey, 'Selected IDs:', selectedIds);
+        alert('Action: ' + actionKey + '\nSelected IDs: ' + selectedIds.join(', '));
+
+        // In real app, you would:
+        // - Make AJAX call to backend
+        // - Reload table after success
+        // Example:
+        // if (actionKey === 'delete') {
+        //     fetch('/api/products/bulk-delete', {
+        //         method: 'POST',
+        //         body: JSON.stringify({ ids: selectedIds })
+        //     }).then(() => GeoTable.reload(tableId));
+        // }
+    }
+</script>
+@endpush
