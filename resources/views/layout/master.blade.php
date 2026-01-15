@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 
-<html lang="en" >   
+<html lang="en" >
 	<!--begin::Head-->
     @include('layout.includes.head')
 	<!--end::Head-->
 	<!--begin::Body-->
-	<body id="kt_app_body" data-kt-app-header-fixed="true" data-kt-app-header-fixed-mobile="true" 
-    data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true" data-kt-app-sidebar-stacked="true" data-kt-app-sidebar-secondary-enabled="true" 
+	<body id="kt_app_body" data-kt-app-header-fixed="true" data-kt-app-header-fixed-mobile="true"
+    data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true" data-kt-app-sidebar-stacked="true" data-kt-app-sidebar-secondary-enabled="true"
     data-kt-app-toolbar-enabled="true" class="app-default">
 		<!--begin::Theme mode setup on page load-->
 		@include('layout.includes.theme-customizer')
@@ -58,10 +58,10 @@
 		</div>
 		<!--end::App-->
 		<!--begin::Drawers-->
-	
-		
+
+
 		<!--end::Chat drawer-->
-	
+
 		<!--end::Drawers-->
 		<!--begin::Scrolltop-->
 		@include('layout.includes.scroll-top')
@@ -73,7 +73,7 @@
         @stack('scripts')
 		<!--end::Global Javascript Bundle-->
 		<!--begin::Vendors Javascript(used for this page only)-->
-	
+
 	</body>
 	<!--end::Body-->
 </html>

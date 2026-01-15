@@ -582,6 +582,10 @@
                                         <td><span class="badge badge-success me-2">NEW</span>Column Reordering (Drag & Drop)</td>
                                         <td><code>:column-reorderable="true"</code></td>
                                     </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Column Filters (Per-Column Search)</td>
+                                        <td><code>:column-filters="true"</code>, <code>column-filters-position="header|footer"</code></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1128,6 +1132,76 @@
                             <i class="ki-outline ki-arrows-loop me-1"></i> Reset Order
                         </button>
                     </div>
+                </div>
+            </div>
+
+            {{-- Column Filters Example (Header Position) --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    <span class="badge badge-success me-2">NEW</span> Column Filters (Per-Column Search) - Header Position
+                    <span class="badge badge-light-info ms-2">Type in filter inputs to search each column</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.datatable.base
+                        id="demo-column-filters-header"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => '60px', 'searchable' => true],
+                            ['key' => 'name', 'label' => 'Name', 'searchable' => true, 'filterPlaceholder' => 'Search name...'],
+                            ['key' => 'email', 'label' => 'Email', 'searchable' => true],
+                            ['key' => 'role', 'label' => 'Role', 'searchable' => true, 'filterOptions' => [
+                                'Admin' => 'Admin',
+                                'Editor' => 'Editor',
+                                'Viewer' => 'Viewer',
+                            ]],
+                            ['key' => 'status', 'label' => 'Status', 'searchable' => true, 'filterOptions' => [
+                                'active' => 'Active',
+                                'inactive' => 'Inactive',
+                                'pending' => 'Pending',
+                            ]],
+                        ]"
+                        :data="$sampleUsers"
+                        :datatable="true"
+                        :sortable="true"
+                        :column-filters="true"
+                        column-filters-position="header"
+                    />
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-sm btn-light-warning" onclick="GeoTable.clearColumnFilters('demo-column-filters-header')">
+                            <i class="ki-outline ki-arrows-loop me-1"></i> Clear All Filters
+                        </button>
+                        <button class="btn btn-sm btn-light-info" onclick="alert(JSON.stringify(GeoTable.getColumnFilters('demo-column-filters-header'), null, 2))">
+                            <i class="ki-outline ki-information-5 me-1"></i> Get Filter Values
+                        </button>
+                        <button class="btn btn-sm btn-light-primary" onclick="GeoTable.setColumnFilter('demo-column-filters-header', 'name', 'John')">
+                            <i class="ki-outline ki-filter me-1"></i> Set Name = "John"
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Column Filters Example (Footer Position) --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    <span class="badge badge-success me-2">NEW</span> Column Filters - Footer Position
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.datatable.base
+                        id="demo-column-filters-footer"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => '60px', 'searchable' => true],
+                            ['key' => 'name', 'label' => 'Name', 'searchable' => true],
+                            ['key' => 'email', 'label' => 'Email', 'searchable' => true],
+                            ['key' => 'role', 'label' => 'Role', 'searchable' => true],
+                            ['key' => 'status', 'label' => 'Status', 'searchable' => false],
+                        ]"
+                        :data="$sampleUsers"
+                        :datatable="true"
+                        :sortable="true"
+                        :pagination="true"
+                        :page-length="5"
+                        :column-filters="true"
+                        column-filters-position="footer"
+                    />
                 </div>
             </div>
 

@@ -15,303 +15,94 @@
     - Future-proof for alternative implementations (AG Grid, etc.)
 
     ================================================================================
-    USAGE EXAMPLES
+    USAGE EXAMPLES (Documentation Only - See showcase page for live demos)
     ================================================================================
 
     1. SIMPLE STATIC TABLE (No JavaScript)
-    --------------------------------------
-    <x-table.datatable.base
-        :columns="[
-            ['key' => 'name', 'label' => 'Name'],
-            ['key' => 'email', 'label' => 'Email'],
-            ['key' => 'status', 'label' => 'Status'],
-        ]"
-        :data="$users"
-    />
+       :columns="[['key' => 'name', 'label' => 'Name'], ...]"
+       :data="$yourData"
 
     2. SERVER-SIDE DATATABLE
-    ------------------------
-    <x-table.datatable.base
-        id="users-table"
-        :columns="[
-            ['key' => 'id', 'label' => 'ID', 'sortable' => true],
-            ['key' => 'name', 'label' => 'Name', 'sortable' => true, 'searchable' => true],
-            ['key' => 'email', 'label' => 'Email', 'searchable' => true],
-            ['key' => 'created_at', 'label' => 'Created', 'sortable' => true],
-        ]"
-        ajax-url="/api/users"
-        :server-side="true"
-        :datatable="true"
-        :pagination="true"
-        :searchable="true"
-    />
+       ajax-url="/api/users"
+       :server-side="true"
+       :datatable="true"
 
-    3. TABLE WITH CUSTOM CELL RENDERING (Slots)
-    -------------------------------------------
-    <x-table.datatable.base
-        :columns="[
-            ['key' => 'name', 'label' => 'Name'],
-            ['key' => 'status', 'label' => 'Status'],
-            ['key' => 'avatar', 'label' => 'Avatar'],
-        ]"
-        :data="$users"
-    >
-        <x-slot:cell-status="['row' => $row, 'value' => $value]">
-            <span class="badge badge-{{ $value === 'active' ? 'success' : 'danger' }}">
-                {{ ucfirst($value) }}
-            </span>
-        </x-slot:cell-status>
+    3. WITH CUSTOM CELL VIEW
+       ['key' => 'status', 'view' => 'partials.status-badge']
 
-        <x-slot:cell-avatar="['row' => $row]">
-            <img src="{{ $row['avatar'] }}" class="w-35px h-35px rounded" />
-        </x-slot:cell-avatar>
-    </x-table.datatable.base>
+    4. WITH ACTIONS
+       :show-actions="true"
+       actions-view="partials.actions"
 
-    4. TABLE WITH ACTIONS COLUMN
-    ----------------------------
-    <x-table.datatable.base
-        :columns="[
-            ['key' => 'name', 'label' => 'Name'],
-            ['key' => 'email', 'label' => 'Email'],
-        ]"
-        :data="$users"
-        :show-actions="true"
-        row-key="id"
-    >
-        <x-slot:actions="['row' => $row]">
-            <a href="#" class="btn btn-sm btn-light btn-active-light-primary">Edit</a>
-            <button class="btn btn-sm btn-light btn-active-light-danger">Delete</button>
-        </x-slot:actions>
-    </x-table.datatable.base>
+    5. WITH TOOLBAR SLOT
+       <x-slot:toolbar>...</x-slot:toolbar>
 
-    5. TABLE WITH TOOLBAR (Filters/Buttons)
-    ---------------------------------------
-    <x-table.datatable.base
-        :columns="$columns"
-        :data="$users"
-        :datatable="true"
-    >
-        <x-slot:toolbar>
-            <div class="d-flex gap-3">
-                <select class="form-select form-select-sm" data-table-filter="status">
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-                <button class="btn btn-sm btn-primary" data-table-action="export">
-                    Export
-                </button>
-            </div>
-        </x-slot:toolbar>
-    </x-table.datatable.base>
+    6. ROW SELECTION
+       :selectable="true"
+       row-key="id"
 
-    6. TABLE WITH ROW SELECTION (Checkboxes)
-    ----------------------------------------
-    <x-table.datatable.base
-        :columns="$columns"
-        :data="$users"
-        :selectable="true"
-        row-key="id"
-        on-selection-change="handleSelectionChange"
-    />
+    7. ROW INDEX
+       :show-index="true"
 
-    7. TABLE WITH ROW INDEX
-    -----------------------
-    <x-table.datatable.base
-        :columns="$columns"
-        :data="$users"
-        :show-index="true"
-        index-label="#"
-    />
+    8. DEFERRED LOADING
+       :defer-loading="true"
 
-    8. DEFERRED LOADING TABLE
-    -------------------------
-    <x-table.datatable.base
-        id="lazy-table"
-        :columns="$columns"
-        ajax-url="/api/large-dataset"
-        :datatable="true"
-        :defer-loading="true"
-    />
-    <!-- Later trigger: window.GeoTable.reload('lazy-table') -->
+    9. BULK ACTIONS
+       :bulk-actions="[['key' => 'delete', 'label' => 'Delete', ...]]"
+       on-bulk-action="handleBulkAction"
 
-    9. TABLE WITH BULK ACTIONS
-    --------------------------
-    <x-table.datatable.base
-        :columns="$columns"
-        :data="$users"
-        :selectable="true"
-        :bulk-actions="[
-            ['key' => 'delete', 'label' => 'Delete', 'icon' => 'ki-outline ki-trash', 'class' => 'btn-light-danger', 'confirm' => 'Delete selected?'],
-            ['key' => 'export', 'label' => 'Export', 'icon' => 'ki-outline ki-file-down', 'class' => 'btn-light-primary'],
-        ]"
-        on-bulk-action="handleBulkAction"
-        row-key="id"
-    />
-
-    10. TABLE WITH COLUMN VISIBILITY TOGGLE
-    ---------------------------------------
-    <x-table.datatable.base
-        :columns="$columns"
-        :data="$users"
-        :datatable="true"
+    10. COLUMN VISIBILITY
         :show-column-toggle="true"
-        :hidden-columns="['created_at']"
-    />
 
-    11. TABLE WITH COLUMN REORDERING (Drag & Drop)
-    ----------------------------------------------
-    <x-table.datatable.base
-        :columns="$columns"
-        :data="$users"
-        :datatable="true"
+    11. COLUMN REORDERING
         :column-reorderable="true"
-        :state-save="true"
-    />
-    <!-- JS API: GeoTable.getColumnOrder(id), GeoTable.setColumnOrder(id, ['col1', 'col2']), GeoTable.resetColumnOrder(id) -->
 
-    12. TABLE WITH EXPANDABLE ROW DETAILS
-    -------------------------------------
-    Click on any row to expand and see more details:
-    <x-table.datatable.base
-        :columns="[
-            ['key' => 'name', 'label' => 'Name'],
-            ['key' => 'email', 'label' => 'Email'],
-        ]"
-        :data="$users"
+    12. EXPANDABLE ROW DETAILS
         :row-details="true"
-        row-key="id"
-    />
 
-    With specific columns in details:
-    <x-table.datatable.base
-        :columns="[
-            ['key' => 'name', 'label' => 'Name'],
-            ['key' => 'email', 'label' => 'Email'],
-        ]"
-        :data="$users"
-        :row-details="true"
-        :row-details-columns="[
-            ['key' => 'phone', 'label' => 'Phone Number'],
-            ['key' => 'address', 'label' => 'Address'],
-            ['key' => 'created_at', 'label' => 'Created Date'],
-        ]"
-        row-key="id"
-    />
+    13. COLUMN FILTERS (Per-Column Search)
+        :column-filters="true"
+        column-filters-position="header|footer"
 
-    With callbacks:
-    <x-table.datatable.base
-        :columns="$columns"
-        :data="$users"
-        :row-details="true"
-        on-row-expand="handleRowExpand"
-        on-row-collapse="handleRowCollapse"
-    />
-    <!-- JS: function handleRowExpand(rowData, rowElement, detailsElement) { console.log('Expanded:', rowData); } -->
+    14. RTL / LOCALE
+        :rtl="true"
+        locale="ar"
 
     JS API:
+    - GeoTable.reload(tableId)
+    - GeoTable.getSelected(tableId)
+    - GeoTable.clearSelection(tableId)
     - GeoTable.expandRow(tableId, rowKey)
     - GeoTable.collapseRow(tableId, rowKey)
-    - GeoTable.toggleRow(tableId, rowKey)
-    - GeoTable.collapseAllRows(tableId)
+    - GeoTable.clearColumnFilters(tableId)
+    - GeoTable.getColumnFilters(tableId)
+    - GeoTable.setColumnFilter(tableId, columnKey, value)
+    - GeoTable.getColumnOrder(tableId)
+    - GeoTable.resetColumnOrder(tableId)
 
     ================================================================================
-    RTL / LOCALE SUPPORT
+    COLUMN DEFINITION SCHEMA
     ================================================================================
-
-    AUTO-DETECT RTL (from HTML dir attribute):
-    -----------------------------------------
-    If your page has <html dir="rtl">, the table automatically enables RTL mode.
-
-    FORCE RTL MODE:
-    ---------------
-    <x-table.datatable.base
-        :columns="$columns"
-        :data="$users"
-        :rtl="true"
-        locale="ar"
-        :datatable="true"
-    />
-
-    ARABIC WITH ALL FEATURES:
-    -------------------------
-    <x-table.datatable.base
-        :columns="[
-            ['key' => 'name', 'label' => 'الاسم'],
-            ['key' => 'email', 'label' => 'البريد الإلكتروني'],
-        ]"
-        :data="$users"
-        :rtl="true"
-        locale="ar"
-        :datatable="true"
-        :pagination="true"
-        :searchable="true"
-    />
-
-    SUPPORTED LOCALES:
-    - ar (Arabic) - Full translation
-    - he (Hebrew) - Full translation
-    - fa (Farsi/Persian) - Full translation
-    - fr (French) - Full translation
-    - Default: English (en)
-
-    ================================================================================
-    COLUMN DEFINITION SCHEMA (Abstract - Not DataTables Specific)
-    ================================================================================
-
-    Each column in the columns array supports:
 
     [
         'key'         => 'field_name',      // Required: data field key
         'label'       => 'Display Name',    // Required: column header
-        'sortable'    => true|false,        // Optional: enable sorting (default: false)
-        'searchable'  => true|false,        // Optional: include in search (default: false)
-        'visible'     => true|false,        // Optional: show/hide column (default: true)
-        'width'       => '100px'|'10%',     // Optional: column width
-        'class'       => 'text-center',     // Optional: cell CSS class
-        'headerClass' => 'bg-light',        // Optional: header CSS class
-        'orderable'   => true|false,        // Optional: alias for sortable
-        'render'      => 'date|currency|badge', // Optional: built-in renderers (see list below)
-        'view'        => 'path.to.blade',   // Optional: custom view partial for cell rendering
-        'format'      => 'Y-m-d',           // Optional: format parameter for render
-
-        // Renderer-specific options:
-        'symbol'      => '$',               // For currency renderer
-        'decimals'    => 2,                 // For currency, number, percent renderers
-        'prefix'      => '',                // For number renderer
-        'suffix'      => '',                // For number renderer
-        'colors'      => [],                // For badge renderer: ['value' => 'color']
-        'statuses'    => [],                // For status renderer: ['key' => ['label' => '', 'color' => '']]
-        'yes'         => 'Yes',             // For yesno renderer
-        'no'          => 'No',              // For yesno renderer
-        'imageWidth'  => '40px',            // For image renderer
-        'imageHeight' => '40px',            // For image renderer
-        'size'        => '35px',            // For avatar renderer
-        'nameField'   => 'name',            // For avatar renderer (field to generate initials from)
-        'url'         => '/path/{id}',      // For link renderer (supports placeholders)
-        'target'      => '_self',           // For link renderer
-        'maxLength'   => 50,                // For truncate renderer
+        'sortable'    => true|false,        // Enable sorting
+        'searchable'  => true|false,        // Include in search
+        'visible'     => true|false,        // Show/hide column
+        'width'       => '100px',           // Column width
+        'class'       => 'text-center',     // Cell CSS class
+        'headerClass' => 'bg-light',        // Header CSS class
+        'render'      => 'date|currency|...', // Built-in renderer
+        'view'        => 'path.to.blade',   // Custom view partial
+        'format'      => 'Y-m-d',           // Format for date renderer
+        'filterOptions' => [...],           // Dropdown options for column filter
+        'filterPlaceholder' => '...',       // Placeholder for filter input
     ]
 
     BUILT-IN RENDERERS:
-    - date          : Format date (M d, Y)
-    - datetime      : Format datetime (M d, Y H:i)
-    - time          : Format time (H:i)
-    - relative      : Human readable time (2 hours ago)
-    - currency      : Format as currency with symbol
-    - number        : Format number with decimals, prefix, suffix
-    - percent       : Format as percentage
-    - badge         : Display as badge with color
-    - status        : Display as status badge with configurable mapping
-    - boolean       : Show check/cross icon
-    - yesno         : Show Yes/No badge
-    - image         : Display image thumbnail
-    - avatar        : Display avatar with fallback initials
-    - link          : Clickable link
-    - email         : Mailto link
-    - phone         : Tel link
-    - truncate      : Truncate text with tooltip
-    - html          : Render raw HTML
+    date, datetime, time, relative, currency, number, percent, badge, status,
+    boolean, yesno, image, avatar, link, email, phone, truncate, html
 
     ================================================================================
 --}}
@@ -357,6 +148,8 @@
     'stateSave' => false,                   // Save table state in localStorage
     'ordering' => null,                     // Default ordering [['column', 'asc']]
     'columnReorderable' => false,           // Enable column drag & drop reordering
+    'columnFilters' => false,               // Enable per-column search/filter inputs
+    'columnFiltersPosition' => 'header',    // Position: 'header' (below titles) or 'footer'
 
     // ============================================
     // EXPORT OPTIONS (Opt-in)
@@ -536,6 +329,9 @@
         'hiddenColumns' => $hiddenColumns,
         // Column Reordering
         'columnReorderable' => $columnReorderable,
+        // Column Filters
+        'columnFilters' => $columnFilters,
+        'columnFiltersPosition' => $columnFiltersPosition,
         'callbacks' => [
             'onInit' => $onInit,
             'onDraw' => $onDraw,
@@ -1132,6 +928,164 @@
 
     .geo-column-show-all:hover {
         background: var(--geo-table-row-hover);
+    }
+
+    /* ============================================ */
+    /* Column Filters (Per-Column Search)          */
+    /* ============================================ */
+    .geo-column-filters-row th {
+        padding: 0.5rem 1.25rem !important;
+        background: var(--geo-table-header-bg) !important;
+        border-bottom: 2px solid var(--geo-table-border) !important;
+    }
+
+    .geo-column-filters-row th:first-child {
+        padding-left: 1.5rem !important;
+    }
+
+    .geo-column-filters-row th:last-child {
+        padding-right: 1.5rem !important;
+    }
+
+    .geo-column-filter-input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.825rem;
+        font-weight: 400;
+        color: var(--geo-table-text);
+        background: var(--geo-input-bg);
+        border: 1px solid var(--geo-input-border);
+        border-radius: 0.375rem;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .geo-column-filter-input::placeholder {
+        color: var(--geo-table-text-muted);
+        opacity: 0.7;
+    }
+
+    .geo-column-filter-input:focus {
+        outline: none;
+        border-color: var(--geo-input-focus-border);
+        box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.1);
+    }
+
+    .geo-column-filter-input:disabled {
+        background: var(--geo-table-row-stripe);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* Filter input wrapper for icons */
+    .geo-column-filter-wrapper {
+        position: relative;
+    }
+
+    .geo-column-filter-wrapper .geo-filter-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--geo-table-text-muted);
+        font-size: 0.875rem;
+        pointer-events: none;
+    }
+
+    .geo-column-filter-wrapper .geo-column-filter-input {
+        padding-left: 2.25rem;
+    }
+
+    .geo-column-filter-wrapper .geo-filter-clear {
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--geo-table-text-muted);
+        background: transparent;
+        border: none;
+        padding: 0.25rem;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+        font-size: 0.75rem;
+        line-height: 1;
+        border-radius: 50%;
+    }
+
+    .geo-column-filter-wrapper:hover .geo-filter-clear,
+    .geo-column-filter-wrapper .geo-filter-clear.active {
+        opacity: 0.6;
+    }
+
+    .geo-column-filter-wrapper .geo-filter-clear:hover {
+        opacity: 1;
+        background: var(--geo-table-row-hover);
+    }
+
+    /* Select-based filters */
+    .geo-column-filter-select {
+        width: 100%;
+        padding: 0.5rem 2rem 0.5rem 0.75rem;
+        font-size: 0.825rem;
+        font-weight: 400;
+        color: var(--geo-table-text);
+        background: var(--geo-input-bg);
+        border: 1px solid var(--geo-input-border);
+        border-radius: 0.375rem;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236c757d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 12px 12px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .geo-column-filter-select:focus {
+        outline: none;
+        border-color: var(--geo-input-focus-border);
+        box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.1);
+    }
+
+    /* Footer position variant */
+    .geo-datatable-wrapper table tfoot.geo-column-filters-footer tr th {
+        padding: 0.5rem 1.25rem !important;
+        background: var(--geo-table-header-bg) !important;
+        border-top: 2px solid var(--geo-table-border) !important;
+        border-bottom: none !important;
+    }
+
+    /* Active filter indicator */
+    .geo-column-filter-input.has-value,
+    .geo-column-filter-select.has-value {
+        border-color: var(--geo-input-focus-border);
+        background-color: rgba(54, 153, 255, 0.05);
+    }
+
+    /* RTL Support for Column Filters */
+    [dir="rtl"] .geo-column-filter-wrapper .geo-filter-icon,
+    .geo-datatable-wrapper[dir="rtl"] .geo-column-filter-wrapper .geo-filter-icon {
+        left: auto;
+        right: 0.75rem;
+    }
+
+    [dir="rtl"] .geo-column-filter-wrapper .geo-column-filter-input,
+    .geo-datatable-wrapper[dir="rtl"] .geo-column-filter-wrapper .geo-column-filter-input {
+        padding-left: 0.75rem;
+        padding-right: 2.25rem;
+    }
+
+    [dir="rtl"] .geo-column-filter-wrapper .geo-filter-clear,
+    .geo-datatable-wrapper[dir="rtl"] .geo-column-filter-wrapper .geo-filter-clear {
+        right: auto;
+        left: 0.5rem;
+    }
+
+    [dir="rtl"] .geo-column-filter-select,
+    .geo-datatable-wrapper[dir="rtl"] .geo-column-filter-select {
+        padding-left: 2rem;
+        padding-right: 0.75rem;
+        background-position: left 0.75rem center;
     }
 
     /* ============================================ */
@@ -2330,6 +2284,12 @@
                 this._setupRowDetails(tableId, config);
                 this.instances[tableId]._rowDetailsSetup = true;
             }
+
+            // Setup column filters
+            if (config.columnFilters && !this.instances[tableId]._columnFiltersSetup) {
+                this._setupColumnFilters(tableId, config);
+                this.instances[tableId]._columnFiltersSetup = true;
+            }
         },
 
         _buildDTOptions: function(tableId, config) {
@@ -2361,7 +2321,8 @@
             var options = {
                 processing: config.serverSide,
                 serverSide: config.serverSide,
-                searching: config.searchable,
+                // Enable searching if column filters are used OR global searchable is set
+                searching: config.searchable || config.columnFilters,
                 ordering: config.sortable,
                 paging: config.pagination,
                 pageLength: config.pageLength,
@@ -2370,6 +2331,8 @@
                 stateSave: config.stateSave,
                 deferLoading: config.deferLoading ? 0 : null,
                 language: language,
+                // Enable header filters row to be recognized (sorting goes to first row)
+                orderCellsTop: config.columnFilters && config.columnFiltersPosition === 'header',
                 drawCallback: function(settings) {
                     self._triggerCallback(config.callbacks.onDraw, [this.api(), tableId]);
                 }
@@ -2390,18 +2353,67 @@
 
             // Column definitions
             if (config.columns && config.columns.length) {
-                options.columns = config.columns.map(function(col) {
-                    return {
-                        data: col.key,
+                var columnDefs = [];
+
+                // Add fixed columns first (must match HTML table structure)
+                if (config.rowDetails) {
+                    columnDefs.push({
+                        orderable: false,
+                        searchable: false,
+                        className: 'geo-col-expand'
+                    });
+                }
+                if (config.selectable) {
+                    columnDefs.push({
+                        orderable: false,
+                        searchable: false,
+                        className: 'geo-col-checkbox'
+                    });
+                }
+                if (config.showIndex) {
+                    columnDefs.push({
+                        orderable: false,
+                        searchable: false,
+                        className: 'geo-col-index'
+                    });
+                }
+
+                // Add data columns
+                config.columns.forEach(function(col, index) {
+                    // When column filters are enabled, make columns searchable by default (unless explicitly set to false)
+                    var isSearchable = config.columnFilters
+                        ? (col.searchable !== false)  // Default to true when column filters enabled
+                        : (col.searchable || false);  // Default to false otherwise
+
+                    var colDef = {
                         name: col.key,
                         title: col.label,
                         orderable: col.sortable || col.orderable || false,
-                        searchable: col.searchable || false,
+                        searchable: isSearchable,
                         visible: col.visible !== false,
                         width: col.width || null,
                         className: col.class || ''
                     };
+
+                    // Only use 'data' property for AJAX/server-side tables
+                    // For HTML-sourced tables, DataTables uses column index automatically
+                    if (config.ajaxUrl || config.serverSide) {
+                        colDef.data = col.key;
+                    }
+
+                    columnDefs.push(colDef);
                 });
+
+                // Add actions column if present
+                if (config.showActions) {
+                    columnDefs.push({
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-end'
+                    });
+                }
+
+                options.columns = columnDefs;
             }
 
             // Default ordering
@@ -2736,6 +2748,235 @@
             });
         },
 
+        // ========================================
+        // COLUMN FILTERS
+        // ========================================
+
+        /**
+         * Setup column filters functionality
+         * @param {string} tableId - The table element ID
+         * @param {object} config - Table configuration
+         */
+        _setupColumnFilters: function(tableId, config) {
+            var self = this;
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var instance = this.instances[tableId];
+            if (!instance || !instance.dt) return;
+
+            var dt = instance.dt;
+
+            // Find all filter inputs (both header and footer)
+            var filterInputs = table.querySelectorAll('.geo-column-filter-input');
+            var filterSelects = table.querySelectorAll('.geo-column-filter-select');
+
+            // Store filter values
+            instance.columnFilterValues = {};
+
+            // Debounce function for text inputs
+            var debounceTimers = {};
+            var debounce = function(key, func, delay) {
+                clearTimeout(debounceTimers[key]);
+                debounceTimers[key] = setTimeout(func, delay);
+            };
+
+            // Setup text input filters
+            filterInputs.forEach(function(input) {
+                var colIndex = parseInt(input.getAttribute('data-column-index'));
+                var colKey = input.getAttribute('data-column-key');
+
+                // Account for fixed columns (expand, checkbox, index)
+                var dtColIndex = self._getDataTableColumnIndex(tableId, colIndex);
+
+                input.addEventListener('input', function(e) {
+                    var value = e.target.value;
+
+                    // Update has-value class for styling
+                    input.classList.toggle('has-value', value.length > 0);
+
+                    // Show/hide clear button
+                    var clearBtn = input.parentElement.querySelector('.geo-filter-clear');
+                    if (clearBtn) {
+                        clearBtn.classList.toggle('active', value.length > 0);
+                    }
+
+                    // Store filter value
+                    instance.columnFilterValues[colKey] = value;
+
+                    // Debounce the search
+                    debounce('filter_' + colKey, function() {
+                        dt.column(dtColIndex).search(value).draw();
+                    }, 300);
+                });
+
+                // Clear button functionality
+                var clearBtn = input.parentElement.querySelector('.geo-filter-clear');
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', function() {
+                        input.value = '';
+                        input.classList.remove('has-value');
+                        clearBtn.classList.remove('active');
+                        instance.columnFilterValues[colKey] = '';
+                        dt.column(dtColIndex).search('').draw();
+                        input.focus();
+                    });
+                }
+
+                // Handle Enter key
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        clearTimeout(debounceTimers['filter_' + colKey]);
+                        dt.column(dtColIndex).search(input.value).draw();
+                    }
+                });
+            });
+
+            // Setup select filters
+            filterSelects.forEach(function(select) {
+                var colIndex = parseInt(select.getAttribute('data-column-index'));
+                var colKey = select.getAttribute('data-column-key');
+
+                // Account for fixed columns
+                var dtColIndex = self._getDataTableColumnIndex(tableId, colIndex);
+
+                select.addEventListener('change', function(e) {
+                    var value = e.target.value;
+
+                    // Update has-value class for styling
+                    select.classList.toggle('has-value', value.length > 0);
+
+                    // Store filter value
+                    instance.columnFilterValues[colKey] = value;
+
+                    // Apply exact match search for select filters
+                    if (value) {
+                        dt.column(dtColIndex).search('^' + value + '$', true, false).draw();
+                    } else {
+                        dt.column(dtColIndex).search('').draw();
+                    }
+                });
+            });
+        },
+
+        /**
+         * Get the DataTable column index accounting for fixed columns
+         * @param {string} tableId - The table element ID
+         * @param {number} dataColIndex - The data column index (from normalizedColumns)
+         * @returns {number} The DataTable column index
+         */
+        _getDataTableColumnIndex: function(tableId, dataColIndex) {
+            var table = document.getElementById(tableId);
+            if (!table) return dataColIndex;
+
+            var instance = this.instances[tableId];
+            if (!instance) return dataColIndex;
+
+            var offset = 0;
+
+            // Count fixed columns by checking config
+            if (instance.config.rowDetails) {
+                offset++; // Expand column
+            }
+            if (instance.config.selectable) {
+                offset++; // Checkbox column
+            }
+            if (instance.config.showIndex) {
+                offset++; // Index column
+            }
+
+            return dataColIndex + offset;
+        },
+
+        /**
+         * Clear all column filters
+         * @param {string} tableId - The table element ID
+         */
+        clearColumnFilters: function(tableId) {
+            var instance = this.instances[tableId];
+            var table = document.getElementById(tableId);
+            if (!instance || !table) return;
+
+            // Clear text inputs
+            var inputs = table.querySelectorAll('.geo-column-filter-input');
+            inputs.forEach(function(input) {
+                input.value = '';
+                input.classList.remove('has-value');
+                var clearBtn = input.parentElement.querySelector('.geo-filter-clear');
+                if (clearBtn) clearBtn.classList.remove('active');
+            });
+
+            // Reset selects
+            var selects = table.querySelectorAll('.geo-column-filter-select');
+            selects.forEach(function(select) {
+                select.value = '';
+                select.classList.remove('has-value');
+            });
+
+            // Clear stored values
+            instance.columnFilterValues = {};
+
+            // Clear DataTable search and redraw
+            if (instance.dt) {
+                instance.dt.columns().search('').draw();
+            }
+        },
+
+        /**
+         * Get current column filter values
+         * @param {string} tableId - The table element ID
+         * @returns {object} Object with column keys and their filter values
+         */
+        getColumnFilters: function(tableId) {
+            var instance = this.instances[tableId];
+            return instance ? (instance.columnFilterValues || {}) : {};
+        },
+
+        /**
+         * Set column filter value programmatically
+         * @param {string} tableId - The table element ID
+         * @param {string} columnKey - The column key
+         * @param {string} value - The filter value
+         */
+        setColumnFilter: function(tableId, columnKey, value) {
+            var table = document.getElementById(tableId);
+            var instance = this.instances[tableId];
+            if (!table || !instance || !instance.dt) return;
+
+            // Find the input/select for this column
+            var input = table.querySelector('.geo-column-filter-input[data-column-key="' + columnKey + '"]');
+            var select = table.querySelector('.geo-column-filter-select[data-column-key="' + columnKey + '"]');
+
+            if (input) {
+                input.value = value;
+                input.classList.toggle('has-value', value.length > 0);
+                var clearBtn = input.parentElement.querySelector('.geo-filter-clear');
+                if (clearBtn) clearBtn.classList.toggle('active', value.length > 0);
+
+                // Trigger the search
+                var colIndex = parseInt(input.getAttribute('data-column-index'));
+                var dtColIndex = this._getDataTableColumnIndex(tableId, colIndex);
+                instance.dt.column(dtColIndex).search(value).draw();
+            } else if (select) {
+                select.value = value;
+                select.classList.toggle('has-value', value.length > 0);
+
+                // Trigger the search (exact match for selects)
+                var colIndex = parseInt(select.getAttribute('data-column-index'));
+                var dtColIndex = this._getDataTableColumnIndex(tableId, colIndex);
+                if (value) {
+                    instance.dt.column(dtColIndex).search('^' + value + '$', true, false).draw();
+                } else {
+                    instance.dt.column(dtColIndex).search('').draw();
+                }
+            }
+
+            // Store the value
+            instance.columnFilterValues = instance.columnFilterValues || {};
+            instance.columnFilterValues[columnKey] = value;
+        },
+
         _triggerCallback: function(callbackName, args) {
             if (callbackName && typeof window[callbackName] === 'function') {
                 window[callbackName].apply(null, args);
@@ -2918,6 +3159,71 @@
                     </th>
                     @endif
                 </tr>
+
+                {{-- Column Filters Row (Header Position) --}}
+                @if($columnFilters && $columnFiltersPosition === 'header')
+                <tr class="geo-column-filters-row">
+                    {{-- Expand Toggle Column - No Filter --}}
+                    @if($rowDetails)
+                    <th></th>
+                    @endif
+
+                    {{-- Checkbox Column - No Filter --}}
+                    @if($selectable)
+                    <th></th>
+                    @endif
+
+                    {{-- Index Column - No Filter --}}
+                    @if($showIndex)
+                    <th></th>
+                    @endif
+
+                    {{-- Data Column Filters --}}
+                    @foreach($normalizedColumns as $colIdx => $column)
+                    @if($column['visible'] !== false)
+                    <th data-filter-column="{{ $colIdx }}">
+                        @if($column['searchable'] ?? true)
+                            @if(!empty($column['filterOptions']))
+                                {{-- Select Filter --}}
+                                <select
+                                    class="geo-column-filter-select"
+                                    data-column-index="{{ $colIdx }}"
+                                    data-column-key="{{ $column['key'] }}"
+                                    aria-label="Filter {{ $column['label'] }}"
+                                >
+                                    <option value="">{{ __('All') }}</option>
+                                    @foreach($column['filterOptions'] as $optValue => $optLabel)
+                                        <option value="{{ $optValue }}">{{ $optLabel }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                {{-- Text Input Filter --}}
+                                <div class="geo-column-filter-wrapper">
+                                    <i class="ki-outline ki-magnifier geo-filter-icon"></i>
+                                    <input
+                                        type="text"
+                                        class="geo-column-filter-input"
+                                        data-column-index="{{ $colIdx }}"
+                                        data-column-key="{{ $column['key'] }}"
+                                        placeholder="{{ $column['filterPlaceholder'] ?? $column['label'] }}"
+                                        aria-label="Filter {{ $column['label'] }}"
+                                    />
+                                    <button type="button" class="geo-filter-clear" title="Clear filter">
+                                        <i class="ki-outline ki-cross"></i>
+                                    </button>
+                                </div>
+                            @endif
+                        @endif
+                    </th>
+                    @endif
+                    @endforeach
+
+                    {{-- Actions Column - No Filter --}}
+                    @if($showActions)
+                    <th></th>
+                    @endif
+                </tr>
+                @endif
             </thead>
 
             {{-- Table Body --}}
@@ -3172,6 +3478,73 @@
                 @endif
                 @endforelse
             </tbody>
+
+            {{-- Column Filters (Footer Position) --}}
+            @if($columnFilters && $columnFiltersPosition === 'footer')
+            <tfoot class="geo-column-filters-footer">
+                <tr class="geo-column-filters-row">
+                    {{-- Expand Toggle Column - No Filter --}}
+                    @if($rowDetails)
+                    <th></th>
+                    @endif
+
+                    {{-- Checkbox Column - No Filter --}}
+                    @if($selectable)
+                    <th></th>
+                    @endif
+
+                    {{-- Index Column - No Filter --}}
+                    @if($showIndex)
+                    <th></th>
+                    @endif
+
+                    {{-- Data Column Filters --}}
+                    @foreach($normalizedColumns as $colIdx => $column)
+                    @if($column['visible'] !== false)
+                    <th data-filter-column="{{ $colIdx }}">
+                        @if($column['searchable'] ?? true)
+                            @if(!empty($column['filterOptions']))
+                                {{-- Select Filter --}}
+                                <select
+                                    class="geo-column-filter-select"
+                                    data-column-index="{{ $colIdx }}"
+                                    data-column-key="{{ $column['key'] }}"
+                                    aria-label="Filter {{ $column['label'] }}"
+                                >
+                                    <option value="">{{ __('All') }}</option>
+                                    @foreach($column['filterOptions'] as $optValue => $optLabel)
+                                        <option value="{{ $optValue }}">{{ $optLabel }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                {{-- Text Input Filter --}}
+                                <div class="geo-column-filter-wrapper">
+                                    <i class="ki-outline ki-magnifier geo-filter-icon"></i>
+                                    <input
+                                        type="text"
+                                        class="geo-column-filter-input"
+                                        data-column-index="{{ $colIdx }}"
+                                        data-column-key="{{ $column['key'] }}"
+                                        placeholder="{{ $column['filterPlaceholder'] ?? $column['label'] }}"
+                                        aria-label="Filter {{ $column['label'] }}"
+                                    />
+                                    <button type="button" class="geo-filter-clear" title="Clear filter">
+                                        <i class="ki-outline ki-cross"></i>
+                                    </button>
+                                </div>
+                            @endif
+                        @endif
+                    </th>
+                    @endif
+                    @endforeach
+
+                    {{-- Actions Column - No Filter --}}
+                    @if($showActions)
+                    <th></th>
+                    @endif
+                </tr>
+            </tfoot>
+            @endif
         </table>
     </div>
 
