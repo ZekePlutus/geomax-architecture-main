@@ -1,18 +1,18 @@
 {{--
     ================================================================================
-    GLOBAL UI COMPONENT SHOWCASE - DataTable Only
+    GLOBAL UI COMPONENT SHOWCASE - Tables (DataTable & AG Grid)
     ================================================================================
 
-    This is a DEVELOPER-ONLY page for testing and previewing DataTable components.
+    This is a DEVELOPER-ONLY page for testing and previewing Table components.
 
     PURPOSE:
-    - Visual validation of DataTable component
+    - Visual validation of table components
     - Documentation of usage patterns
     - Testing different prop combinations
     - Design consistency verification
 
     ACCESS:
-    - URL: /__components
+    - URL: /components
     - Environment: local, staging, development only
     - No authentication required
     ================================================================================
@@ -20,8 +20,8 @@
 
 @extends('core-ui.layouts.showcase')
 
-@section('header-title', 'DataTable Component Library')
-@section('header-description', 'Browse, test, and validate DataTable components')
+@section('header-title', 'Table Component Library')
+@section('header-description', 'Browse, test, and validate DataTable and AG Grid components')
 
 @section('sidebar-nav')
     <!-- Feature Tracking -->
@@ -31,8 +31,8 @@
         Feature Tracker
     </a>
 
-    <!-- Table Category -->
-    <div class="showcase-nav-category">Table Components</div>
+    <!-- DataTable Category -->
+    <div class="showcase-nav-category">DataTable (jQuery)</div>
     <a href="#datatable-static" class="showcase-nav-item active">
         <i class="ki-outline ki-row-horizontal"></i>
         DataTable (Static)
@@ -48,6 +48,25 @@
     <a href="#empty-states" class="showcase-nav-item">
         <i class="ki-outline ki-file-deleted"></i>
         Empty States
+    </a>
+
+    <!-- AG Grid Category -->
+    <div class="showcase-nav-category">AG Grid (Enterprise)</div>
+    <a href="#aggrid-basic" class="showcase-nav-item">
+        <i class="ki-outline ki-grid"></i>
+        AG Grid (Basic)
+    </a>
+    <a href="#aggrid-filtering" class="showcase-nav-item">
+        <i class="ki-outline ki-filter"></i>
+        AG Grid (Filtering)
+    </a>
+    <a href="#aggrid-selection" class="showcase-nav-item">
+        <i class="ki-outline ki-check-square"></i>
+        AG Grid (Selection)
+    </a>
+    <a href="#aggrid-features" class="showcase-nav-item">
+        <i class="ki-outline ki-setting-3"></i>
+        AG Grid Features
     </a>
 @endsection
 
@@ -902,11 +921,514 @@
         </div>
     </section>
 
+    {{-- ================================================================== --}}
+    {{-- AG GRID - FEATURE TRACKER                                          --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-feature-tracker" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-grid me-2 text-info"></i>
+                AG Grid Component - Feature Tracker
+            </h3>
+        </div>
+        <div class="showcase-section-body">
+            <p class="text-muted mb-5">
+                Track implemented and pending features for the <code>x-table.aggrid.base</code> component.
+                <br><small class="text-warning">Last Updated: January 15, 2026</small>
+            </p>
+
+            <div class="row g-5">
+                {{-- Implemented Features --}}
+                <div class="col-lg-6">
+                    <div class="card card-bordered border-success">
+                        <div class="card-header bg-light-success">
+                            <h4 class="card-title">
+                                <i class="ki-outline ki-check-circle text-success me-2"></i>
+                                Implemented Features (P0)
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-row-bordered">
+                                <thead>
+                                    <tr class="fw-bold text-muted">
+                                        <th>Feature</th>
+                                        <th>Props</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Static Data Rendering</td>
+                                        <td><code>:data="$array"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Column Configuration</td>
+                                        <td><code>:columns="[...]"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sorting (Single/Multi)</td>
+                                        <td><code>:sortable="true"</code>, <code>:multi-sort="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Column Filtering</td>
+                                        <td><code>:filterable="true"</code>, <code>'filter' => 'text|number|date'</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Floating Filters</td>
+                                        <td><code>:floating-filter="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Quick Filter (Search)</td>
+                                        <td><code>:quick-filter="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Pagination</td>
+                                        <td><code>:pagination="true"</code>, <code>:page-size="25"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Row Selection</td>
+                                        <td><code>:selectable="true"</code>, <code>selection-mode="multiple"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Checkbox Selection</td>
+                                        <td><code>:checkbox-selection="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Column Resizing</td>
+                                        <td><code>:resizable="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Column Pinning</td>
+                                        <td><code>'pinned' => 'left|right'</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Cell Renderers (16+)</td>
+                                        <td><code>'render' => 'badge|currency|...'</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>CSV Export</td>
+                                        <td><code>:exportable="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Themes (4)</td>
+                                        <td><code>theme="quartz|alpine|balham|material"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Dark Mode</td>
+                                        <td><code>:dark-mode="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>State Persistence</td>
+                                        <td><code>:state-save="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>AJAX Data Source</td>
+                                        <td><code>ajax-url="/api/data"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Actions Column</td>
+                                        <td><code>:show-actions="true"</code></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Pending Features --}}
+                <div class="col-lg-6">
+                    <div class="card card-bordered border-warning">
+                        <div class="card-header bg-light-warning">
+                            <h4 class="card-title">
+                                <i class="ki-outline ki-time text-warning me-2"></i>
+                                Coming Soon (P1/P2)
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-row-bordered">
+                                <thead>
+                                    <tr class="fw-bold text-muted">
+                                        <th>Feature</th>
+                                        <th>Priority</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Server-Side Data Model</td>
+                                        <td><span class="badge badge-light-primary">P1</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Row Grouping</td>
+                                        <td><span class="badge badge-light-primary">P1</span> <small class="text-muted">(Enterprise)</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Inline Cell Editing</td>
+                                        <td><span class="badge badge-light-primary">P1</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Row Dragging</td>
+                                        <td><span class="badge badge-light-info">P2</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Master/Detail (Expandable)</td>
+                                        <td><span class="badge badge-light-info">P2</span> <small class="text-muted">(Enterprise)</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Excel Export</td>
+                                        <td><span class="badge badge-light-info">P2</span> <small class="text-muted">(Enterprise)</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Context Menu</td>
+                                        <td><span class="badge badge-light-info">P2</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Column Aggregation</td>
+                                        <td><span class="badge badge-light-info">P2</span> <small class="text-muted">(Enterprise)</small></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Clipboard</td>
+                                        <td><span class="badge badge-light-info">P2</span> <small class="text-muted">(Enterprise)</small></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="mt-4 p-3 bg-light-info rounded">
+                                <small class="text-info">
+                                    <i class="ki-outline ki-information-3 me-1"></i>
+                                    Features marked "(Enterprise)" require AG Grid Enterprise license.
+                                    Currently using Community edition.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- AG GRID - BASIC                                                    --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-basic" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-grid me-2 text-info"></i>
+                AG Grid - Basic Usage
+            </h3>
+        </div>
+        <div class="showcase-section-body">
+            <div class="showcase-example">
+                <div class="showcase-example-header">
+                    <h4>Simple Static Data Grid</h4>
+                    <p class="text-muted mb-0">Basic grid with sortable columns and pagination</p>
+                </div>
+                <div class="showcase-example-preview">
+                    @php
+                        $agGridUsers = [
+                            ['id' => 1, 'name' => 'John Smith', 'email' => 'john@example.com', 'role' => 'Admin', 'status' => 'active', 'salary' => 85000, 'joined' => '2023-01-15'],
+                            ['id' => 2, 'name' => 'Jane Doe', 'email' => 'jane@example.com', 'role' => 'Editor', 'status' => 'active', 'salary' => 65000, 'joined' => '2023-03-22'],
+                            ['id' => 3, 'name' => 'Bob Wilson', 'email' => 'bob@example.com', 'role' => 'Viewer', 'status' => 'inactive', 'salary' => 45000, 'joined' => '2022-11-08'],
+                            ['id' => 4, 'name' => 'Alice Brown', 'email' => 'alice@example.com', 'role' => 'Editor', 'status' => 'active', 'salary' => 72000, 'joined' => '2023-06-14'],
+                            ['id' => 5, 'name' => 'Charlie Davis', 'email' => 'charlie@example.com', 'role' => 'Viewer', 'status' => 'pending', 'salary' => 48000, 'joined' => '2024-01-03'],
+                            ['id' => 6, 'name' => 'Diana Miller', 'email' => 'diana@example.com', 'role' => 'Admin', 'status' => 'active', 'salary' => 92000, 'joined' => '2022-08-19'],
+                            ['id' => 7, 'name' => 'Edward Garcia', 'email' => 'edward@example.com', 'role' => 'Editor', 'status' => 'active', 'salary' => 68000, 'joined' => '2023-09-27'],
+                            ['id' => 8, 'name' => 'Fiona Martinez', 'email' => 'fiona@example.com', 'role' => 'Viewer', 'status' => 'inactive', 'salary' => 42000, 'joined' => '2023-04-11'],
+                        ];
+                    @endphp
+
+                    <x-table.aggrid.base
+                        id="aggrid-basic-demo"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 80],
+                            ['key' => 'name', 'label' => 'Name', 'flex' => 1],
+                            ['key' => 'email', 'label' => 'Email', 'flex' => 1],
+                            ['key' => 'role', 'label' => 'Role', 'width' => 120, 'render' => 'badge', 'colors' => ['Admin' => 'primary', 'Editor' => 'info', 'Viewer' => 'secondary']],
+                            ['key' => 'status', 'label' => 'Status', 'width' => 120, 'render' => 'status', 'statuses' => [
+                                'active' => ['label' => 'Active', 'color' => 'success'],
+                                'inactive' => ['label' => 'Inactive', 'color' => 'danger'],
+                                'pending' => ['label' => 'Pending', 'color' => 'warning'],
+                            ]],
+                            ['key' => 'salary', 'label' => 'Salary', 'width' => 120, 'render' => 'currency', 'symbol' => '$', 'decimals' => 0],
+                            ['key' => 'joined', 'label' => 'Joined', 'width' => 130, 'render' => 'date'],
+                        ]"
+                        :data="$agGridUsers"
+                        :sortable="true"
+                        :pagination="true"
+                        :page-size="5"
+                        height="350px"
+                    />
+                </div>
+                <div class="showcase-example-code">
+                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+    :columns="[
+        ['key' => 'id', 'label' => 'ID', 'width' => 80],
+        ['key' => 'name', 'label' => 'Name', 'flex' => 1],
+        ['key' => 'email', 'label' => 'Email', 'flex' => 1],
+        ['key' => 'role', 'label' => 'Role', 'render' => 'badge', 'colors' => ['Admin' => 'primary']],
+        ['key' => 'status', 'label' => 'Status', 'render' => 'status', 'statuses' => [...]],
+        ['key' => 'salary', 'label' => 'Salary', 'render' => 'currency', 'symbol' => '$'],
+        ['key' => 'joined', 'label' => 'Joined', 'render' => 'date'],
+    ]"
+    :data="$users"
+    :sortable="true"
+    :pagination="true"
+    :page-size="5"
+/&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- AG GRID - FILTERING                                                --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-filtering" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-filter me-2 text-info"></i>
+                AG Grid - Filtering
+            </h3>
+        </div>
+        <div class="showcase-section-body">
+            <div class="showcase-example">
+                <div class="showcase-example-header">
+                    <h4>Grid with Column Filters & Quick Search</h4>
+                    <p class="text-muted mb-0">Floating filters below headers + quick filter search box</p>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="aggrid-filter-demo"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 80, 'filter' => 'number'],
+                            ['key' => 'name', 'label' => 'Name', 'flex' => 1, 'filter' => 'text'],
+                            ['key' => 'email', 'label' => 'Email', 'flex' => 1, 'filter' => 'text'],
+                            ['key' => 'role', 'label' => 'Role', 'width' => 120, 'filter' => 'text', 'render' => 'badge', 'colors' => ['Admin' => 'primary', 'Editor' => 'info', 'Viewer' => 'secondary']],
+                            ['key' => 'salary', 'label' => 'Salary', 'width' => 130, 'filter' => 'number', 'render' => 'currency', 'symbol' => '$', 'decimals' => 0],
+                            ['key' => 'joined', 'label' => 'Joined', 'width' => 140, 'filter' => 'date', 'render' => 'date'],
+                        ]"
+                        :data="$agGridUsers"
+                        :sortable="true"
+                        :filterable="true"
+                        :floating-filter="true"
+                        :quick-filter="true"
+                        :pagination="true"
+                        height="400px"
+                    />
+                </div>
+                <div class="showcase-example-code">
+                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+    :columns="[
+        ['key' => 'id', 'label' => 'ID', 'filter' => 'number'],
+        ['key' => 'name', 'label' => 'Name', 'filter' => 'text'],
+        ['key' => 'salary', 'label' => 'Salary', 'filter' => 'number'],
+        ['key' => 'joined', 'label' => 'Joined', 'filter' => 'date'],
+    ]"
+    :data="$users"
+    :filterable="true"
+    :floating-filter="true"
+    :quick-filter="true"
+/&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- AG GRID - SELECTION                                                --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-selection" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-check-square me-2 text-info"></i>
+                AG Grid - Row Selection
+            </h3>
+        </div>
+        <div class="showcase-section-body">
+            <div class="showcase-example">
+                <div class="showcase-example-header">
+                    <h4>Multi-Select with Checkboxes</h4>
+                    <p class="text-muted mb-0">Select multiple rows with checkbox column. Selection count shows in toolbar.</p>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="aggrid-selection-demo"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 80],
+                            ['key' => 'name', 'label' => 'Name', 'flex' => 1],
+                            ['key' => 'email', 'label' => 'Email', 'flex' => 1],
+                            ['key' => 'role', 'label' => 'Role', 'width' => 120],
+                            ['key' => 'status', 'label' => 'Status', 'width' => 120, 'render' => 'badge', 'colors' => ['active' => 'success', 'inactive' => 'danger', 'pending' => 'warning']],
+                        ]"
+                        :data="$agGridUsers"
+                        :selectable="true"
+                        selection-mode="multiple"
+                        :checkbox-selection="true"
+                        :header-checkbox="true"
+                        :exportable="true"
+                        on-selection-change="handleAgGridSelection"
+                        height="350px"
+                    />
+                </div>
+                <div class="showcase-example-code">
+                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$users"
+    :selectable="true"
+    selection-mode="multiple"
+    :checkbox-selection="true"
+    :header-checkbox="true"
+    :exportable="true"
+    on-selection-change="handleSelection"
+/&gt;
+
+&lt;script&gt;
+function handleSelection(selectedRows, params) {
+    console.log('Selected:', selectedRows);
+}
+&lt;/script&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- AG GRID - FEATURES                                                 --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-features" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-setting-3 me-2 text-info"></i>
+                AG Grid - Advanced Features
+            </h3>
+        </div>
+        <div class="showcase-section-body">
+            {{-- Column Pinning --}}
+            <div class="showcase-example">
+                <div class="showcase-example-header">
+                    <h4>Column Pinning</h4>
+                    <p class="text-muted mb-0">Pin columns to left or right. Scroll horizontally to see effect.</p>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="aggrid-pinning-demo"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 70, 'pinned' => 'left'],
+                            ['key' => 'name', 'label' => 'Name', 'width' => 150, 'pinned' => 'left'],
+                            ['key' => 'email', 'label' => 'Email', 'width' => 200],
+                            ['key' => 'role', 'label' => 'Role', 'width' => 150],
+                            ['key' => 'department', 'label' => 'Department', 'width' => 150],
+                            ['key' => 'location', 'label' => 'Location', 'width' => 150],
+                            ['key' => 'phone', 'label' => 'Phone', 'width' => 150],
+                            ['key' => 'status', 'label' => 'Status', 'width' => 120, 'pinned' => 'right', 'render' => 'badge', 'colors' => ['active' => 'success', 'inactive' => 'danger']],
+                        ]"
+                        :data="[
+                            ['id' => 1, 'name' => 'John Smith', 'email' => 'john@example.com', 'role' => 'Admin', 'department' => 'Engineering', 'location' => 'New York', 'phone' => '+1-555-0100', 'status' => 'active'],
+                            ['id' => 2, 'name' => 'Jane Doe', 'email' => 'jane@example.com', 'role' => 'Manager', 'department' => 'Marketing', 'location' => 'Los Angeles', 'phone' => '+1-555-0101', 'status' => 'active'],
+                            ['id' => 3, 'name' => 'Bob Wilson', 'email' => 'bob@example.com', 'role' => 'Developer', 'department' => 'Engineering', 'location' => 'Chicago', 'phone' => '+1-555-0102', 'status' => 'inactive'],
+                        ]"
+                        :sortable="true"
+                        height="250px"
+                    />
+                </div>
+                <div class="showcase-example-code">
+                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+    :columns="[
+        ['key' => 'id', 'label' => 'ID', 'pinned' => 'left'],
+        ['key' => 'name', 'label' => 'Name', 'pinned' => 'left'],
+        // ... middle columns scroll ...
+        ['key' => 'status', 'label' => 'Status', 'pinned' => 'right'],
+    ]"
+    :data="$users"
+/&gt;</code></pre>
+                </div>
+            </div>
+
+            {{-- Themes --}}
+            <div class="showcase-example mt-10">
+                <div class="showcase-example-header">
+                    <h4>Themes</h4>
+                    <p class="text-muted mb-0">AG Grid supports multiple themes: Quartz (default), Alpine, Balham, Material</p>
+                </div>
+                <div class="showcase-example-preview">
+                    <div class="row g-5">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Alpine Theme</h6>
+                            <x-table.aggrid.base
+                                id="aggrid-theme-alpine"
+                                :columns="[
+                                    ['key' => 'name', 'label' => 'Name'],
+                                    ['key' => 'email', 'label' => 'Email'],
+                                    ['key' => 'status', 'label' => 'Status', 'render' => 'badge', 'colors' => ['active' => 'success', 'inactive' => 'danger']],
+                                ]"
+                                :data="[
+                                    ['name' => 'John', 'email' => 'john@test.com', 'status' => 'active'],
+                                    ['name' => 'Jane', 'email' => 'jane@test.com', 'status' => 'inactive'],
+                                ]"
+                                theme="alpine"
+                                height="180px"
+                            />
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Balham Theme</h6>
+                            <x-table.aggrid.base
+                                id="aggrid-theme-balham"
+                                :columns="[
+                                    ['key' => 'name', 'label' => 'Name'],
+                                    ['key' => 'email', 'label' => 'Email'],
+                                    ['key' => 'status', 'label' => 'Status', 'render' => 'badge', 'colors' => ['active' => 'success', 'inactive' => 'danger']],
+                                ]"
+                                :data="[
+                                    ['name' => 'John', 'email' => 'john@test.com', 'status' => 'active'],
+                                    ['name' => 'Jane', 'email' => 'jane@test.com', 'status' => 'inactive'],
+                                ]"
+                                theme="balham"
+                                height="180px"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- State Persistence --}}
+            <div class="showcase-example mt-10">
+                <div class="showcase-example-header">
+                    <h4>State Persistence</h4>
+                    <p class="text-muted mb-0">Column order, widths, and sort state are saved to localStorage. Try resizing columns, then refresh the page.</p>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="aggrid-state-demo"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 80],
+                            ['key' => 'name', 'label' => 'Name', 'flex' => 1],
+                            ['key' => 'email', 'label' => 'Email', 'flex' => 1],
+                            ['key' => 'role', 'label' => 'Role', 'width' => 120],
+                        ]"
+                        :data="$agGridUsers"
+                        :sortable="true"
+                        :resizable="true"
+                        :state-save="true"
+                        height="250px"
+                    />
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-light-warning" onclick="localStorage.removeItem('geo-grid-state-aggrid-state-demo'); location.reload();">
+                            <i class="ki-outline ki-arrows-circle me-1"></i>
+                            Reset Saved State
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
 @endsection
 
 @push('scripts')
 <script>
-    // Demo handler for bulk actions
+    // Demo handler for DataTable bulk actions
     function handleBulkAction(actionKey, selectedIds, tableId) {
         console.log('Bulk Action:', actionKey, 'Selected IDs:', selectedIds);
         alert('Action: ' + actionKey + '\nSelected IDs: ' + selectedIds.join(', '));
@@ -921,6 +1443,12 @@
         //         body: JSON.stringify({ ids: selectedIds })
         //     }).then(() => GeoTable.reload(tableId));
         // }
+    }
+
+    // Demo handler for AG Grid selection
+    function handleAgGridSelection(selectedRows, params) {
+        console.log('AG Grid Selection:', selectedRows);
+        console.log('Selected count:', selectedRows.length);
     }
 </script>
 @endpush
