@@ -76,6 +76,10 @@
         <i class="ki-outline ki-arrow-up-down"></i>
         <span class="badge badge-success badge-sm me-1">NEW</span> Row Dragging
     </a>
+    <a href="#aggrid-context-menu" class="showcase-nav-item">
+        <i class="ki-outline ki-menu"></i>
+        <span class="badge badge-success badge-sm me-1">NEW</span> Context Menu
+    </a>
     <a href="#aggrid-features" class="showcase-nav-item">
         <i class="ki-outline ki-setting-3"></i>
         AG Grid Features
@@ -1095,7 +1099,7 @@
                                     </tr>
                                     <tr>
                                         <td>Context Menu</td>
-                                        <td><span class="badge badge-light-info">P2</span></td>
+                                        <td><span class="badge badge-light-success"><i class="ki-outline ki-check-circle fs-8 me-1"></i>Done</span> <small class="text-muted">(Custom Implementation)</small></td>
                                     </tr>
                                     <tr>
                                         <td>Column Aggregation</td>
@@ -1110,7 +1114,7 @@
                             <div class="mt-4 p-3 bg-light-success rounded">
                                 <small class="text-success">
                                     <i class="ki-outline ki-check-circle me-1"></i>
-                                    <strong>Inline Cell Editing</strong> and <strong>Row Dragging</strong> are now implemented!
+                                    <strong>Inline Cell Editing</strong>, <strong>Row Dragging</strong>, and <strong>Context Menu</strong> are now implemented!
                                 </small>
                             </div>
                             <div class="mt-2 p-3 bg-light-info rounded">
@@ -1867,6 +1871,196 @@ GeoGrid.resetRowOrder('grid-id');                    // Reset to original order
     </section>
 
     {{-- ================================================================== --}}
+    {{-- AG GRID - CONTEXT MENU                                            --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-context-menu" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-menu me-2 text-info"></i>
+                <span class="badge badge-success me-2">NEW</span>
+                AG Grid - Context Menu
+            </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-aggrid-context">
+                Show Code
+            </button>
+        </div>
+        <div class="showcase-section-body">
+            <p class="text-muted mb-4">
+                Right-click on rows to see a custom context menu with actions.
+            </p>
+
+            {{-- Basic Context Menu --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Basic Context Menu
+                    <span class="badge badge-light-info">Right-click to test</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="demo-context-basic"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 70],
+                            ['key' => 'name', 'label' => 'Name'],
+                            ['key' => 'email', 'label' => 'Email'],
+                            ['key' => 'status', 'label' => 'Status', 'render' => 'badge', 'colors' => ['active' => 'success', 'inactive' => 'warning']],
+                        ]"
+                        :data="[
+                            ['id' => 1, 'name' => 'John Smith', 'email' => 'john@example.com', 'status' => 'active'],
+                            ['id' => 2, 'name' => 'Jane Doe', 'email' => 'jane@example.com', 'status' => 'active'],
+                            ['id' => 3, 'name' => 'Bob Wilson', 'email' => 'bob@example.com', 'status' => 'inactive'],
+                        ]"
+                        :context-menu="true"
+                        height="250px"
+                    />
+                </div>
+            </div>
+
+            {{-- Custom Context Menu Items --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Custom Menu Items
+                    <span class="badge badge-light-primary">With icons & dividers</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="demo-context-custom"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 70],
+                            ['key' => 'task', 'label' => 'Task'],
+                            ['key' => 'priority', 'label' => 'Priority', 'render' => 'badge', 'colors' => ['high' => 'danger', 'medium' => 'warning', 'low' => 'success']],
+                            ['key' => 'assignee', 'label' => 'Assignee'],
+                        ]"
+                        :data="[
+                            ['id' => 1, 'task' => 'Implement login', 'priority' => 'high', 'assignee' => 'John'],
+                            ['id' => 2, 'task' => 'Design homepage', 'priority' => 'medium', 'assignee' => 'Jane'],
+                            ['id' => 3, 'task' => 'Write documentation', 'priority' => 'low', 'assignee' => 'Bob'],
+                        ]"
+                        :context-menu="true"
+                        :context-menu-items="[
+                            ['action' => 'view', 'label' => 'View Task', 'icon' => 'eye'],
+                            ['action' => 'edit', 'label' => 'Edit Task', 'icon' => 'pencil'],
+                            ['action' => 'assign', 'label' => 'Reassign', 'icon' => 'user-tick'],
+                            ['divider' => true],
+                            ['header' => 'Priority'],
+                            ['action' => 'priority-high', 'label' => 'Set High', 'icon' => 'arrow-up'],
+                            ['action' => 'priority-low', 'label' => 'Set Low', 'icon' => 'arrow-down'],
+                            ['divider' => true],
+                            ['action' => 'delete', 'label' => 'Delete Task', 'icon' => 'trash', 'class' => 'danger'],
+                        ]"
+                        on-context-menu-action="handleDemoContextAction"
+                        height="250px"
+                    />
+                    <div id="demo-context-log" class="mt-3 bg-light-info p-3 rounded fs-7">
+                        <em class="text-muted">Right-click a row and select an action...</em>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Context Menu with Callbacks --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Dynamic Menu Items
+                    <span class="badge badge-light-warning">Runtime updates</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <div class="d-flex gap-3 mb-3">
+                        <button class="btn btn-sm btn-light-primary" onclick="GeoGrid.setContextMenuItems('demo-context-dynamic', demoMenuItemsBasic)">
+                            <i class="ki-outline ki-category me-1"></i> Basic Menu
+                        </button>
+                        <button class="btn btn-sm btn-light-info" onclick="GeoGrid.setContextMenuItems('demo-context-dynamic', demoMenuItemsExtended)">
+                            <i class="ki-outline ki-add-files me-1"></i> Extended Menu
+                        </button>
+                    </div>
+                    <x-table.aggrid.base
+                        id="demo-context-dynamic"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 70],
+                            ['key' => 'product', 'label' => 'Product'],
+                            ['key' => 'price', 'label' => 'Price', 'render' => 'currency'],
+                            ['key' => 'stock', 'label' => 'Stock'],
+                        ]"
+                        :data="[
+                            ['id' => 101, 'product' => 'Laptop Pro', 'price' => 1299.99, 'stock' => 15],
+                            ['id' => 102, 'product' => 'Wireless Mouse', 'price' => 49.99, 'stock' => 230],
+                            ['id' => 103, 'product' => 'USB-C Hub', 'price' => 79.99, 'stock' => 0],
+                        ]"
+                        :context-menu="true"
+                        :context-menu-items="[
+                            ['action' => 'view', 'label' => 'View Product', 'icon' => 'eye'],
+                            ['action' => 'edit', 'label' => 'Edit', 'icon' => 'pencil'],
+                        ]"
+                        on-context-menu-action="handleDemoContextAction"
+                        height="220px"
+                    />
+                </div>
+            </div>
+        </div>
+
+        {{-- Code Examples --}}
+        <div id="code-aggrid-context" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage</span>
+                <button class="showcase-code-copy">Copy</button>
+            </div>
+            <pre class="showcase-code">&lt;!-- Basic Context Menu (uses default items) --&gt;
+&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$users"
+    :context-menu="true"
+/&gt;
+
+&lt;!-- Custom Menu Items --&gt;
+&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$tasks"
+    :context-menu="true"
+    :context-menu-items="[
+        ['action' => 'view', 'label' => 'View Details', 'icon' => 'eye'],
+        ['action' => 'edit', 'label' => 'Edit', 'icon' => 'pencil'],
+        ['divider' => true],
+        ['header' => 'Actions'],
+        ['action' => 'duplicate', 'label' => 'Duplicate', 'icon' => 'copy'],
+        ['action' => 'archive', 'label' => 'Archive', 'icon' => 'archive'],
+        ['divider' => true],
+        ['action' => 'delete', 'label' => 'Delete', 'icon' => 'trash', 'class' => 'danger'],
+    ]"
+    on-context-menu-action="handleContextAction"
+/&gt;
+
+&lt;script&gt;
+// Handle menu actions
+function handleContextAction(event) {
+    const { action, rowData, gridId, api } = event;
+
+    switch (action) {
+        case 'view':
+            window.location.href = `/items/${rowData.id}`;
+            break;
+        case 'edit':
+            openEditModal(rowData);
+            break;
+        case 'duplicate':
+            api.applyTransaction({ add: [{ ...rowData, id: null }] });
+            break;
+        case 'delete':
+            if (confirm('Delete this item?')) {
+                api.applyTransaction({ remove: [rowData] });
+            }
+            break;
+    }
+}
+
+// JS API methods
+GeoGrid.showContextMenu('grid-id', rowData, x, y);   // Show menu programmatically
+GeoGrid.hideContextMenu('grid-id');                   // Hide menu
+GeoGrid.setContextMenuItems('grid-id', items);        // Update menu items dynamically
+GeoGrid.getContextMenuItems('grid-id');               // Get current menu items
+&lt;/script&gt;</pre>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
     {{-- AG GRID - FEATURES                                                 --}}
     {{-- ================================================================== --}}
 
@@ -2076,6 +2270,41 @@ GeoGrid.resetRowOrder('grid-id');                    // Reset to original order
         orderDiv.style.display = 'block';
         orderDiv.innerHTML = '<strong>Current Order (IDs):</strong> ' + ids.join(' → ');
     }
+
+    // ========================================
+    // CONTEXT MENU DEMO HANDLERS
+    // ========================================
+
+    function handleDemoContextAction(event) {
+        const log = document.getElementById('demo-context-log');
+        const placeholder = log.querySelector('em');
+        if (placeholder) placeholder.remove();
+
+        const entry = document.createElement('div');
+        entry.className = 'mb-1';
+        entry.innerHTML = `<strong>${event.action}</strong>: ${JSON.stringify(event.rowData)}`;
+        log.appendChild(entry);
+
+        console.log('Context menu action:', event);
+    }
+
+    // Menu item sets for dynamic demo
+    const demoMenuItemsBasic = [
+        { action: 'view', label: 'View Product', icon: 'eye' },
+        { action: 'edit', label: 'Edit', icon: 'pencil' },
+    ];
+
+    const demoMenuItemsExtended = [
+        { action: 'view', label: 'View Product', icon: 'eye' },
+        { action: 'edit', label: 'Edit', icon: 'pencil' },
+        { divider: true },
+        { header: 'Inventory' },
+        { action: 'restock', label: 'Restock', icon: 'plus-circle' },
+        { action: 'adjust', label: 'Adjust Stock', icon: 'setting-2' },
+        { divider: true },
+        { action: 'export', label: 'Export to CSV', icon: 'exit-down' },
+        { action: 'delete', label: 'Delete Product', icon: 'trash', class: 'danger' },
+    ];
 
     // Mock server-side API endpoint
     // In production, this would be handled by your actual backend

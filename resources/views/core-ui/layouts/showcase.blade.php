@@ -261,44 +261,134 @@
             border: 1px solid #2d2d3a;
         }
 
+        /* Legacy code wrapper (hidden by default, used for storing code) */
         .showcase-code-wrapper {
             display: none;
-            padding: 20px 25px;
-            background: #f8f9fa;
-            border-top: 1px solid #e4e6ef;
         }
 
-        .showcase-code-wrapper.show {
-            display: block;
+        /* Slide-out Code Panel */
+        .showcase-code-panel {
+            position: fixed;
+            top: var(--showcase-warning-height);
+            right: 0;
+            width: 550px;
+            max-width: 50vw;
+            height: calc(100vh - var(--showcase-warning-height));
+            background: #1e1e2d;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.3);
         }
 
-        .showcase-code-header {
+        .showcase-code-panel.open {
+            transform: translateX(0);
+        }
+
+        .showcase-code-panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            padding: 15px 20px;
+            background: #151521;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
 
-        .showcase-code-label {
+        .showcase-code-panel-title {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .showcase-code-panel-title i {
+            color: #3699ff;
+        }
+
+        .showcase-code-panel-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .showcase-code-panel-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .showcase-code-panel-copy {
+            background: #3699ff;
+            color: #fff;
+        }
+
+        .showcase-code-panel-copy:hover {
+            background: #1a73e8;
+        }
+
+        .showcase-code-panel-close {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .showcase-code-panel-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .showcase-code-panel-body {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .showcase-code-panel-body .showcase-code {
+            border-radius: 0;
+            border: none;
+            background: transparent;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        .showcase-code-panel-label {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(54, 153, 255, 0.2);
+            color: #3699ff;
             font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #7e8299;
-        }
-
-        .showcase-code-copy {
-            font-size: 11px;
-            padding: 4px 10px;
-            background: #3699ff;
-            color: #fff;
-            border: none;
             border-radius: 4px;
-            cursor: pointer;
         }
 
-        .showcase-code-copy:hover {
-            background: #1a73e8;
+        /* Backdrop when panel is open */
+        .showcase-code-backdrop {
+            position: fixed;
+            top: var(--showcase-warning-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .showcase-code-backdrop.open {
+            opacity: 1;
+            visibility: visible;
         }
 
         .showcase-code .tag {
@@ -313,16 +403,32 @@
             color: #2ecc71;
         }
 
-        /* Toggle Button */
+        /* Toggle Button - Consistent style */
         .showcase-toggle-code {
             font-size: 12px;
-            padding: 5px 12px;
+            padding: 6px 14px;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f3f5 !important;
+            border: 1px solid #e4e6ef !important;
+            color: #5e6278 !important;
+        }
+
+        .showcase-toggle-code:hover {
+            background: #e9ecef !important;
+            border-color: #d1d5db !important;
         }
 
         .showcase-toggle-code.active {
             background: #3699ff !important;
+            border-color: #3699ff !important;
             color: #fff !important;
+        }
+
+        .showcase-toggle-code i {
+            font-size: 14px;
         }
 
         /* Environment Badge */
@@ -405,38 +511,127 @@
         </main>
     </div>
 
+    <!-- Slide-out Code Panel -->
+    <div class="showcase-code-backdrop" id="codeBackdrop"></div>
+    <div class="showcase-code-panel" id="codePanel">
+        <div class="showcase-code-panel-header">
+            <h4 class="showcase-code-panel-title">
+                <i class="ki-outline ki-code"></i>
+                <span id="codePanelTitle">Blade Usage</span>
+            </h4>
+            <div class="showcase-code-panel-actions">
+                <button class="showcase-code-panel-btn showcase-code-panel-copy" id="codePanelCopy">
+                    <i class="ki-outline ki-copy"></i>
+                    Copy
+                </button>
+                <button class="showcase-code-panel-btn showcase-code-panel-close" id="codePanelClose">
+                    <i class="ki-outline ki-cross"></i>
+                </button>
+            </div>
+        </div>
+        <div class="showcase-code-panel-body">
+            <pre class="showcase-code" id="codePanelContent"></pre>
+        </div>
+    </div>
+
     <!-- Global Scripts (Metronic) -->
     <script src="{{ asset('assets/js/plugins.bundle.js') }}"></script>
     <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
 
     <!-- Showcase Scripts -->
     <script>
-        // Toggle code visibility
+        // Code Panel Elements
+        const codePanel = document.getElementById('codePanel');
+        const codeBackdrop = document.getElementById('codeBackdrop');
+        const codePanelContent = document.getElementById('codePanelContent');
+        const codePanelTitle = document.getElementById('codePanelTitle');
+        const codePanelCopy = document.getElementById('codePanelCopy');
+        const codePanelClose = document.getElementById('codePanelClose');
+        let activeCodeButton = null;
+
+        // Open code panel
+        function openCodePanel(codeContent, title) {
+            codePanelContent.textContent = codeContent;
+            codePanelTitle.textContent = title || 'Blade Usage';
+            codePanel.classList.add('open');
+            codeBackdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close code panel
+        function closeCodePanel() {
+            codePanel.classList.remove('open');
+            codeBackdrop.classList.remove('open');
+            document.body.style.overflow = '';
+
+            // Remove active state from button
+            if (activeCodeButton) {
+                activeCodeButton.classList.remove('active');
+                activeCodeButton.innerHTML = '<i class="ki-outline ki-code"></i> Show Code';
+                activeCodeButton = null;
+            }
+        }
+
+        // Toggle code visibility (new slide-out behavior)
         document.querySelectorAll('[data-toggle-code]').forEach(function(btn) {
+            // Update button HTML to include icon
+            if (!btn.querySelector('i')) {
+                btn.innerHTML = '<i class="ki-outline ki-code"></i> Show Code';
+            }
+
             btn.addEventListener('click', function() {
                 var targetId = this.dataset.toggleCode;
                 var target = document.querySelector(targetId);
+
                 if (target) {
-                    var isHidden = !target.classList.contains('show');
-                    target.classList.toggle('show');
-                    this.textContent = isHidden ? 'Hide Code' : 'Show Code';
-                    this.classList.toggle('active', isHidden);
+                    // If this button is already active, close the panel
+                    if (this.classList.contains('active')) {
+                        closeCodePanel();
+                        return;
+                    }
+
+                    // Close any other active button
+                    if (activeCodeButton && activeCodeButton !== this) {
+                        activeCodeButton.classList.remove('active');
+                        activeCodeButton.innerHTML = '<i class="ki-outline ki-code"></i> Show Code';
+                    }
+
+                    // Get code content
+                    var codeBlock = target.querySelector('.showcase-code');
+                    var codeLabel = target.querySelector('.showcase-code-label');
+                    var title = codeLabel ? codeLabel.textContent : 'Blade Usage';
+                    var codeContent = codeBlock ? codeBlock.textContent : '';
+
+                    // Update button state
+                    this.classList.add('active');
+                    this.innerHTML = '<i class="ki-outline ki-eye-slash"></i> Hide Code';
+                    activeCodeButton = this;
+
+                    // Open panel
+                    openCodePanel(codeContent, title);
                 }
             });
         });
 
+        // Close panel events
+        codePanelClose.addEventListener('click', closeCodePanel);
+        codeBackdrop.addEventListener('click', closeCodePanel);
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && codePanel.classList.contains('open')) {
+                closeCodePanel();
+            }
+        });
+
         // Copy code to clipboard
-        document.querySelectorAll('.showcase-code-copy').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var codeBlock = this.closest('.showcase-code-wrapper').querySelector('.showcase-code');
-                if (codeBlock) {
-                    navigator.clipboard.writeText(codeBlock.textContent).then(function() {
-                        btn.textContent = 'Copied!';
-                        setTimeout(function() {
-                            btn.textContent = 'Copy';
-                        }, 2000);
-                    });
-                }
+        codePanelCopy.addEventListener('click', function() {
+            var codeContent = codePanelContent.textContent;
+            navigator.clipboard.writeText(codeContent).then(function() {
+                codePanelCopy.innerHTML = '<i class="ki-outline ki-check"></i> Copied!';
+                setTimeout(function() {
+                    codePanelCopy.innerHTML = '<i class="ki-outline ki-copy"></i> Copy';
+                }, 2000);
             });
         });
 

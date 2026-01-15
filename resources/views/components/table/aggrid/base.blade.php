@@ -434,6 +434,14 @@
     'rowDragMultiRow' => false,             // Allow dragging multiple selected rows
 
     // ============================================
+    // CONTEXT MENU
+    // ============================================
+    'contextMenu' => false,                 // Enable context menu (right-click)
+    'contextMenuItems' => [],               // Array of menu items: [{key, label, icon, class, divider, disabled, callback}]
+    'onContextMenuAction' => null,          // Callback when menu item clicked: (actionKey, rowData, event)
+    'contextMenuClass' => '',               // Additional CSS class for menu
+
+    // ============================================
     // CALLBACKS (JavaScript function names)
     // ============================================
     'onInit' => null,                       // Called after grid initialized
@@ -449,7 +457,7 @@
     'onCellValueChanged' => null,           // Called when cell value changes (inline editing)
     'onRowValueChanged' => null,            // Called when row editing completes (fullRow mode)
     'onRowDragEnd' => null,                 // Called when row drag ends
-    'onRowDragMove' => null,                // Called during row drag
+    'onRowDragMove' => null,                 // Called during row drag
 ])
 
 @php
@@ -563,6 +571,10 @@
         'rowDragManaged' => $rowDragManaged,
         'rowDragEntireRow' => $rowDragEntireRow,
         'rowDragMultiRow' => $rowDragMultiRow,
+        // Context Menu
+        'contextMenu' => $contextMenu,
+        'contextMenuItems' => $contextMenuItems,
+        'contextMenuClass' => $contextMenuClass,
         // Callbacks
         'callbacks' => [
             'onInit' => $onInit,
@@ -579,6 +591,7 @@
             'onRowValueChanged' => $onRowValueChanged,
             'onRowDragEnd' => $onRowDragEnd,
             'onRowDragMove' => $onRowDragMove,
+            'onContextMenuAction' => $onContextMenuAction,
         ],
     ];
 @endphp
@@ -806,6 +819,120 @@
             /* Fix for AG Grid in modals */
             .modal .ag-root-wrapper {
                 border-radius: 0.375rem;
+            }
+
+            /* ========================================== */
+            /* CONTEXT MENU                               */
+            /* ========================================== */
+            .geo-grid-context-menu {
+                position: fixed;
+                z-index: 9999;
+                min-width: 180px;
+                max-width: 280px;
+                background: var(--bs-body-bg, #fff);
+                border: 1px solid var(--bs-border-color, #dee2e6);
+                border-radius: 0.5rem;
+                box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.175);
+                padding: 0.5rem 0;
+                opacity: 0;
+                transform: scale(0.95);
+                transform-origin: top left;
+                transition: opacity 0.1s ease, transform 0.1s ease;
+                pointer-events: none;
+            }
+
+            .geo-grid-context-menu.show {
+                opacity: 1;
+                transform: scale(1);
+                pointer-events: auto;
+            }
+
+            .geo-grid-context-menu-item {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+                color: var(--bs-body-color, #212529);
+                cursor: pointer;
+                transition: background-color 0.15s ease;
+                border: none;
+                background: none;
+                width: 100%;
+                text-align: left;
+            }
+
+            .geo-grid-context-menu-item:hover {
+                background-color: var(--bs-gray-100, #f8f9fa);
+            }
+
+            .geo-grid-context-menu-item:active {
+                background-color: var(--bs-gray-200, #e9ecef);
+            }
+
+            .geo-grid-context-menu-item.disabled {
+                opacity: 0.5;
+                pointer-events: none;
+                cursor: not-allowed;
+            }
+
+            .geo-grid-context-menu-item.danger {
+                color: var(--bs-danger, #dc3545);
+            }
+
+            .geo-grid-context-menu-item.danger:hover {
+                background-color: rgba(220, 53, 69, 0.1);
+            }
+
+            .geo-grid-context-menu-item i {
+                font-size: 1.1rem;
+                width: 1.25rem;
+                text-align: center;
+                opacity: 0.7;
+            }
+
+            .geo-grid-context-menu-item .shortcut {
+                margin-left: auto;
+                font-size: 0.75rem;
+                color: var(--bs-gray-500, #adb5bd);
+            }
+
+            .geo-grid-context-menu-divider {
+                height: 1px;
+                margin: 0.5rem 0;
+                background-color: var(--bs-border-color, #dee2e6);
+            }
+
+            .geo-grid-context-menu-header {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: var(--bs-gray-500, #adb5bd);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+            }
+
+            /* Submenu support (optional future enhancement) */
+            .geo-grid-context-menu-item.has-submenu::after {
+                content: '';
+                margin-left: auto;
+                border: 4px solid transparent;
+                border-left-color: currentColor;
+                opacity: 0.5;
+            }
+
+            /* Dark mode support */
+            [data-bs-theme="dark"] .geo-grid-context-menu {
+                background: var(--bs-gray-800, #343a40);
+                border-color: var(--bs-gray-700, #495057);
+            }
+
+            [data-bs-theme="dark"] .geo-grid-context-menu-item:hover {
+                background-color: var(--bs-gray-700, #495057);
+            }
+
+            [data-bs-theme="dark"] .geo-grid-context-menu-divider {
+                background-color: var(--bs-gray-700, #495057);
             }
         </style>
     @endpush
@@ -1213,6 +1340,12 @@
                             suppressRowDrag: false,
                         } : {}),
 
+                        // ========================================
+                        // CONTEXT MENU SUPPRESSION
+                        // ========================================
+                        // Suppress AG Grid's built-in context menu to use our custom one
+                        suppressContextMenu: config.contextMenu,
+
                         // Server-side row model configuration
                         ...(config.serverSide ? {
                             rowModelType: config.serverSideInfinite ? 'infinite' : 'serverSide',
@@ -1377,6 +1510,14 @@
                                 });
                             }
                         },
+
+                        // ========================================
+                        // CONTEXT MENU (Custom Implementation)
+                        // ========================================
+                        onCellContextMenu: config.contextMenu ? (params) => {
+                            params.event.preventDefault();
+                            showContextMenu(gridId, params.event, params.data, params.node);
+                        } : undefined,
                     };
 
                     // Create grid
@@ -1386,8 +1527,14 @@
                     instances[gridId] = {
                         api: gridApi,
                         config: config,
-                        options: gridOptions
+                        options: gridOptions,
+                        contextMenuEl: null,
                     };
+
+                    // Initialize context menu if enabled
+                    if (config.contextMenu) {
+                        initContextMenu(gridId, config);
+                    }
 
                     // Handle AJAX data source
                     if (config.ajaxUrl && !config.serverSide) {
@@ -1808,6 +1955,335 @@
                         console.error('GeoGrid AJAX error:', error);
                         instance.api.showNoRowsOverlay();
                     });
+                }
+
+                // ========================================
+                // CONTEXT MENU FUNCTIONS
+                // ========================================
+
+                /**
+                 * Initialize context menu for a grid
+                 */
+                function initContextMenu(gridId, config) {
+                    const instance = instances[gridId];
+                    if (!instance) return;
+
+                    // Create context menu container (hidden by default)
+                    const menuEl = document.createElement('div');
+                    menuEl.id = `${gridId}-context-menu`;
+                    menuEl.className = `geo-grid-context-menu ${config.contextMenuClass || ''}`.trim();
+                    menuEl.style.display = 'none';
+                    document.body.appendChild(menuEl);
+
+                    instance.contextMenuEl = menuEl;
+
+                    // Add native contextmenu event listener on the grid container
+                    // This ensures context menu works even if AG Grid's onCellContextMenu doesn't fire
+                    const container = document.getElementById(gridId);
+                    if (container) {
+                        container.addEventListener('contextmenu', (e) => {
+                            // Check if right-click is on a grid row
+                            const rowElement = e.target.closest('.ag-row');
+                            if (rowElement) {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                // Get row index from the row element
+                                const rowIndex = parseInt(rowElement.getAttribute('row-index'));
+                                if (!isNaN(rowIndex)) {
+                                    // Get the row node from the API
+                                    const rowNode = instance.api.getDisplayedRowAtIndex(rowIndex);
+                                    if (rowNode && rowNode.data) {
+                                        showContextMenu(gridId, e, rowNode.data, rowNode);
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    // Close menu on click outside
+                    document.addEventListener('click', (e) => {
+                        if (!menuEl.contains(e.target)) {
+                            hideContextMenu(gridId);
+                        }
+                    });
+
+                    // Close menu on scroll
+                    document.addEventListener('scroll', () => hideContextMenu(gridId), true);
+
+                    // Close menu on escape key
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') {
+                            hideContextMenu(gridId);
+                        }
+                    });
+                }
+
+                /**
+                 * Show context menu at specified position
+                 */
+                function showContextMenu(gridId, event, rowData, node) {
+                    const instance = instances[gridId];
+                    if (!instance || !instance.contextMenuEl) {
+                        console.warn('GeoGrid: No instance or contextMenuEl found for', gridId);
+                        return;
+                    }
+
+                    const config = instance.config;
+                    const menuEl = instance.contextMenuEl;
+
+                    // Get menu items (either static or dynamic)
+                    let menuItems = config.contextMenuItems || [];
+
+                    // If no items configured, use default items
+                    if (menuItems.length === 0) {
+                        menuItems = getDefaultContextMenuItems(config);
+                    }
+
+                    // Build menu HTML
+                    const menuHtml = buildContextMenuHtml(gridId, menuItems, rowData, node);
+                    menuEl.innerHTML = menuHtml;
+
+                    // Position menu
+                    const x = event.clientX;
+                    const y = event.clientY;
+
+                    // Make menu visible for size calculation (but not shown yet)
+                    menuEl.style.display = 'block';
+                    menuEl.classList.remove('show');
+
+                    const menuRect = menuEl.getBoundingClientRect();
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+
+                    let finalX = x;
+                    let finalY = y;
+
+                    if (x + menuRect.width > viewportWidth) {
+                        finalX = viewportWidth - menuRect.width - 10;
+                    }
+                    if (y + menuRect.height > viewportHeight) {
+                        finalY = viewportHeight - menuRect.height - 10;
+                    }
+
+                    menuEl.style.left = `${finalX}px`;
+                    menuEl.style.top = `${finalY}px`;
+
+                    // Show menu with animation
+                    requestAnimationFrame(() => {
+                        menuEl.classList.add('show');
+                    });
+
+                    // Store current row data for menu actions
+                    menuEl.dataset.rowData = JSON.stringify(rowData);
+                    menuEl.dataset.nodeId = node.id;
+
+                    // Add click handlers to menu items
+                    menuEl.querySelectorAll('.geo-grid-context-menu-item:not(.disabled)').forEach(item => {
+                        item.onclick = (e) => {
+                            e.stopPropagation();
+                            const action = item.dataset.action;
+                            handleContextMenuAction(gridId, action, rowData, node);
+                            hideContextMenu(gridId);
+                        };
+                    });
+                }
+
+                /**
+                 * Hide context menu
+                 */
+                function hideContextMenu(gridId) {
+                    const instance = instances[gridId];
+                    if (!instance || !instance.contextMenuEl) return;
+
+                    instance.contextMenuEl.classList.remove('show');
+                    // Wait for animation to complete before hiding
+                    setTimeout(() => {
+                        if (!instance.contextMenuEl.classList.contains('show')) {
+                            instance.contextMenuEl.style.display = 'none';
+                        }
+                    }, 150);
+                }
+
+                /**
+                 * Get default context menu items based on grid config
+                 */
+                function getDefaultContextMenuItems(config) {
+                    const items = [];
+
+                    // View action (if actions enabled)
+                    if (config.showActions) {
+                        items.push({
+                            action: 'view',
+                            label: 'View Details',
+                            icon: 'eye',
+                        });
+                    }
+
+                    // Edit action (if editable)
+                    if (config.editable) {
+                        items.push({
+                            action: 'edit',
+                            label: 'Edit Row',
+                            icon: 'pencil',
+                        });
+                    }
+
+                    // Divider
+                    if (items.length > 0) {
+                        items.push({ divider: true });
+                    }
+
+                    // Copy action
+                    items.push({
+                        action: 'copy',
+                        label: 'Copy Row Data',
+                        icon: 'copy',
+                    });
+
+                    // Delete action (always available)
+                    items.push({
+                        action: 'delete',
+                        label: 'Delete Row',
+                        icon: 'trash',
+                        class: 'danger',
+                    });
+
+                    return items;
+                }
+
+                /**
+                 * Build context menu HTML
+                 */
+                function buildContextMenuHtml(gridId, items, rowData, node) {
+                    let html = '';
+
+                    items.forEach((item, index) => {
+                        // Divider
+                        if (item.divider) {
+                            html += '<div class="geo-grid-context-menu-divider"></div>';
+                            return;
+                        }
+
+                        // Header (non-clickable label)
+                        if (item.header) {
+                            html += `<div class="geo-grid-context-menu-header">${escapeHtml(item.header)}</div>`;
+                            return;
+                        }
+
+                        // Check if item should be visible (dynamic visibility)
+                        if (typeof item.visible === 'function' && !item.visible(rowData)) {
+                            return;
+                        }
+
+                        // Check if item should be disabled
+                        let isDisabled = false;
+                        if (typeof item.disabled === 'function') {
+                            isDisabled = item.disabled(rowData);
+                        } else if (item.disabled === true) {
+                            isDisabled = true;
+                        }
+
+                        // Build item classes
+                        const classes = ['geo-grid-context-menu-item'];
+                        if (isDisabled) classes.push('disabled');
+                        if (item.class) classes.push(item.class);
+
+                        // Icon
+                        let iconHtml = '';
+                        if (item.icon) {
+                            iconHtml = `<i class="ki-outline ki-${item.icon} fs-5"></i>`;
+                        } else if (item.iconHtml) {
+                            iconHtml = item.iconHtml;
+                        }
+
+                        // Shortcut hint
+                        let shortcutHtml = '';
+                        if (item.shortcut) {
+                            shortcutHtml = `<span class="geo-grid-context-menu-shortcut">${escapeHtml(item.shortcut)}</span>`;
+                        }
+
+                        html += `
+                            <div class="${classes.join(' ')}" data-action="${escapeHtml(item.action || '')}">
+                                ${iconHtml}
+                                <span class="geo-grid-context-menu-label">${escapeHtml(item.label)}</span>
+                                ${shortcutHtml}
+                            </div>
+                        `;
+                    });
+
+                    return html;
+                }
+
+                /**
+                 * Handle context menu action
+                 */
+                function handleContextMenuAction(gridId, action, rowData, node) {
+                    const instance = instances[gridId];
+                    if (!instance) return;
+
+                    const config = instance.config;
+
+                    // Call custom callback if defined
+                    if (config.callbacks.onContextMenuAction) {
+                        executeCallback(config.callbacks.onContextMenuAction, {
+                            action: action,
+                            rowData: rowData,
+                            node: node,
+                            gridId: gridId,
+                            api: instance.api,
+                        });
+                        return;
+                    }
+
+                    // Default action handlers
+                    switch (action) {
+                        case 'copy':
+                            copyRowToClipboard(rowData);
+                            break;
+                        case 'delete':
+                            if (confirm('Are you sure you want to delete this row?')) {
+                                instance.api.applyTransaction({ remove: [rowData] });
+                            }
+                            break;
+                        case 'edit':
+                            // Start editing first editable cell
+                            const firstEditableCol = config.columns.find(col => col.editable !== false);
+                            if (firstEditableCol) {
+                                instance.api.startEditingCell({
+                                    rowIndex: node.rowIndex,
+                                    colKey: firstEditableCol.key,
+                                });
+                            }
+                            break;
+                        case 'view':
+                            console.log('View row:', rowData);
+                            break;
+                        default:
+                            console.log(`Context menu action: ${action}`, rowData);
+                    }
+                }
+
+                /**
+                 * Copy row data to clipboard
+                 */
+                function copyRowToClipboard(rowData) {
+                    const text = JSON.stringify(rowData, null, 2);
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(text).then(() => {
+                            console.log('Row data copied to clipboard');
+                        }).catch(err => {
+                            console.error('Failed to copy:', err);
+                        });
+                    } else {
+                        // Fallback for older browsers
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                    }
                 }
 
                 /**
@@ -2234,6 +2710,50 @@
                         if (instance && instance.config.data) {
                             instance.api.setGridOption('rowData', [...instance.config.data]);
                         }
+                    },
+
+                    // ========================================
+                    // CONTEXT MENU API
+                    // ========================================
+
+                    /**
+                     * Show context menu programmatically
+                     */
+                    showContextMenu(gridId, rowData, x, y) {
+                        const instance = instances[gridId];
+                        if (!instance) return;
+
+                        // Create a fake event and node for the menu
+                        const fakeEvent = { clientX: x, clientY: y };
+                        const fakeNode = { id: rowData[instance.config.rowKey] || rowData.id };
+
+                        showContextMenu(gridId, fakeEvent, rowData, fakeNode);
+                    },
+
+                    /**
+                     * Hide context menu
+                     */
+                    hideContextMenu(gridId) {
+                        hideContextMenu(gridId);
+                    },
+
+                    /**
+                     * Update context menu items dynamically
+                     */
+                    setContextMenuItems(gridId, items) {
+                        const instance = instances[gridId];
+                        if (instance) {
+                            instance.config.contextMenuItems = items;
+                        }
+                    },
+
+                    /**
+                     * Get current context menu items
+                     */
+                    getContextMenuItems(gridId) {
+                        const instance = instances[gridId];
+                        if (!instance) return [];
+                        return instance.config.contextMenuItems || getDefaultContextMenuItems(instance.config);
                     },
                 };
             })();
