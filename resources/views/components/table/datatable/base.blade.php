@@ -1173,6 +1173,22 @@
         right: -2px;
     }
 
+    /* Invalid drop zone - when dragging outside table */
+    .geo-datatable-wrapper.column-reorderable table thead th.geo-col-drag-invalid {
+        opacity: 0.3;
+        background: var(--bs-danger, #f1416c) !important;
+        color: white !important;
+    }
+
+    /* Visual feedback: highlight thead when dragging */
+    .geo-datatable-wrapper.column-reorderable table thead {
+        transition: box-shadow 0.2s ease;
+    }
+
+    .geo-datatable-wrapper.column-reorderable table thead:has(.geo-col-dragging) {
+        box-shadow: inset 0 0 0 2px var(--bs-primary, #3699ff);
+    }
+
     .geo-datatable-wrapper.column-reorderable table thead th .geo-drag-handle {
         display: inline-block;
         margin-right: 0.5rem;
@@ -1926,7 +1942,37 @@
 
             // Get all draggable header cells (skip fixed columns like checkbox/index)
             var headers = table.querySelectorAll('thead th');
-            var dragState = { dragging: null, dragIndex: -1 };
+            var thead = table.querySelector('thead');
+            var dragState = { dragging: null, dragIndex: -1, validDrop: false };
+
+            // Add table-level dragover to keep drag valid within table
+            thead.addEventListener('dragover', function(e) {
+                if (dragState.dragging) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    dragState.validDrop = true;
+                }
+            });
+
+            // When drag leaves the thead entirely, mark as invalid
+            thead.addEventListener('dragleave', function(e) {
+                // Check if actually leaving thead (not entering a child)
+                if (!thead.contains(e.relatedTarget)) {
+                    dragState.validDrop = false;
+                    // Add visual feedback that drop is invalid
+                    if (dragState.dragging) {
+                        dragState.dragging.classList.add('geo-col-drag-invalid');
+                    }
+                }
+            });
+
+            // Re-entering thead removes invalid state
+            thead.addEventListener('dragenter', function(e) {
+                dragState.validDrop = true;
+                if (dragState.dragging) {
+                    dragState.dragging.classList.remove('geo-col-drag-invalid');
+                }
+            });
 
             headers.forEach(function(th, index) {
                 // Skip fixed columns (checkbox, index, actions)
@@ -1939,9 +1985,19 @@
                 th.addEventListener('dragstart', function(e) {
                     dragState.dragging = th;
                     dragState.dragIndex = index;
+                    dragState.validDrop = true;
                     th.classList.add('geo-col-dragging');
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', index);
+                    
+                    // Set a custom drag image (optional - helps with visual feedback)
+                    if (e.dataTransfer.setDragImage) {
+                        var clone = th.cloneNode(true);
+                        clone.style.cssText = 'position:absolute;top:-1000px;background:#fff;padding:8px 12px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+                        document.body.appendChild(clone);
+                        e.dataTransfer.setDragImage(clone, 20, 20);
+                        setTimeout(function() { document.body.removeChild(clone); }, 0);
+                    }
                 });
 
                 // Drag over
@@ -1987,18 +2043,22 @@
 
                     // Clean up
                     th.classList.remove('geo-col-drag-over', 'geo-col-drag-over-right');
+                    dragState.validDrop = true; // Mark as successful drop
                 });
 
-                // Drag end
+                // Drag end - this fires regardless of whether drop was successful
                 th.addEventListener('dragend', function(e) {
-                    th.classList.remove('geo-col-dragging');
-                    dragState.dragging = null;
-                    dragState.dragIndex = -1;
-
+                    th.classList.remove('geo-col-dragging', 'geo-col-drag-invalid');
+                    
                     // Clean up all drag-over classes
                     headers.forEach(function(h) {
                         h.classList.remove('geo-col-drag-over', 'geo-col-drag-over-right');
                     });
+                    
+                    // Reset drag state
+                    dragState.dragging = null;
+                    dragState.dragIndex = -1;
+                    dragState.validDrop = false;
                 });
             });
         },

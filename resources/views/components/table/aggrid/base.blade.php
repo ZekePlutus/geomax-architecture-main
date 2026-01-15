@@ -1673,6 +1673,12 @@
 
                         // Suppress features
                         suppressMovableColumns: config.suppressMovable,
+                        
+                        // ========================================
+                        // COLUMN DRAG PROTECTION
+                        // ========================================
+                        // Prevent columns from being hidden when dragged outside the grid
+                        suppressDragLeaveHidesColumns: true,
 
                         // ========================================
                         // INLINE EDITING
