@@ -1641,6 +1641,10 @@
             // Check if already initialized - prevent reinitialize error
             if (this.instances[tableId] && this.instances[tableId].dt) {
                 console.debug('GeoTable: Table already initialized:', tableId);
+                // Still setup features that might not have been initialized
+                this._waitForDependencies(function() {
+                    self._setupAdditionalFeatures(tableId, config);
+                });
                 return this.instances[tableId].dt;
             }
 
@@ -1648,6 +1652,18 @@
             var $table = jQuery('#' + tableId);
             if ($table.length && jQuery.fn.DataTable.isDataTable($table)) {
                 console.debug('GeoTable: DataTable already exists on element:', tableId);
+                // Create instance if not exists and setup features
+                if (!this.instances[tableId]) {
+                    this.instances[tableId] = {
+                        config: config,
+                        selected: [],
+                        dt: $table.DataTable(),
+                        expandedRows: {}
+                    };
+                }
+                this._waitForDependencies(function() {
+                    self._setupAdditionalFeatures(tableId, config);
+                });
                 return $table.DataTable();
             }
 
@@ -1989,7 +2005,7 @@
                     th.classList.add('geo-col-dragging');
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', index);
-                    
+
                     // Set a custom drag image (optional - helps with visual feedback)
                     if (e.dataTransfer.setDragImage) {
                         var clone = th.cloneNode(true);
@@ -2049,12 +2065,12 @@
                 // Drag end - this fires regardless of whether drop was successful
                 th.addEventListener('dragend', function(e) {
                     th.classList.remove('geo-col-dragging', 'geo-col-drag-invalid');
-                    
+
                     // Clean up all drag-over classes
                     headers.forEach(function(h) {
                         h.classList.remove('geo-col-drag-over', 'geo-col-drag-over-right');
                     });
-                    
+
                     // Reset drag state
                     dragState.dragging = null;
                     dragState.dragIndex = -1;
@@ -2250,14 +2266,17 @@
 
             // Double-check: prevent reinitialize if already a DataTable
             if (jQuery.fn.DataTable.isDataTable($table)) {
-                console.debug('GeoTable: Skipping init - already a DataTable:', tableId);
+                console.debug('GeoTable: Skipping DataTable init - already initialized:', tableId);
                 if (!this.instances[tableId]) {
                     this.instances[tableId] = {
                         config: config,
                         selected: [],
-                        dt: $table.DataTable()
+                        dt: $table.DataTable(),
+                        expandedRows: {}
                     };
                 }
+                // Still need to setup features that don't depend on DataTable initialization
+                this._setupAdditionalFeatures(tableId, config);
                 return;
             }
 
@@ -2265,7 +2284,8 @@
             this.instances[tableId] = {
                 config: config,
                 selected: [],
-                dt: null
+                dt: null,
+                expandedRows: {}
             };
 
             // Build DataTables options
@@ -2275,28 +2295,41 @@
             var dt = $table.DataTable(dtOptions);
             this.instances[tableId].dt = dt;
 
-            // Setup selection handling
-            if (config.selectable) {
-                this._setupSelection(tableId, config);
-            }
-
-            // Setup row click handling
-            if (config.callbacks.onRowClick) {
-                this._setupRowClick(tableId, config);
-            }
-
-            // Setup column reordering
-            if (config.columnReorderable) {
-                this._setupColumnReorder(tableId);
-            }
-
-            // Setup row details / expandable rows
-            if (config.rowDetails) {
-                this._setupRowDetails(tableId, config);
-            }
+            // Setup additional features
+            this._setupAdditionalFeatures(tableId, config);
 
             // Trigger init callback
             this._triggerCallback(config.callbacks.onInit, [dt, tableId]);
+        },
+
+        /**
+         * Setup additional features that work independently of DataTable initialization
+         * This is called both during normal init and when skipping reinit
+         */
+        _setupAdditionalFeatures: function(tableId, config) {
+            // Setup selection handling
+            if (config.selectable && !this.instances[tableId]._selectionSetup) {
+                this._setupSelection(tableId, config);
+                this.instances[tableId]._selectionSetup = true;
+            }
+
+            // Setup row click handling
+            if (config.callbacks.onRowClick && !this.instances[tableId]._rowClickSetup) {
+                this._setupRowClick(tableId, config);
+                this.instances[tableId]._rowClickSetup = true;
+            }
+
+            // Setup column reordering
+            if (config.columnReorderable && !this.instances[tableId]._columnReorderSetup) {
+                this._setupColumnReorder(tableId);
+                this.instances[tableId]._columnReorderSetup = true;
+            }
+
+            // Setup row details / expandable rows
+            if (config.rowDetails && !this.instances[tableId]._rowDetailsSetup) {
+                this._setupRowDetails(tableId, config);
+                this.instances[tableId]._rowDetailsSetup = true;
+            }
         },
 
         _buildDTOptions: function(tableId, config) {

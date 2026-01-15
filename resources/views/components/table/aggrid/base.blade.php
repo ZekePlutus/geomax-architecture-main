@@ -1673,7 +1673,7 @@
 
                         // Suppress features
                         suppressMovableColumns: config.suppressMovable,
-                        
+
                         // ========================================
                         // COLUMN DRAG PROTECTION
                         // ========================================
