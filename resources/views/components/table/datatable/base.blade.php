@@ -171,6 +171,46 @@
     <!-- JS API: GeoTable.getColumnOrder(id), GeoTable.setColumnOrder(id, ['col1', 'col2']), GeoTable.resetColumnOrder(id) -->
 
     ================================================================================
+    RTL / LOCALE SUPPORT
+    ================================================================================
+
+    AUTO-DETECT RTL (from HTML dir attribute):
+    -----------------------------------------
+    If your page has <html dir="rtl">, the table automatically enables RTL mode.
+
+    FORCE RTL MODE:
+    ---------------
+    <x-table.datatable.base
+        :columns="$columns"
+        :data="$users"
+        :rtl="true"
+        locale="ar"
+        :datatable="true"
+    />
+
+    ARABIC WITH ALL FEATURES:
+    -------------------------
+    <x-table.datatable.base
+        :columns="[
+            ['key' => 'name', 'label' => 'الاسم'],
+            ['key' => 'email', 'label' => 'البريد الإلكتروني'],
+        ]"
+        :data="$users"
+        :rtl="true"
+        locale="ar"
+        :datatable="true"
+        :pagination="true"
+        :searchable="true"
+    />
+
+    SUPPORTED LOCALES:
+    - ar (Arabic) - Full translation
+    - he (Hebrew) - Full translation
+    - fa (Farsi/Persian) - Full translation
+    - fr (French) - Full translation
+    - Default: English (en)
+
+    ================================================================================
     COLUMN DEFINITION SCHEMA (Abstract - Not DataTables Specific)
     ================================================================================
 
@@ -294,6 +334,12 @@
     'compact' => false,                     // Compact/dense mode
 
     // ============================================
+    // RTL / LOCALE SUPPORT
+    // ============================================
+    'rtl' => null,                          // Enable RTL mode (null = auto-detect from HTML dir, true/false = force)
+    'locale' => null,                       // Locale code ('ar', 'he', 'fa', 'en', 'fr', etc.) - auto-detect if null
+
+    // ============================================
     // STATES
     // ============================================
     'loading' => false,                     // Initial loading state
@@ -415,6 +461,9 @@
         'rowKey' => $rowKey,
         'showIndex' => $showIndex,
         'showActions' => $showActions,
+        // RTL / Locale
+        'rtl' => $rtl,
+        'locale' => $locale ?? app()->getLocale(),
         // Bulk Actions
         'bulkActions' => $bulkActions,
         'onBulkAction' => $onBulkAction,
@@ -1126,6 +1175,117 @@
             text-align: center !important;
         }
     }
+
+    /* ============================================ */
+    /* RTL (Right-to-Left) SUPPORT                 */
+    /* ============================================ */
+    [dir="rtl"] .geo-datatable-wrapper,
+    .geo-datatable-wrapper[dir="rtl"] {
+        direction: rtl;
+        text-align: right;
+    }
+
+    [dir="rtl"] .geo-datatable-toolbar,
+    .geo-datatable-wrapper[dir="rtl"] .geo-datatable-toolbar {
+        flex-direction: row-reverse;
+    }
+
+    [dir="rtl"] .geo-bulk-toolbar,
+    .geo-datatable-wrapper[dir="rtl"] .geo-bulk-toolbar {
+        flex-direction: row-reverse;
+    }
+
+    [dir="rtl"] .geo-bulk-count,
+    .geo-datatable-wrapper[dir="rtl"] .geo-bulk-count {
+        margin-left: 1rem;
+        margin-right: 0;
+    }
+
+    [dir="rtl"] .geo-bulk-actions,
+    .geo-datatable-wrapper[dir="rtl"] .geo-bulk-actions {
+        margin-left: 0;
+        margin-right: auto;
+    }
+
+    [dir="rtl"] .dataTables_wrapper .dataTables_length,
+    .geo-datatable-wrapper[dir="rtl"] .dataTables_wrapper .dataTables_length {
+        float: right;
+        text-align: right;
+    }
+
+    [dir="rtl"] .dataTables_wrapper .dataTables_filter,
+    .geo-datatable-wrapper[dir="rtl"] .dataTables_wrapper .dataTables_filter {
+        float: left;
+        text-align: left;
+    }
+
+    [dir="rtl"] .dataTables_wrapper .dataTables_info,
+    .geo-datatable-wrapper[dir="rtl"] .dataTables_wrapper .dataTables_info {
+        float: right;
+        text-align: right;
+    }
+
+    [dir="rtl"] .dataTables_wrapper .dataTables_paginate,
+    .geo-datatable-wrapper[dir="rtl"] .dataTables_wrapper .dataTables_paginate {
+        float: left;
+        text-align: left;
+    }
+
+    [dir="rtl"] .dataTables_wrapper .dataTables_paginate .paginate_button,
+    .geo-datatable-wrapper[dir="rtl"] .dataTables_wrapper .dataTables_paginate .paginate_button {
+        margin-left: 0;
+        margin-right: 0.25rem;
+    }
+
+    [dir="rtl"] .geo-column-dropdown,
+    .geo-datatable-wrapper[dir="rtl"] .geo-column-dropdown {
+        left: auto;
+        right: 0;
+        text-align: right;
+    }
+
+    [dir="rtl"] .geo-column-toggle-item label,
+    .geo-datatable-wrapper[dir="rtl"] .geo-column-toggle-item label {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+
+    [dir="rtl"] .geo-column-toggle-item input,
+    .geo-datatable-wrapper[dir="rtl"] .geo-column-toggle-item input {
+        margin-left: 0.5rem;
+        margin-right: 0;
+    }
+
+    /* RTL Table Headers */
+    [dir="rtl"] table.dataTable thead th,
+    [dir="rtl"] table.dataTable thead td,
+    .geo-datatable-wrapper[dir="rtl"] table.dataTable thead th,
+    .geo-datatable-wrapper[dir="rtl"] table.dataTable thead td {
+        text-align: right;
+    }
+
+    /* RTL Table Cells */
+    [dir="rtl"] table.dataTable tbody td,
+    .geo-datatable-wrapper[dir="rtl"] table.dataTable tbody td {
+        text-align: right;
+    }
+
+    /* RTL Sorting Icons */
+    [dir="rtl"] table.dataTable thead .sorting::after,
+    [dir="rtl"] table.dataTable thead .sorting_asc::after,
+    [dir="rtl"] table.dataTable thead .sorting_desc::after,
+    .geo-datatable-wrapper[dir="rtl"] table.dataTable thead .sorting::after,
+    .geo-datatable-wrapper[dir="rtl"] table.dataTable thead .sorting_asc::after,
+    .geo-datatable-wrapper[dir="rtl"] table.dataTable thead .sorting_desc::after {
+        left: 0.5rem;
+        right: auto;
+    }
+
+    /* RTL Empty State */
+    [dir="rtl"] .geo-datatable-empty,
+    .geo-datatable-wrapper[dir="rtl"] .geo-datatable-empty {
+        direction: rtl;
+    }
 </style>
 @endpush
 
@@ -1137,6 +1297,113 @@
  */
 (function() {
     'use strict';
+
+    // ========================================
+    // LOCALE TRANSLATIONS FOR DATATABLE
+    // ========================================
+    const dtLocaleTexts = {
+        // Arabic
+        ar: {
+            emptyTable: 'لا توجد بيانات',
+            info: 'عرض _START_ إلى _END_ من _TOTAL_ سجل',
+            infoEmpty: 'عرض 0 إلى 0 من 0 سجل',
+            infoFiltered: '(مفلتر من _MAX_ سجل)',
+            lengthMenu: 'عرض _MENU_ سجل',
+            loadingRecords: 'جاري التحميل...',
+            processing: 'جاري المعالجة...',
+            search: 'بحث:',
+            zeroRecords: 'لم يتم العثور على سجلات مطابقة',
+            paginate: {
+                first: 'الأول',
+                last: 'الأخير',
+                next: 'التالي',
+                previous: 'السابق'
+            },
+            aria: {
+                sortAscending: ': تفعيل لترتيب العمود تصاعدياً',
+                sortDescending: ': تفعيل لترتيب العمود تنازلياً'
+            },
+            select: {
+                rows: {
+                    _: '%d صفوف محددة',
+                    0: '',
+                    1: '1 صف محدد'
+                }
+            }
+        },
+        // Hebrew
+        he: {
+            emptyTable: 'אין נתונים זמינים בטבלה',
+            info: 'מציג _START_ עד _END_ מתוך _TOTAL_ רשומות',
+            infoEmpty: 'מציג 0 עד 0 מתוך 0 רשומות',
+            infoFiltered: '(מסונן מתוך _MAX_ רשומות)',
+            lengthMenu: 'הצג _MENU_ רשומות',
+            loadingRecords: 'טוען...',
+            processing: 'מעבד...',
+            search: 'חיפוש:',
+            zeroRecords: 'לא נמצאו רשומות תואמות',
+            paginate: {
+                first: 'ראשון',
+                last: 'אחרון',
+                next: 'הבא',
+                previous: 'הקודם'
+            }
+        },
+        // Farsi/Persian
+        fa: {
+            emptyTable: 'هیچ داده‌ای موجود نیست',
+            info: 'نمایش _START_ تا _END_ از _TOTAL_ رکورد',
+            infoEmpty: 'نمایش 0 تا 0 از 0 رکورد',
+            infoFiltered: '(فیلتر شده از _MAX_ رکورد)',
+            lengthMenu: 'نمایش _MENU_ رکورد',
+            loadingRecords: 'در حال بارگذاری...',
+            processing: 'در حال پردازش...',
+            search: 'جستجو:',
+            zeroRecords: 'رکوردی یافت نشد',
+            paginate: {
+                first: 'اولین',
+                last: 'آخرین',
+                next: 'بعدی',
+                previous: 'قبلی'
+            }
+        },
+        // French
+        fr: {
+            emptyTable: 'Aucune donnée disponible',
+            info: 'Affichage de _START_ à _END_ sur _TOTAL_ entrées',
+            infoEmpty: 'Affichage de 0 à 0 sur 0 entrées',
+            infoFiltered: '(filtré depuis _MAX_ entrées)',
+            lengthMenu: 'Afficher _MENU_ entrées',
+            loadingRecords: 'Chargement...',
+            processing: 'Traitement...',
+            search: 'Rechercher:',
+            zeroRecords: 'Aucun enregistrement correspondant trouvé',
+            paginate: {
+                first: 'Premier',
+                last: 'Dernier',
+                next: 'Suivant',
+                previous: 'Précédent'
+            }
+        }
+    };
+
+    /**
+     * Get locale text for DataTables
+     */
+    function getDtLocaleText(locale) {
+        // Normalize locale (e.g., 'ar_SA' -> 'ar', 'en-US' -> 'en')
+        const normalizedLocale = locale ? locale.split(/[-_]/)[0].toLowerCase() : null;
+        return dtLocaleTexts[normalizedLocale] || null;
+    }
+
+    /**
+     * Check if locale is RTL
+     */
+    function isRtlLocale(locale) {
+        const rtlLocales = ['ar', 'he', 'fa', 'ur'];
+        const normalizedLocale = locale ? locale.split(/[-_]/)[0].toLowerCase() : null;
+        return rtlLocales.includes(normalizedLocale);
+    }
 
     // Namespace
     window.GeoTable = window.GeoTable || {
@@ -1738,6 +2005,30 @@
 
         _buildDTOptions: function(tableId, config) {
             var self = this;
+
+            // ========================================
+            // RTL DETECTION
+            // ========================================
+            // Determine RTL: use explicit config, or auto-detect from HTML dir attribute or locale
+            var isRtl = config.rtl !== null ? config.rtl :
+                (document.documentElement.dir === 'rtl' || document.body.dir === 'rtl' || isRtlLocale(config.locale));
+
+            // Get locale-specific text (or use defaults)
+            var localeText = getDtLocaleText(config.locale);
+            var defaultLanguage = {
+                emptyTable: '<div class="geo-datatable-empty"><i class="ki-outline ki-file-deleted"></i><div>No data available</div></div>',
+                zeroRecords: '<div class="geo-datatable-empty"><i class="ki-outline ki-magnifier"></i><div>No matching records found</div></div>',
+                processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
+            };
+
+            // Build language object with locale overrides
+            var language = localeText ? Object.assign({}, localeText, {
+                // Keep custom HTML templates for empty/loading but override text
+                emptyTable: '<div class="geo-datatable-empty"><i class="ki-outline ki-file-deleted"></i><div>' + (localeText.emptyTable || 'No data available') + '</div></div>',
+                zeroRecords: '<div class="geo-datatable-empty"><i class="ki-outline ki-magnifier"></i><div>' + (localeText.zeroRecords || 'No matching records found') + '</div></div>',
+                processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">' + (localeText.loadingRecords || 'Loading...') + '</span></div>'
+            }) : defaultLanguage;
+
             var options = {
                 processing: config.serverSide,
                 serverSide: config.serverSide,
@@ -1749,11 +2040,7 @@
                 responsive: config.responsive,
                 stateSave: config.stateSave,
                 deferLoading: config.deferLoading ? 0 : null,
-                language: {
-                    emptyTable: '<div class="geo-datatable-empty"><i class="ki-outline ki-file-deleted"></i><div>No data available</div></div>',
-                    zeroRecords: '<div class="geo-datatable-empty"><i class="ki-outline ki-magnifier"></i><div>No matching records found</div></div>',
-                    processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
-                },
+                language: language,
                 drawCallback: function(settings) {
                     self._triggerCallback(config.callbacks.onDraw, [this.api(), tableId]);
                 }

@@ -277,6 +277,45 @@
     - html          : Render raw HTML
 
     ================================================================================
+    RTL / LOCALE SUPPORT
+    ================================================================================
+
+    AUTO-DETECT RTL (from HTML dir attribute):
+    -----------------------------------------
+    If your page has <html dir="rtl">, the grid automatically enables RTL mode.
+
+    FORCE RTL MODE:
+    ---------------
+    <x-table.aggrid.base
+        :columns="$columns"
+        :data="$users"
+        :rtl="true"
+        locale="ar"
+    />
+
+    ARABIC WITH ALL FEATURES:
+    -------------------------
+    <x-table.aggrid.base
+        :columns="[
+            ['key' => 'الاسم', 'label' => 'الاسم'],
+            ['key' => 'البريد', 'label' => 'البريد الإلكتروني'],
+        ]"
+        :data="$users"
+        :rtl="true"
+        locale="ar"
+        :sortable="true"
+        :filterable="true"
+        :pagination="true"
+    />
+
+    SUPPORTED LOCALES:
+    - ar (Arabic)
+    - he (Hebrew)
+    - fa (Farsi/Persian)
+    - fr (French)
+    - Default: English (en)
+
+    ================================================================================
     JS API (GeoGrid)
     ================================================================================
 
@@ -396,6 +435,12 @@
     'domLayout' => 'normal',                // 'normal', 'autoHeight', 'print'
     'class' => '',                          // Additional CSS classes for wrapper
     'loading' => false,                     // Show loading overlay initially
+
+    // ============================================
+    // RTL / LOCALE SUPPORT
+    // ============================================
+    'rtl' => null,                          // Enable RTL mode (null = auto-detect from HTML dir, true/false = force)
+    'locale' => null,                       // Locale code ('ar', 'he', 'fa', 'en', 'fr', etc.) - auto-detect if null
 
     // ============================================
     // EMPTY STATE
@@ -551,6 +596,9 @@
         'rowHeight' => $rowHeight,
         'headerHeight' => $headerHeight,
         'domLayout' => $domLayout,
+        // RTL / Locale
+        'rtl' => $rtl,
+        'locale' => $locale ?? app()->getLocale(),
         // Empty/Loading
         'emptyMessage' => $emptyMessage,
         'loadingMessage' => $loadingMessage,
@@ -934,6 +982,68 @@
             [data-bs-theme="dark"] .geo-grid-context-menu-divider {
                 background-color: var(--bs-gray-700, #495057);
             }
+
+            /* ========================================== */
+            /* RTL (Right-to-Left) SUPPORT               */
+            /* ========================================== */
+            [dir="rtl"] .geo-grid-wrapper,
+            .geo-grid-wrapper[dir="rtl"] {
+                direction: rtl;
+                text-align: right;
+            }
+
+            [dir="rtl"] .geo-grid-toolbar,
+            .geo-grid-wrapper[dir="rtl"] .geo-grid-toolbar {
+                flex-direction: row-reverse;
+            }
+
+            [dir="rtl"] .geo-grid-toolbar-left,
+            .geo-grid-wrapper[dir="rtl"] .geo-grid-toolbar-left {
+                flex-direction: row-reverse;
+            }
+
+            [dir="rtl"] .geo-grid-toolbar-right,
+            .geo-grid-wrapper[dir="rtl"] .geo-grid-toolbar-right {
+                flex-direction: row-reverse;
+                margin-left: 0;
+                margin-right: auto;
+            }
+
+            [dir="rtl"] .geo-grid-context-menu,
+            .geo-grid-context-menu[dir="rtl"] {
+                text-align: right;
+            }
+
+            [dir="rtl"] .geo-grid-context-menu-item,
+            .geo-grid-context-menu[dir="rtl"] .geo-grid-context-menu-item {
+                flex-direction: row-reverse;
+            }
+
+            [dir="rtl"] .geo-grid-context-menu-item i,
+            .geo-grid-context-menu[dir="rtl"] .geo-grid-context-menu-item i {
+                margin-left: 0.75rem;
+                margin-right: 0;
+            }
+
+            [dir="rtl"] .geo-grid-context-menu-item .shortcut,
+            .geo-grid-context-menu[dir="rtl"] .geo-grid-context-menu-item .shortcut {
+                margin-left: 0;
+                margin-right: auto;
+            }
+
+            /* RTL Submenu arrow */
+            [dir="rtl"] .geo-grid-context-menu-item.has-submenu::after,
+            .geo-grid-context-menu[dir="rtl"] .geo-grid-context-menu-item.has-submenu::after {
+                border-left-color: transparent;
+                border-right-color: currentColor;
+            }
+
+            /* RTL Selection count badge */
+            [dir="rtl"] .geo-grid-selection-count .btn-close,
+            .geo-grid-wrapper[dir="rtl"] .geo-grid-selection-count .btn-close {
+                margin-left: 0;
+                margin-right: 0.5rem;
+            }
         </style>
     @endpush
 @endonce
@@ -1030,6 +1140,128 @@
 
                 // Store grid instances
                 const instances = {};
+
+                // ========================================
+                // LOCALE TRANSLATIONS
+                // ========================================
+                const localeTexts = {
+                    // Arabic
+                    ar: {
+                        // Pagination
+                        page: 'صفحة',
+                        to: 'إلى',
+                        of: 'من',
+                        more: 'المزيد',
+                        next: 'التالي',
+                        previous: 'السابق',
+                        first: 'الأول',
+                        last: 'الأخير',
+                        // Filter
+                        filter: 'تصفية',
+                        filterOoo: 'تصفية...',
+                        equals: 'يساوي',
+                        notEqual: 'لا يساوي',
+                        blank: 'فارغ',
+                        notBlank: 'غير فارغ',
+                        lessThan: 'أقل من',
+                        greaterThan: 'أكبر من',
+                        lessThanOrEqual: 'أقل من أو يساوي',
+                        greaterThanOrEqual: 'أكبر من أو يساوي',
+                        inRange: 'في النطاق',
+                        contains: 'يحتوي',
+                        notContains: 'لا يحتوي',
+                        startsWith: 'يبدأ بـ',
+                        endsWith: 'ينتهي بـ',
+                        andCondition: 'و',
+                        orCondition: 'أو',
+                        applyFilter: 'تطبيق',
+                        resetFilter: 'إعادة تعيين',
+                        clearFilter: 'مسح',
+                        // Grid
+                        noRowsToShow: 'لا توجد بيانات',
+                        loading: 'جاري التحميل...',
+                        enabled: 'مفعل',
+                        disabled: 'معطل',
+                        // Selection
+                        selectAll: 'تحديد الكل',
+                        selectAllSearchResults: 'تحديد كل نتائج البحث',
+                        searchOoo: 'بحث...',
+                        // Export
+                        export: 'تصدير',
+                        csvExport: 'تصدير CSV',
+                        excelExport: 'تصدير Excel',
+                        // Copy
+                        copy: 'نسخ',
+                        copyWithHeaders: 'نسخ مع العناوين',
+                        paste: 'لصق',
+                        // Columns
+                        columns: 'الأعمدة',
+                        column: 'عمود',
+                        pinColumn: 'تثبيت العمود',
+                        autosizeThiscolumn: 'حجم تلقائي لهذا العمود',
+                        autosizeAllColumns: 'حجم تلقائي لجميع الأعمدة',
+                        resetColumns: 'إعادة تعيين الأعمدة',
+                        // Row grouping
+                        group: 'مجموعة',
+                        rowGroupColumnsEmptyMessage: 'اسحب هنا للتجميع',
+                        // Values
+                        sum: 'المجموع',
+                        count: 'العدد',
+                        avg: 'المتوسط',
+                        min: 'الأدنى',
+                        max: 'الأقصى',
+                        // Pivot
+                        pivotMode: 'وضع المحور',
+                        pivots: 'المحاور',
+                        // Row Drag
+                        rowDragRows: 'سحب الصفوف',
+                    },
+                    // Hebrew
+                    he: {
+                        page: 'עמוד',
+                        to: 'עד',
+                        of: 'מתוך',
+                        noRowsToShow: 'אין נתונים להצגה',
+                        loading: 'טוען...',
+                        filter: 'סינון',
+                        columns: 'עמודות',
+                        export: 'ייצוא',
+                    },
+                    // Farsi/Persian
+                    fa: {
+                        page: 'صفحه',
+                        to: 'تا',
+                        of: 'از',
+                        noRowsToShow: 'داده‌ای برای نمایش وجود ندارد',
+                        loading: 'در حال بارگذاری...',
+                        filter: 'فیلتر',
+                        columns: 'ستون‌ها',
+                        export: 'صادرات',
+                    },
+                    // French
+                    fr: {
+                        page: 'Page',
+                        to: 'à',
+                        of: 'sur',
+                        noRowsToShow: 'Aucune donnée à afficher',
+                        loading: 'Chargement...',
+                        filter: 'Filtre',
+                        columns: 'Colonnes',
+                        export: 'Exporter',
+                        copy: 'Copier',
+                        paste: 'Coller',
+                        selectAll: 'Tout sélectionner',
+                    },
+                };
+
+                /**
+                 * Get locale text for a specific locale
+                 */
+                function getLocaleTextForLocale(locale) {
+                    // Normalize locale (e.g., 'ar_SA' -> 'ar', 'en-US' -> 'en')
+                    const normalizedLocale = locale ? locale.split(/[-_]/)[0].toLowerCase() : null;
+                    return localeTexts[normalizedLocale] || {};
+                }
 
                 /**
                  * Create server-side datasource for AG Grid Server-Side Row Model
@@ -1281,6 +1513,13 @@
                     // Build column definitions
                     const columnDefs = buildColumnDefs(config);
 
+                    // ========================================
+                    // RTL DETECTION
+                    // ========================================
+                    // Determine RTL: use explicit config, or auto-detect from HTML dir attribute
+                    const isRtl = config.rtl !== null ? config.rtl :
+                        (document.documentElement.dir === 'rtl' || document.body.dir === 'rtl');
+
                     // Build grid options
                     const gridOptions = {
                         columnDefs: columnDefs,
@@ -1294,6 +1533,11 @@
                         },
                         // Row ID
                         getRowId: (params) => String(params.data[config.rowKey] || params.data.id),
+
+                        // ========================================
+                        // RTL MODE
+                        // ========================================
+                        enableRtl: isRtl,
 
                         // Sorting
                         multiSortKey: config.multiSort ? 'ctrl' : null,
@@ -1374,6 +1618,11 @@
                                 <span>${config.emptyMessage}</span>
                             </div>
                         `,
+
+                        // ========================================
+                        // LOCALE TEXT (for RTL languages like Arabic)
+                        // ========================================
+                        localeText: GeoGrid.getLocaleText(config.locale),
 
                         // Event handlers
                         onGridReady: (params) => {
@@ -2418,6 +2667,15 @@
 
                 return {
                     init,
+
+                    /**
+                     * Get locale text for AG Grid localization
+                     * @param {string} locale - Locale code (e.g., 'ar', 'fr', 'he')
+                     * @returns {Object} Locale text object for AG Grid
+                     */
+                    getLocaleText(locale) {
+                        return getLocaleTextForLocale(locale);
+                    },
 
                     getInstance(gridId) {
                         return instances[gridId]?.api || null;
