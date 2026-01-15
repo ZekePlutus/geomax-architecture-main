@@ -65,14 +65,66 @@
         :page-size-options="[10, 25, 50, 100]"
     />
 
-    5. SERVER-SIDE DATA SOURCE
-    --------------------------
+    5. SERVER-SIDE DATA SOURCE (Simple AJAX)
+    ----------------------------------------
     <x-table.aggrid.base
         :columns="$columns"
         ajax-url="/api/users"
         :server-side="true"
         :pagination="true"
     />
+
+    5b. SERVER-SIDE WITH INFINITE SCROLL
+    -------------------------------------
+    For very large datasets with lazy loading:
+    <x-table.aggrid.base
+        :columns="$columns"
+        ajax-url="/api/users"
+        :server-side="true"
+        :server-side-infinite="true"
+        :cache-block-size="100"
+        :filterable="true"
+        :sortable="true"
+    />
+
+    Expected server response format:
+    {
+        "data": [...],           // Array of row objects
+        "total": 10000,          // Total row count (optional)
+        "meta": { "total": N }   // Alternative: Laravel pagination format
+    }
+
+    Server receives these query params:
+    - page, per_page: Laravel-style pagination
+    - start, limit: Offset-based pagination
+    - sort_by, sort_dir: Primary sort column
+    - filters: Object with column filters
+
+    5c. SERVER-SIDE WITH CALLBACKS
+    ------------------------------
+    <x-table.aggrid.base
+        :columns="$columns"
+        ajax-url="/api/users"
+        :server-side="true"
+        :pagination="true"
+        on-server-request="handleBeforeRequest"
+        on-server-response="handleAfterResponse"
+        on-server-error="handleServerError"
+    />
+
+    <script>
+        function handleBeforeRequest(params, request) {
+            // Modify params before sending to server
+            params.custom_param = 'value';
+        }
+        function handleAfterResponse(response) {
+            // Process response before rendering
+            console.log('Loaded', response.total, 'rows');
+        }
+        function handleServerError(error) {
+            alert('Failed to load data');
+        }
+    </script>
 
     6. TABLE WITH CUSTOM CELL RENDERING
     -----------------------------------
@@ -110,6 +162,52 @@
         </x-slot:actions>
     </x-table.aggrid.base>
 
+    9. INLINE CELL EDITING
+    ----------------------
+    <x-table.aggrid.base
+        :columns="[
+            ['key' => 'name', 'label' => 'Name', 'editor' => 'text'],
+            ['key' => 'price', 'label' => 'Price', 'editor' => 'number', 'min' => 0],
+            ['key' => 'status', 'label' => 'Status', 'editor' => 'select', 'options' => ['active', 'inactive', 'pending']],
+            ['key' => 'notes', 'label' => 'Notes', 'editor' => 'textarea', 'editable' => true],
+            ['key' => 'id', 'label' => 'ID', 'editable' => false], // Not editable
+        ]"
+        :data="$users"
+        :editable="true"
+        edit-type="cell"
+        on-cell-value-changed="handleCellChange"
+    />
+
+    // Callback receives: { rowData, field, oldValue, newValue, rowIndex, api }
+    <script>
+        function handleCellChange(event) {
+            console.log(`Changed ${event.field} from ${event.oldValue} to ${event.newValue}`);
+            // Save to server...
+        }
+    </script>
+
+    10. ROW DRAGGING (REORDER)
+    --------------------------
+    <x-table.aggrid.base
+        :columns="$columns"
+        :data="$users"
+        :row-draggable="true"
+        :row-drag-managed="true"
+        on-row-drag-end="handleRowReorder"
+    />
+
+    <script>
+        function handleRowReorder(event) {
+            console.log('New order:', event.allRows);
+            // Save new order to server...
+            const ids = event.allRows.map(row => row.id);
+            fetch('/api/reorder', {
+                method: 'POST',
+                body: JSON.stringify({ ids })
+            });
+        }
+    </script>
+
     ================================================================================
     COLUMN DEFINITION SCHEMA
     ================================================================================
@@ -132,6 +230,18 @@
         'headerClass'   => 'bg-light',          // Optional: header CSS class
         'render'        => 'date|currency|...', // Optional: built-in renderer
         'format'        => 'Y-m-d',             // Optional: format for render
+
+        // INLINE EDITING options:
+        'editable'      => true|false,          // Optional: override global editable setting
+        'editor'        => 'text|number|select|date|textarea|checkbox', // Editor type
+        'options'       => [],                  // For select editor: dropdown options
+        'min'           => 0,                   // For number editor
+        'max'           => 100,                 // For number editor
+        'step'          => 1,                   // For number editor
+        'precision'     => 2,                   // For number editor
+        'maxLength'     => 500,                 // For textarea editor
+        'rows'          => 5,                   // For textarea editor
+        'validator'     => 'required|email|...',// Validation rule
 
         // Renderer-specific options (same as DataTable):
         'symbol'        => '$',                 // For currency
@@ -179,7 +289,7 @@
     // Clear selection
     window.GeoGrid.clearSelection('grid-id')
 
-    // Refresh data
+    // Refresh data (works for both client-side and server-side)
     window.GeoGrid.refresh('grid-id')
 
     // Export
@@ -194,6 +304,17 @@
     // Get/Set column state
     window.GeoGrid.getColumnState('grid-id')
     window.GeoGrid.setColumnState('grid-id', state)
+
+    // SERVER-SIDE SPECIFIC:
+
+    // Refresh server-side data with options
+    window.GeoGrid.refreshServerSide('grid-id', { purge: true })
+
+    // Get server-side cache info
+    window.GeoGrid.getServerSideCacheInfo('grid-id')
+
+    // Purge cache and reload all data
+    window.GeoGrid.purgeServerSideCache('grid-id')
 
     ================================================================================
 --}}
@@ -221,7 +342,11 @@
     // ============================================
     'data' => [],                           // Static data array
     'ajaxUrl' => null,                      // URL for AJAX data source
-    'serverSide' => false,                  // Enable server-side mode
+    'serverSide' => false,                  // Enable server-side row model (lazy loading)
+    'serverSideInfinite' => false,          // Use infinite scroll with server-side
+    'cacheBlockSize' => 100,                // Rows per block for server-side
+    'maxBlocksInCache' => 10,               // Max blocks to keep in cache
+    'totalRows' => null,                    // Total row count (if known) for server-side
 
     // ============================================
     // SORTING
@@ -291,6 +416,24 @@
     'stateSave' => false,                   // Save column state to localStorage
 
     // ============================================
+    // INLINE EDITING
+    // ============================================
+    'editable' => false,                    // Enable inline cell editing globally
+    'editType' => 'fullRow',                // 'fullRow' (edit entire row) or 'cell' (single cell)
+    'singleClickEdit' => false,             // Start edit on single click (default: double-click)
+    'stopEditingWhenCellsLoseFocus' => true,// Stop editing when clicking outside
+    'undoRedoCellEditing' => false,         // Enable undo/redo for cell edits
+    'undoRedoCellEditingLimit' => 20,       // Max undo steps
+
+    // ============================================
+    // ROW DRAGGING
+    // ============================================
+    'rowDraggable' => false,                // Enable row dragging
+    'rowDragManaged' => true,               // Let AG Grid handle row order
+    'rowDragEntireRow' => false,            // Drag from anywhere (not just drag handle)
+    'rowDragMultiRow' => false,             // Allow dragging multiple selected rows
+
+    // ============================================
     // CALLBACKS (JavaScript function names)
     // ============================================
     'onInit' => null,                       // Called after grid initialized
@@ -299,7 +442,14 @@
     'onSortChange' => null,                 // Called when sort changes
     'onFilterChange' => null,               // Called when filters change
     'onColumnResize' => null,               // Called when column resized
-    'onColumnMove' => null,                 // Called when column moved
+    'onColumnMove' => null,                // Called when column moved
+    'onServerRequest' => null,              // Called before server-side request (can modify params)
+    'onServerResponse' => null,             // Called after server-side response (can modify data)
+    'onServerError' => null,                // Called on server-side request error
+    'onCellValueChanged' => null,           // Called when cell value changes (inline editing)
+    'onRowValueChanged' => null,            // Called when row editing completes (fullRow mode)
+    'onRowDragEnd' => null,                 // Called when row drag ends
+    'onRowDragMove' => null,                // Called during row drag
 ])
 
 @php
@@ -362,6 +512,10 @@
         'data' => !$ajaxUrl ? $data : [],
         'ajaxUrl' => $ajaxUrl,
         'serverSide' => $serverSide,
+        'serverSideInfinite' => $serverSideInfinite,
+        'cacheBlockSize' => $cacheBlockSize,
+        'maxBlocksInCache' => $maxBlocksInCache,
+        'totalRows' => $totalRows,
         // Sorting
         'sortable' => $sortable,
         'multiSort' => $multiSort,
@@ -397,6 +551,18 @@
         'exportFilename' => $exportFilename,
         // State
         'stateSave' => $stateSave,
+        // Inline Editing
+        'editable' => $editable,
+        'editType' => $editType,
+        'singleClickEdit' => $singleClickEdit,
+        'stopEditingWhenCellsLoseFocus' => $stopEditingWhenCellsLoseFocus,
+        'undoRedoCellEditing' => $undoRedoCellEditing,
+        'undoRedoCellEditingLimit' => $undoRedoCellEditingLimit,
+        // Row Dragging
+        'rowDraggable' => $rowDraggable,
+        'rowDragManaged' => $rowDragManaged,
+        'rowDragEntireRow' => $rowDragEntireRow,
+        'rowDragMultiRow' => $rowDragMultiRow,
         // Callbacks
         'callbacks' => [
             'onInit' => $onInit,
@@ -406,6 +572,13 @@
             'onFilterChange' => $onFilterChange,
             'onColumnResize' => $onColumnResize,
             'onColumnMove' => $onColumnMove,
+            'onServerRequest' => $onServerRequest,
+            'onServerResponse' => $onServerResponse,
+            'onServerError' => $onServerError,
+            'onCellValueChanged' => $onCellValueChanged,
+            'onRowValueChanged' => $onRowValueChanged,
+            'onRowDragEnd' => $onRowDragEnd,
+            'onRowDragMove' => $onRowDragMove,
         ],
     ];
 @endphp
@@ -525,6 +698,75 @@
                 display: flex;
                 align-items: center;
                 gap: 0.25rem;
+            }
+
+            /* ========================================== */
+            /* ROW DRAG HANDLE                            */
+            /* ========================================== */
+            .geo-grid-drag-handle {
+                cursor: move;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .geo-grid-drag-handle .ag-drag-handle {
+                opacity: 0.5;
+                transition: opacity 0.15s ease;
+            }
+
+            .geo-grid-drag-handle:hover .ag-drag-handle,
+            .ag-row-dragging .geo-grid-drag-handle .ag-drag-handle {
+                opacity: 1;
+            }
+
+            .ag-row-dragging {
+                background-color: var(--bs-light) !important;
+                opacity: 0.9;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .ag-row-drag-preview {
+                border: 2px dashed var(--bs-primary);
+                background-color: rgba(var(--bs-primary-rgb), 0.1);
+            }
+
+            /* ========================================== */
+            /* INLINE EDITING                             */
+            /* ========================================== */
+            .ag-cell-edit-input {
+                width: 100%;
+                height: 100%;
+                padding: 0 8px;
+                border: none;
+                outline: none;
+                background: transparent;
+            }
+
+            .ag-cell.ag-cell-inline-editing {
+                background-color: var(--bs-light);
+                border: 2px solid var(--bs-primary) !important;
+                border-radius: 4px;
+                padding: 0;
+            }
+
+            .ag-popup-editor {
+                background: var(--bs-body-bg);
+                border: 1px solid var(--bs-border-color);
+                border-radius: 4px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .ag-large-text-input {
+                padding: 8px;
+                font-family: inherit;
+                resize: vertical;
+            }
+
+            /* Validation error styling */
+            .ag-cell-validation-error {
+                border-color: var(--bs-danger) !important;
+                background-color: rgba(var(--bs-danger-rgb), 0.1) !important;
             }
 
             /* Empty overlay custom styling */
@@ -663,6 +905,241 @@
                 const instances = {};
 
                 /**
+                 * Create server-side datasource for AG Grid Server-Side Row Model
+                 * This handles large datasets with lazy loading
+                 */
+                function createServerSideDatasource(config) {
+                    return {
+                        getRows: (params) => {
+                            const request = params.request;
+
+                            // Build query parameters
+                            const queryParams = buildServerSideParams(request, config);
+
+                            // Allow callback to modify params
+                            if (config.callbacks.onServerRequest) {
+                                executeCallback(config.callbacks.onServerRequest, queryParams, request);
+                            }
+
+                            // Build URL with query string
+                            const url = new URL(config.ajaxUrl, window.location.origin);
+                            Object.entries(queryParams).forEach(([key, value]) => {
+                                if (value !== null && value !== undefined) {
+                                    if (typeof value === 'object') {
+                                        url.searchParams.append(key, JSON.stringify(value));
+                                    } else {
+                                        url.searchParams.append(key, value);
+                                    }
+                                }
+                            });
+
+                            fetch(url.toString(), {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                }
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                                }
+                                return response.json();
+                            })
+                            .then(response => {
+                                // Allow callback to modify response
+                                if (config.callbacks.onServerResponse) {
+                                    executeCallback(config.callbacks.onServerResponse, response);
+                                }
+
+                                // Extract data and total from response
+                                // Support various response formats:
+                                // - { data: [], total: N }
+                                // - { data: [], meta: { total: N } }
+                                // - { rows: [], rowCount: N }
+                                // - [ ] (array directly, total unknown)
+                                let rowData, rowCount;
+
+                                if (Array.isArray(response)) {
+                                    rowData = response;
+                                    rowCount = response.length;
+                                } else {
+                                    rowData = response.data || response.rows || [];
+                                    rowCount = response.total
+                                        || response.rowCount
+                                        || response.meta?.total
+                                        || response.meta?.totalRows
+                                        || (config.totalRows ?? -1); // -1 means unknown
+                                }
+
+                                params.success({
+                                    rowData: rowData,
+                                    rowCount: rowCount
+                                });
+                            })
+                            .catch(error => {
+                                console.error('GeoGrid Server-Side Error:', error);
+                                if (config.callbacks.onServerError) {
+                                    executeCallback(config.callbacks.onServerError, error);
+                                }
+                                params.fail();
+                            });
+                        }
+                    };
+                }
+
+                /**
+                 * Create infinite scroll datasource (alternative to server-side)
+                 * Uses simpler pagination model
+                 */
+                function createInfiniteDatasource(config) {
+                    return {
+                        getRows: (params) => {
+                            const startRow = params.startRow;
+                            const endRow = params.endRow;
+                            const pageSize = endRow - startRow;
+
+                            // Build query parameters
+                            const queryParams = {
+                                start: startRow,
+                                limit: pageSize,
+                                // Include sort model
+                                sort: params.sortModel?.length > 0 ? params.sortModel : null,
+                                // Include filter model
+                                filter: Object.keys(params.filterModel || {}).length > 0 ? params.filterModel : null,
+                            };
+
+                            // Allow callback to modify params
+                            if (config.callbacks.onServerRequest) {
+                                executeCallback(config.callbacks.onServerRequest, queryParams, params);
+                            }
+
+                            // Build URL
+                            const url = new URL(config.ajaxUrl, window.location.origin);
+                            Object.entries(queryParams).forEach(([key, value]) => {
+                                if (value !== null && value !== undefined) {
+                                    if (typeof value === 'object') {
+                                        url.searchParams.append(key, JSON.stringify(value));
+                                    } else {
+                                        url.searchParams.append(key, value);
+                                    }
+                                }
+                            });
+
+                            fetch(url.toString(), {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(response => {
+                                // Allow callback to modify response
+                                if (config.callbacks.onServerResponse) {
+                                    executeCallback(config.callbacks.onServerResponse, response);
+                                }
+
+                                let rowData, lastRow;
+
+                                if (Array.isArray(response)) {
+                                    rowData = response;
+                                    lastRow = response.length < pageSize ? startRow + response.length : -1;
+                                } else {
+                                    rowData = response.data || response.rows || [];
+                                    const total = response.total || response.rowCount || response.meta?.total;
+                                    lastRow = total ? total : (rowData.length < pageSize ? startRow + rowData.length : -1);
+                                }
+
+                                params.successCallback(rowData, lastRow);
+                            })
+                            .catch(error => {
+                                console.error('GeoGrid Infinite Scroll Error:', error);
+                                if (config.callbacks.onServerError) {
+                                    executeCallback(config.callbacks.onServerError, error);
+                                }
+                                params.failCallback();
+                            });
+                        }
+                    };
+                }
+
+                /**
+                 * Build server-side request parameters from AG Grid request
+                 */
+                function buildServerSideParams(request, config) {
+                    const params = {};
+
+                    // Pagination
+                    if (request.startRow !== undefined) {
+                        params.start = request.startRow;
+                        params.limit = request.endRow - request.startRow;
+                        // Also include page number for Laravel-style pagination
+                        params.page = Math.floor(request.startRow / (request.endRow - request.startRow)) + 1;
+                        params.per_page = request.endRow - request.startRow;
+                    }
+
+                    // Sorting
+                    if (request.sortModel && request.sortModel.length > 0) {
+                        // Format: sort[0][field]=name&sort[0][dir]=asc
+                        // Also support: sort_by=name&sort_dir=asc (single sort)
+                        const primarySort = request.sortModel[0];
+                        params.sort_by = primarySort.colId;
+                        params.sort_dir = primarySort.sort;
+
+                        // For multi-sort, include full model
+                        if (request.sortModel.length > 1) {
+                            params.sort = request.sortModel.map(s => ({
+                                field: s.colId,
+                                dir: s.sort
+                            }));
+                        }
+                    }
+
+                    // Filtering
+                    if (request.filterModel && Object.keys(request.filterModel).length > 0) {
+                        // Convert AG Grid filter model to server-friendly format
+                        const filters = {};
+                        Object.entries(request.filterModel).forEach(([field, filterDef]) => {
+                            if (filterDef.filterType === 'text') {
+                                filters[field] = {
+                                    type: filterDef.type, // contains, equals, startsWith, endsWith
+                                    value: filterDef.filter
+                                };
+                            } else if (filterDef.filterType === 'number') {
+                                filters[field] = {
+                                    type: filterDef.type, // equals, lessThan, greaterThan, inRange
+                                    value: filterDef.filter,
+                                    valueTo: filterDef.filterTo // for inRange
+                                };
+                            } else if (filterDef.filterType === 'date') {
+                                filters[field] = {
+                                    type: filterDef.type,
+                                    value: filterDef.dateFrom,
+                                    valueTo: filterDef.dateTo
+                                };
+                            } else if (filterDef.filterType === 'set') {
+                                filters[field] = {
+                                    type: 'in',
+                                    values: filterDef.values
+                                };
+                            }
+                        });
+                        params.filters = filters;
+                    }
+
+                    // Row grouping (for future use)
+                    if (request.rowGroupCols && request.rowGroupCols.length > 0) {
+                        params.group_by = request.rowGroupCols.map(c => c.id);
+                    }
+
+                    // Group keys (for expanding groups)
+                    if (request.groupKeys && request.groupKeys.length > 0) {
+                        params.group_keys = request.groupKeys;
+                    }
+
+                    return params;
+                }
+
+                /**
                  * Initialize a grid with configuration
                  */
                 function init(config) {
@@ -680,12 +1157,13 @@
                     // Build grid options
                     const gridOptions = {
                         columnDefs: columnDefs,
-                        rowData: config.data || [],
                         defaultColDef: {
                             sortable: config.sortable,
                             resizable: config.resizable,
                             filter: config.filterable,
                             floatingFilter: config.floatingFilter,
+                            // Editing defaults
+                            editable: config.editable,
                         },
                         // Row ID
                         getRowId: (params) => String(params.data[config.rowKey] || params.data.id),
@@ -693,8 +1171,8 @@
                         // Sorting
                         multiSortKey: config.multiSort ? 'ctrl' : null,
 
-                        // Pagination
-                        pagination: config.pagination,
+                        // Pagination (for client-side mode)
+                        pagination: config.pagination && !config.serverSide,
                         paginationPageSize: config.pageSize,
                         paginationPageSizeSelector: config.pageSizeOptions,
 
@@ -703,7 +1181,7 @@
                             mode: config.selectionMode === 'single' ? 'singleRow' : 'multiRow',
                             checkboxes: config.checkboxSelection,
                             headerCheckbox: config.headerCheckbox,
-                            enableClickSelection: true,
+                            enableClickSelection: !config.editable, // Disable click selection if editing
                         } : undefined,
 
                         // Appearance
@@ -713,6 +1191,42 @@
 
                         // Suppress features
                         suppressMovableColumns: config.suppressMovable,
+
+                        // ========================================
+                        // INLINE EDITING
+                        // ========================================
+                        ...(config.editable ? {
+                            editType: config.editType === 'fullRow' ? 'fullRow' : undefined,
+                            singleClickEdit: config.singleClickEdit,
+                            stopEditingWhenCellsLoseFocus: config.stopEditingWhenCellsLoseFocus,
+                            undoRedoCellEditing: config.undoRedoCellEditing,
+                            undoRedoCellEditingLimit: config.undoRedoCellEditingLimit,
+                        } : {}),
+
+                        // ========================================
+                        // ROW DRAGGING
+                        // ========================================
+                        ...(config.rowDraggable ? {
+                            rowDragManaged: config.rowDragManaged,
+                            rowDragEntireRow: config.rowDragEntireRow,
+                            rowDragMultiRow: config.rowDragMultiRow,
+                            suppressRowDrag: false,
+                        } : {}),
+
+                        // Server-side row model configuration
+                        ...(config.serverSide ? {
+                            rowModelType: config.serverSideInfinite ? 'infinite' : 'serverSide',
+                            serverSideDatasource: config.serverSideInfinite ? undefined : createServerSideDatasource(config),
+                            datasource: config.serverSideInfinite ? createInfiniteDatasource(config) : undefined,
+                            cacheBlockSize: config.cacheBlockSize,
+                            maxBlocksInCache: config.maxBlocksInCache,
+                            // Server-side pagination
+                            pagination: config.pagination,
+                            paginationPageSize: config.pageSize,
+                            paginationPageSizeSelector: config.pageSizeOptions,
+                        } : {
+                            rowData: config.data || [],
+                        }),
 
                         // Overlays
                         overlayLoadingTemplate: `
@@ -805,6 +1319,64 @@
                                 executeCallback(config.callbacks.onColumnMove, params);
                             }
                         },
+
+                        // ========================================
+                        // INLINE EDITING EVENT HANDLERS
+                        // ========================================
+                        onCellValueChanged: (params) => {
+                            if (config.callbacks.onCellValueChanged) {
+                                executeCallback(config.callbacks.onCellValueChanged, {
+                                    rowData: params.data,
+                                    field: params.colDef.field,
+                                    oldValue: params.oldValue,
+                                    newValue: params.newValue,
+                                    rowIndex: params.rowIndex,
+                                    api: params.api,
+                                });
+                            }
+                        },
+
+                        onRowValueChanged: (params) => {
+                            if (config.callbacks.onRowValueChanged) {
+                                executeCallback(config.callbacks.onRowValueChanged, {
+                                    rowData: params.data,
+                                    rowIndex: params.rowIndex,
+                                    api: params.api,
+                                });
+                            }
+                        },
+
+                        // ========================================
+                        // ROW DRAGGING EVENT HANDLERS
+                        // ========================================
+                        onRowDragEnd: (params) => {
+                            if (config.callbacks.onRowDragEnd) {
+                                // Get updated row order
+                                const rowData = [];
+                                params.api.forEachNode((node) => {
+                                    if (node.data) rowData.push(node.data);
+                                });
+                                executeCallback(config.callbacks.onRowDragEnd, {
+                                    node: params.node,
+                                    overNode: params.overNode,
+                                    overIndex: params.overIndex,
+                                    draggedData: params.node.data,
+                                    allRows: rowData,
+                                    api: params.api,
+                                });
+                            }
+                        },
+
+                        onRowDragMove: (params) => {
+                            if (config.callbacks.onRowDragMove) {
+                                executeCallback(config.callbacks.onRowDragMove, {
+                                    node: params.node,
+                                    overNode: params.overNode,
+                                    overIndex: params.overIndex,
+                                    api: params.api,
+                                });
+                            }
+                        },
                     };
 
                     // Create grid
@@ -831,6 +1403,24 @@
                 function buildColumnDefs(config) {
                     const columnDefs = [];
 
+                    // ========================================
+                    // ROW DRAG HANDLE COLUMN
+                    // ========================================
+                    if (config.rowDraggable && !config.rowDragEntireRow) {
+                        columnDefs.push({
+                            headerName: '',
+                            field: '_dragHandle',
+                            width: 50,
+                            rowDrag: true,
+                            sortable: false,
+                            filter: false,
+                            resizable: false,
+                            suppressMovable: true,
+                            pinned: 'left',
+                            cellClass: 'geo-grid-drag-handle',
+                        });
+                    }
+
                     // Index column
                     if (config.showIndex) {
                         columnDefs.push({
@@ -848,7 +1438,7 @@
                     // Selection checkbox column (handled by rowSelection config now)
 
                     // Data columns
-                    config.columns.forEach(col => {
+                    config.columns.forEach((col, index) => {
                         if (col.visible === false) return;
 
                         const colDef = {
@@ -868,8 +1458,43 @@
                             hide: col.visible === false,
                         };
 
-                        // Add cell renderer if specified
-                        if (col.render) {
+                        // ========================================
+                        // INLINE EDITING PER COLUMN
+                        // ========================================
+                        if (config.editable) {
+                            // Column-level editable override
+                            if (col.editable !== undefined) {
+                                colDef.editable = col.editable;
+                            }
+
+                            // Editor type (text, number, select, date, etc.)
+                            if (col.editor) {
+                                colDef.cellEditor = buildCellEditor(col);
+                                colDef.cellEditorParams = buildCellEditorParams(col);
+                            }
+
+                            // Validation
+                            if (col.validator) {
+                                colDef.valueSetter = (params) => {
+                                    const validationResult = validateCellValue(col, params.newValue, params.data);
+                                    if (validationResult.valid) {
+                                        params.data[col.key] = params.newValue;
+                                        return true;
+                                    } else {
+                                        console.warn(`Validation failed for ${col.key}: ${validationResult.message}`);
+                                        return false;
+                                    }
+                                };
+                            }
+                        }
+
+                        // Row drag on first column (if rowDragEntireRow is false and no separate handle)
+                        if (config.rowDraggable && config.rowDragEntireRow && index === 0) {
+                            colDef.rowDrag = true;
+                        }
+
+                        // Add cell renderer if specified (but not for editable columns with editors)
+                        if (col.render && !col.editor) {
                             colDef.cellRenderer = buildCellRenderer(col);
                         }
 
@@ -887,6 +1512,7 @@
                             filter: false,
                             resizable: false,
                             suppressMovable: true,
+                            editable: false, // Never editable
                             cellRenderer: (params) => {
                                 return renderActionsCell(config.id, params.data);
                             }
@@ -894,6 +1520,120 @@
                     }
 
                     return columnDefs;
+                }
+
+                /**
+                 * Build cell editor type
+                 */
+                function buildCellEditor(col) {
+                    switch (col.editor) {
+                        case 'number':
+                            return 'agNumberCellEditor';
+                        case 'largeText':
+                        case 'textarea':
+                            return 'agLargeTextCellEditor';
+                        case 'select':
+                        case 'dropdown':
+                            return 'agSelectCellEditor';
+                        case 'date':
+                            return 'agDateCellEditor';
+                        case 'checkbox':
+                            return 'agCheckboxCellEditor';
+                        case 'text':
+                        default:
+                            return 'agTextCellEditor';
+                    }
+                }
+
+                /**
+                 * Build cell editor params
+                 */
+                function buildCellEditorParams(col) {
+                    const params = {};
+
+                    switch (col.editor) {
+                        case 'number':
+                            if (col.min !== undefined) params.min = col.min;
+                            if (col.max !== undefined) params.max = col.max;
+                            if (col.precision !== undefined) params.precision = col.precision;
+                            if (col.step !== undefined) params.step = col.step;
+                            break;
+
+                        case 'largeText':
+                        case 'textarea':
+                            params.maxLength = col.maxLength || 500;
+                            params.rows = col.rows || 5;
+                            params.cols = col.cols || 50;
+                            break;
+
+                        case 'select':
+                        case 'dropdown':
+                            params.values = col.options || [];
+                            break;
+
+                        case 'date':
+                            // AG Grid Community date editor is basic
+                            break;
+                    }
+
+                    return params;
+                }
+
+                /**
+                 * Validate cell value
+                 */
+                function validateCellValue(col, value, rowData) {
+                    const validator = col.validator;
+                    if (!validator) return { valid: true };
+
+                    // Built-in validators
+                    if (typeof validator === 'string') {
+                        switch (validator) {
+                            case 'required':
+                                if (!value && value !== 0) {
+                                    return { valid: false, message: 'This field is required' };
+                                }
+                                break;
+                            case 'email':
+                                if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                                    return { valid: false, message: 'Invalid email address' };
+                                }
+                                break;
+                            case 'number':
+                                if (value && isNaN(Number(value))) {
+                                    return { valid: false, message: 'Must be a number' };
+                                }
+                                break;
+                        }
+                    }
+
+                    // Custom validator function
+                    if (typeof validator === 'object') {
+                        if (validator.required && !value && value !== 0) {
+                            return { valid: false, message: validator.message || 'This field is required' };
+                        }
+                        if (validator.min !== undefined && Number(value) < validator.min) {
+                            return { valid: false, message: validator.message || `Minimum value is ${validator.min}` };
+                        }
+                        if (validator.max !== undefined && Number(value) > validator.max) {
+                            return { valid: false, message: validator.message || `Maximum value is ${validator.max}` };
+                        }
+                        if (validator.pattern && !new RegExp(validator.pattern).test(value)) {
+                            return { valid: false, message: validator.message || 'Invalid format' };
+                        }
+                    }
+
+                    // Custom function validator
+                    if (typeof validator === 'function') {
+                        return validator(value, rowData);
+                    }
+
+                    // String function name
+                    if (typeof validator === 'string' && typeof window[validator] === 'function') {
+                        return window[validator](value, rowData);
+                    }
+
+                    return { valid: true };
                 }
 
                 /**
@@ -1221,8 +1961,62 @@
 
                     refresh(gridId) {
                         const instance = instances[gridId];
-                        if (instance && instance.config.ajaxUrl) {
+                        if (!instance) return;
+
+                        if (instance.config.serverSide) {
+                            // For server-side, refresh the data source
+                            if (instance.config.serverSideInfinite) {
+                                instance.api.setDatasource(createInfiniteDatasource(instance.config));
+                            } else {
+                                instance.api.refreshServerSide({ purge: true });
+                            }
+                        } else if (instance.config.ajaxUrl) {
                             loadAjaxData(gridId, instance.config.ajaxUrl);
+                        }
+                    },
+
+                    /**
+                     * Refresh server-side data (alias for refresh with server-side grids)
+                     */
+                    refreshServerSide(gridId, options = {}) {
+                        const instance = instances[gridId];
+                        if (!instance || !instance.config.serverSide) return;
+
+                        if (instance.config.serverSideInfinite) {
+                            instance.api.setDatasource(createInfiniteDatasource(instance.config));
+                        } else {
+                            instance.api.refreshServerSide({
+                                route: options.route || undefined,
+                                purge: options.purge !== false, // Default: true
+                            });
+                        }
+                    },
+
+                    /**
+                     * Get server-side cache info
+                     */
+                    getServerSideCacheInfo(gridId) {
+                        const instance = instances[gridId];
+                        if (!instance || !instance.config.serverSide) return null;
+
+                        return {
+                            isServerSide: true,
+                            isInfinite: instance.config.serverSideInfinite,
+                            cacheBlockSize: instance.config.cacheBlockSize,
+                        };
+                    },
+
+                    /**
+                     * Purge server-side cache and reload
+                     */
+                    purgeServerSideCache(gridId) {
+                        const instance = instances[gridId];
+                        if (!instance || !instance.config.serverSide) return;
+
+                        if (instance.config.serverSideInfinite) {
+                            instance.api.purgeInfiniteCache();
+                        } else {
+                            instance.api.refreshServerSide({ purge: true });
                         }
                     },
 
@@ -1294,6 +2088,151 @@
                         const instance = instances[gridId];
                         if (instance) {
                             instance.api.hideOverlay();
+                        }
+                    },
+
+                    // ========================================
+                    // INLINE EDITING API
+                    // ========================================
+
+                    /**
+                     * Start editing a cell
+                     */
+                    startEditing(gridId, rowIndex, colKey) {
+                        const instance = instances[gridId];
+                        if (instance) {
+                            instance.api.startEditingCell({
+                                rowIndex: rowIndex,
+                                colKey: colKey,
+                            });
+                        }
+                    },
+
+                    /**
+                     * Stop all editing
+                     */
+                    stopEditing(gridId, cancel = false) {
+                        const instance = instances[gridId];
+                        if (instance) {
+                            instance.api.stopEditing(cancel);
+                        }
+                    },
+
+                    /**
+                     * Get all edited cells (for tracking changes)
+                     */
+                    getEditedCells(gridId) {
+                        const instance = instances[gridId];
+                        if (!instance) return [];
+                        // Note: AG Grid doesn't track this by default
+                        // This would need custom implementation if needed
+                        return [];
+                    },
+
+                    /**
+                     * Undo last cell edit
+                     */
+                    undoCellEdit(gridId) {
+                        const instance = instances[gridId];
+                        if (instance && instance.config.undoRedoCellEditing) {
+                            instance.api.undoCellEditing();
+                        }
+                    },
+
+                    /**
+                     * Redo last undone cell edit
+                     */
+                    redoCellEdit(gridId) {
+                        const instance = instances[gridId];
+                        if (instance && instance.config.undoRedoCellEditing) {
+                            instance.api.redoCellEditing();
+                        }
+                    },
+
+                    /**
+                     * Update a cell value programmatically
+                     */
+                    updateCellValue(gridId, rowKey, colKey, newValue) {
+                        const instance = instances[gridId];
+                        if (!instance) return false;
+
+                        const rowNode = instance.api.getRowNode(rowKey);
+                        if (rowNode) {
+                            rowNode.setDataValue(colKey, newValue);
+                            return true;
+                        }
+                        return false;
+                    },
+
+                    // ========================================
+                    // ROW DRAGGING API
+                    // ========================================
+
+                    /**
+                     * Get current row order after dragging
+                     */
+                    getRowOrder(gridId) {
+                        const instance = instances[gridId];
+                        if (!instance) return [];
+
+                        const rowData = [];
+                        instance.api.forEachNode((node) => {
+                            if (node.data) {
+                                rowData.push(node.data);
+                            }
+                        });
+                        return rowData;
+                    },
+
+                    /**
+                     * Get row IDs in current order
+                     */
+                    getRowOrderIds(gridId) {
+                        const instance = instances[gridId];
+                        if (!instance) return [];
+
+                        const ids = [];
+                        instance.api.forEachNode((node) => {
+                            if (node.data) {
+                                const id = node.data[instance.config.rowKey] || node.data.id;
+                                if (id !== undefined) ids.push(id);
+                            }
+                        });
+                        return ids;
+                    },
+
+                    /**
+                     * Move row to new position programmatically
+                     */
+                    moveRow(gridId, fromIndex, toIndex) {
+                        const instance = instances[gridId];
+                        if (!instance) return false;
+
+                        // Get all row data
+                        const rowData = [];
+                        instance.api.forEachNode((node) => {
+                            if (node.data) rowData.push(node.data);
+                        });
+
+                        if (fromIndex < 0 || fromIndex >= rowData.length) return false;
+                        if (toIndex < 0 || toIndex >= rowData.length) return false;
+
+                        // Move the row
+                        const [movedRow] = rowData.splice(fromIndex, 1);
+                        rowData.splice(toIndex, 0, movedRow);
+
+                        // Update grid
+                        instance.api.setGridOption('rowData', rowData);
+                        return true;
+                    },
+
+                    /**
+                     * Reset row order to original data order
+                     */
+                    resetRowOrder(gridId) {
+                        const instance = instances[gridId];
+                        if (instance && instance.config.data) {
+                            instance.api.setGridOption('rowData', [...instance.config.data]);
                         }
                     },
                 };

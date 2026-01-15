@@ -64,6 +64,18 @@
         <i class="ki-outline ki-check-square"></i>
         AG Grid (Selection)
     </a>
+    <a href="#aggrid-server-side" class="showcase-nav-item">
+        <i class="ki-outline ki-cloud-download"></i>
+        AG Grid (Server-Side)
+    </a>
+    <a href="#aggrid-editing" class="showcase-nav-item">
+        <i class="ki-outline ki-pencil"></i>
+        <span class="badge badge-success badge-sm me-1">NEW</span> Inline Editing
+    </a>
+    <a href="#aggrid-row-dragging" class="showcase-nav-item">
+        <i class="ki-outline ki-arrow-up-down"></i>
+        <span class="badge badge-success badge-sm me-1">NEW</span> Row Dragging
+    </a>
     <a href="#aggrid-features" class="showcase-nav-item">
         <i class="ki-outline ki-setting-3"></i>
         AG Grid Features
@@ -1026,8 +1038,24 @@
                                         <td><code>ajax-url="/api/data"</code></td>
                                     </tr>
                                     <tr>
+                                        <td>Server-Side Data Model</td>
+                                        <td><code>:server-side="true"</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Infinite Scroll</td>
+                                        <td><code>:server-side-infinite="true"</code></td>
+                                    </tr>
+                                    <tr>
                                         <td>Actions Column</td>
                                         <td><code>:show-actions="true"</code></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Inline Cell Editing</td>
+                                        <td><code>:editable="true"</code>, <code>'editor' => 'text|number|select'</code></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Row Dragging</td>
+                                        <td><code>:row-draggable="true"</code>, <code>on-row-drag-end</code></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1054,20 +1082,8 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>Server-Side Data Model</td>
-                                        <td><span class="badge badge-light-primary">P1</span></td>
-                                    </tr>
-                                    <tr>
                                         <td>Row Grouping</td>
                                         <td><span class="badge badge-light-primary">P1</span> <small class="text-muted">(Enterprise)</small></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Inline Cell Editing</td>
-                                        <td><span class="badge badge-light-primary">P1</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Row Dragging</td>
-                                        <td><span class="badge badge-light-info">P2</span></td>
                                     </tr>
                                     <tr>
                                         <td>Master/Detail (Expandable)</td>
@@ -1091,7 +1107,13 @@
                                     </tr>
                                 </tbody>
                             </table>
-                            <div class="mt-4 p-3 bg-light-info rounded">
+                            <div class="mt-4 p-3 bg-light-success rounded">
+                                <small class="text-success">
+                                    <i class="ki-outline ki-check-circle me-1"></i>
+                                    <strong>Inline Cell Editing</strong> and <strong>Row Dragging</strong> are now implemented!
+                                </small>
+                            </div>
+                            <div class="mt-2 p-3 bg-light-info rounded">
                                 <small class="text-info">
                                     <i class="ki-outline ki-information-3 me-1"></i>
                                     Features marked "(Enterprise)" require AG Grid Enterprise license.
@@ -1294,6 +1316,557 @@ function handleSelection(selectedRows, params) {
     </section>
 
     {{-- ================================================================== --}}
+    {{-- AG GRID - SERVER-SIDE DATA MODEL                                   --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-server-side" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-cloud-download me-2 text-primary"></i>
+                AG Grid - Server-Side Data Model
+            </h3>
+        </div>
+        <div class="showcase-section-body">
+            <div class="alert alert-info mb-5">
+                <i class="ki-outline ki-information-5 me-2"></i>
+                <strong>Server-Side Row Model:</strong> Ideal for large datasets (100k+ rows). Data is fetched from the server on demand with sorting, filtering, and pagination handled server-side.
+            </div>
+
+            {{-- Server-Side Mock Demo --}}
+            <div class="showcase-example">
+                <div class="showcase-example-header">
+                    <h4>Server-Side Data (Simulated)</h4>
+                    <p class="text-muted mb-0">
+                        This demo simulates server-side behavior using a JavaScript mock. In production, data would be fetched from your API endpoint.
+                        <br><small>Try sorting, filtering, or changing pages to see server requests in the console.</small>
+                    </p>
+                </div>
+                <div class="showcase-example-preview">
+                    <div id="aggrid-server-side-demo-wrapper">
+                        <x-table.aggrid.base
+                            id="aggrid-server-side-demo"
+                            :columns="[
+                                ['key' => 'id', 'label' => 'ID', 'width' => 80, 'sortable' => true, 'filter' => 'number'],
+                                ['key' => 'name', 'label' => 'Name', 'flex' => 1, 'sortable' => true, 'filter' => 'text'],
+                                ['key' => 'email', 'label' => 'Email', 'flex' => 1, 'filter' => 'text'],
+                                ['key' => 'department', 'label' => 'Department', 'width' => 150, 'sortable' => true, 'filter' => 'text'],
+                                ['key' => 'salary', 'label' => 'Salary', 'width' => 120, 'render' => 'currency', 'sortable' => true, 'filter' => 'number'],
+                                ['key' => 'status', 'label' => 'Status', 'width' => 100, 'render' => 'badge', 'colors' => ['active' => 'success', 'inactive' => 'danger']],
+                            ]"
+                            ajax-url="/api/mock/server-side-users"
+                            :server-side="true"
+                            :pagination="true"
+                            :page-size="10"
+                            :page-size-options="[10, 25, 50]"
+                            :filterable="true"
+                            :floating-filter="true"
+                            :sortable="true"
+                            on-server-request="logServerRequest"
+                            on-server-response="logServerResponse"
+                            height="400px"
+                        />
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-light-primary" onclick="GeoGrid.refresh('aggrid-server-side-demo')">
+                            <i class="ki-outline ki-arrows-circle me-1"></i>
+                            Refresh Data
+                        </button>
+                        <button class="btn btn-sm btn-light-warning" onclick="GeoGrid.purgeServerSideCache('aggrid-server-side-demo')">
+                            <i class="ki-outline ki-trash me-1"></i>
+                            Purge Cache
+                        </button>
+                    </div>
+                </div>
+                <div class="showcase-example-code">
+                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+    id="users-grid"
+    :columns="[
+        ['key' => 'id', 'label' => 'ID', 'sortable' => true, 'filter' => 'number'],
+        ['key' => 'name', 'label' => 'Name', 'sortable' => true, 'filter' => 'text'],
+        ['key' => 'email', 'label' => 'Email', 'filter' => 'text'],
+        ['key' => 'salary', 'label' => 'Salary', 'render' => 'currency', 'filter' => 'number'],
+    ]"
+    ajax-url="/api/users"
+    :server-side="true"
+    :pagination="true"
+    :page-size="25"
+    :filterable="true"
+    :floating-filter="true"
+    :sortable="true"
+/&gt;
+
+&lt;!-- Your API should return: --&gt;
+{
+    "data": [
+        {"id": 1, "name": "John", "email": "john@example.com", "salary": 75000},
+        ...
+    ],
+    "total": 10000  // Total row count for pagination
+}
+
+&lt;!-- Query params sent to server: --&gt;
+?page=1&per_page=25&sort_by=name&sort_dir=asc&filters={"name":{"type":"contains","value":"john"}}</code></pre>
+                </div>
+            </div>
+
+            {{-- Infinite Scroll Demo --}}
+            <div class="showcase-example mt-10">
+                <div class="showcase-example-header">
+                    <h4>Infinite Scroll Mode</h4>
+                    <p class="text-muted mb-0">
+                        Alternative to pagination - rows load automatically as user scrolls. Better for continuous browsing.
+                    </p>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="aggrid-infinite-demo"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 80],
+                            ['key' => 'name', 'label' => 'Name', 'flex' => 1],
+                            ['key' => 'email', 'label' => 'Email', 'flex' => 1],
+                            ['key' => 'created_at', 'label' => 'Created', 'width' => 150, 'render' => 'date'],
+                        ]"
+                        ajax-url="/api/mock/infinite-users"
+                        :server-side="true"
+                        :server-side-infinite="true"
+                        :cache-block-size="50"
+                        :sortable="true"
+                        height="350px"
+                    />
+                    <p class="text-muted mt-2 small">
+                        <i class="ki-outline ki-information me-1"></i>
+                        Scroll down to load more rows. Data loads in blocks of 50.
+                    </p>
+                </div>
+                <div class="showcase-example-code">
+                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+    :columns="$columns"
+    ajax-url="/api/users"
+    :server-side="true"
+    :server-side-infinite="true"
+    :cache-block-size="50"
+/&gt;</code></pre>
+                </div>
+            </div>
+
+            {{-- Laravel Controller Example --}}
+            <div class="showcase-example mt-10">
+                <div class="showcase-example-header">
+                    <h4>Laravel Controller Example</h4>
+                    <p class="text-muted mb-0">Example backend implementation for handling server-side requests.</p>
+                </div>
+                <div class="showcase-example-code">
+                    <pre><code class="language-php">// app/Http/Controllers/Api/UserController.php
+
+public function index(Request $request)
+{
+    $query = User::query();
+
+    // Apply filters
+    if ($filters = $request->input('filters')) {
+        $filters = is_string($filters) ? json_decode($filters, true) : $filters;
+        foreach ($filters as $field => $filter) {
+            match ($filter['type']) {
+                'contains' => $query->where($field, 'like', '%' . $filter['value'] . '%'),
+                'equals' => $query->where($field, $filter['value']),
+                'startsWith' => $query->where($field, 'like', $filter['value'] . '%'),
+                'lessThan' => $query->where($field, '<', $filter['value']),
+                'greaterThan' => $query->where($field, '>', $filter['value']),
+                'inRange' => $query->whereBetween($field, [$filter['value'], $filter['valueTo']]),
+                default => null,
+            };
+        }
+    }
+
+    // Apply sorting
+    if ($sortBy = $request->input('sort_by')) {
+        $query->orderBy($sortBy, $request->input('sort_dir', 'asc'));
+    }
+
+    // Paginate
+    $perPage = $request->input('per_page', 25);
+    $paginated = $query->paginate($perPage);
+
+    return response()->json([
+        'data' => $paginated->items(),
+        'total' => $paginated->total(),
+        'page' => $paginated->currentPage(),
+        'per_page' => $paginated->perPage(),
+    ]);
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- AG GRID - INLINE CELL EDITING                                      --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-editing" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-pencil me-2 text-success"></i>
+                <span class="badge badge-success me-2">NEW</span>
+                AG Grid - Inline Cell Editing
+            </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-aggrid-editing">
+                Show Code
+            </button>
+        </div>
+        <div class="showcase-section-body">
+            <p class="text-muted mb-5">
+                Edit cells directly in the grid. Double-click a cell to start editing.
+                Supports text, number, select dropdown, textarea, and date editors with validation.
+            </p>
+
+            @php
+                $editableProducts = [
+                    ['id' => 1, 'name' => 'MacBook Pro', 'price' => 2499.00, 'stock' => 15, 'status' => 'active', 'notes' => 'Popular item'],
+                    ['id' => 2, 'name' => 'iPhone 15', 'price' => 999.00, 'stock' => 50, 'status' => 'active', 'notes' => 'Best seller'],
+                    ['id' => 3, 'name' => 'AirPods Pro', 'price' => 249.00, 'stock' => 0, 'status' => 'out_of_stock', 'notes' => 'Restock pending'],
+                    ['id' => 4, 'name' => 'iPad Air', 'price' => 799.00, 'stock' => 25, 'status' => 'active', 'notes' => ''],
+                    ['id' => 5, 'name' => 'Apple Watch', 'price' => 399.00, 'stock' => 30, 'status' => 'on_sale', 'notes' => '10% discount'],
+                ];
+            @endphp
+
+            {{-- Basic Inline Editing --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Basic Inline Editing
+                    <span class="badge badge-light-success">Double-click to edit</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="demo-edit-basic"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 70, 'editable' => false],
+                            ['key' => 'name', 'label' => 'Product Name', 'editor' => 'text'],
+                            ['key' => 'price', 'label' => 'Price', 'editor' => 'number', 'min' => 0, 'precision' => 2],
+                            ['key' => 'stock', 'label' => 'Stock', 'editor' => 'number', 'min' => 0, 'step' => 1],
+                            ['key' => 'status', 'label' => 'Status', 'editor' => 'select', 'options' => ['active', 'out_of_stock', 'on_sale', 'discontinued']],
+                        ]"
+                        :data="$editableProducts"
+                        :editable="true"
+                        :sortable="true"
+                        height="300px"
+                        on-cell-value-changed="handleDemoCellChange"
+                    />
+                    <div class="mt-3">
+                        <div id="demo-edit-log" class="bg-light p-3 rounded fs-7" style="max-height: 100px; overflow-y: auto;">
+                            <em class="text-muted">Edit log will appear here...</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Full Row Editing --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Full Row Editing Mode
+                    <span class="badge badge-light-info">Edit entire row at once</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="demo-edit-fullrow"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 70, 'editable' => false],
+                            ['key' => 'name', 'label' => 'Product Name', 'editor' => 'text'],
+                            ['key' => 'price', 'label' => 'Price ($)', 'editor' => 'number', 'min' => 0],
+                            ['key' => 'stock', 'label' => 'Stock', 'editor' => 'number', 'min' => 0],
+                            ['key' => 'notes', 'label' => 'Notes', 'editor' => 'textarea', 'maxLength' => 200, 'rows' => 3],
+                        ]"
+                        :data="$editableProducts"
+                        :editable="true"
+                        edit-type="fullRow"
+                        height="300px"
+                        on-row-value-changed="handleDemoRowChange"
+                    />
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-sm btn-light-warning" onclick="GeoGrid.stopEditing('demo-edit-fullrow', true)">
+                            <i class="ki-outline ki-cross me-1"></i> Cancel Editing
+                        </button>
+                        <button class="btn btn-sm btn-light-success" onclick="GeoGrid.stopEditing('demo-edit-fullrow', false)">
+                            <i class="ki-outline ki-check me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Editing with Undo/Redo --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Editing with Undo/Redo
+                    <span class="badge badge-light-primary">Ctrl+Z / Ctrl+Y</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="demo-edit-undo"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => 70, 'editable' => false],
+                            ['key' => 'name', 'label' => 'Product', 'editor' => 'text'],
+                            ['key' => 'price', 'label' => 'Price', 'editor' => 'number', 'min' => 0],
+                            ['key' => 'stock', 'label' => 'Stock', 'editor' => 'number'],
+                        ]"
+                        :data="$editableProducts"
+                        :editable="true"
+                        :undo-redo-cell-editing="true"
+                        :undo-redo-cell-editing-limit="20"
+                        height="250px"
+                    />
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-sm btn-light-secondary" onclick="GeoGrid.undoCellEdit('demo-edit-undo')">
+                            <i class="ki-outline ki-arrow-left me-1"></i> Undo
+                        </button>
+                        <button class="btn btn-sm btn-light-secondary" onclick="GeoGrid.redoCellEdit('demo-edit-undo')">
+                            <i class="ki-outline ki-arrow-right me-1"></i> Redo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Code Examples --}}
+        <div id="code-aggrid-editing" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage</span>
+                <button class="showcase-code-copy">Copy</button>
+            </div>
+            <pre class="showcase-code">&lt;!-- Basic Inline Editing --&gt;
+&lt;x-table.aggrid.base
+    :columns="[
+        ['key' => 'id', 'label' => 'ID', 'editable' => false], // Not editable
+        ['key' => 'name', 'label' => 'Name', 'editor' => 'text'],
+        ['key' => 'price', 'label' => 'Price', 'editor' => 'number', 'min' => 0, 'precision' => 2],
+        ['key' => 'status', 'label' => 'Status', 'editor' => 'select', 'options' => ['active', 'inactive']],
+        ['key' => 'notes', 'label' => 'Notes', 'editor' => 'textarea', 'maxLength' => 500],
+    ]"
+    :data="$products"
+    :editable="true"
+    on-cell-value-changed="handleCellChange"
+/&gt;
+
+&lt;!-- Full Row Editing Mode --&gt;
+&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$products"
+    :editable="true"
+    edit-type="fullRow"
+    on-row-value-changed="handleRowChange"
+/&gt;
+
+&lt;!-- With Undo/Redo --&gt;
+&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$products"
+    :editable="true"
+    :undo-redo-cell-editing="true"
+    :undo-redo-cell-editing-limit="20"
+/&gt;
+
+&lt;script&gt;
+// Callback when cell value changes
+function handleCellChange(event) {
+    console.log('Cell changed:', {
+        field: event.field,
+        oldValue: event.oldValue,
+        newValue: event.newValue,
+        rowData: event.rowData
+    });
+
+    // Save to server
+    fetch('/api/products/' + event.rowData.id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [event.field]: event.newValue })
+    });
+}
+
+// JS API methods
+GeoGrid.startEditing('grid-id', rowIndex, 'columnKey');
+GeoGrid.stopEditing('grid-id', cancel);
+GeoGrid.undoCellEdit('grid-id');
+GeoGrid.redoCellEdit('grid-id');
+GeoGrid.updateCellValue('grid-id', rowKey, 'columnKey', newValue);
+&lt;/script&gt;</pre>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- AG GRID - ROW DRAGGING                                             --}}
+    {{-- ================================================================== --}}
+
+    <section id="aggrid-row-dragging" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-arrow-up-down me-2 text-success"></i>
+                <span class="badge badge-success me-2">NEW</span>
+                AG Grid - Row Dragging
+            </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-aggrid-dragging">
+                Show Code
+            </button>
+        </div>
+        <div class="showcase-section-body">
+            <p class="text-muted mb-5">
+                Reorder rows by dragging. Supports drag handle column or full row dragging.
+                Get the new order via callback or API for saving to server.
+            </p>
+
+            @php
+                $draggableItems = [
+                    ['id' => 1, 'order' => 1, 'task' => 'Review pull requests', 'priority' => 'high', 'assignee' => 'John'],
+                    ['id' => 2, 'order' => 2, 'task' => 'Write documentation', 'priority' => 'medium', 'assignee' => 'Jane'],
+                    ['id' => 3, 'order' => 3, 'task' => 'Fix bug #123', 'priority' => 'high', 'assignee' => 'Bob'],
+                    ['id' => 4, 'order' => 4, 'task' => 'Deploy to staging', 'priority' => 'low', 'assignee' => 'Alice'],
+                    ['id' => 5, 'order' => 5, 'task' => 'Team meeting', 'priority' => 'medium', 'assignee' => 'John'],
+                ];
+            @endphp
+
+            {{-- Basic Row Dragging with Handle --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Row Dragging with Handle
+                    <span class="badge badge-light-info">Drag the ⋮⋮ handle</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="demo-drag-handle"
+                        :columns="[
+                            ['key' => 'order', 'label' => '#', 'width' => 60],
+                            ['key' => 'task', 'label' => 'Task'],
+                            ['key' => 'priority', 'label' => 'Priority', 'render' => 'badge', 'colors' => ['high' => 'danger', 'medium' => 'warning', 'low' => 'info']],
+                            ['key' => 'assignee', 'label' => 'Assignee'],
+                        ]"
+                        :data="$draggableItems"
+                        :row-draggable="true"
+                        :row-drag-managed="true"
+                        height="300px"
+                        on-row-drag-end="handleDemoRowDrag"
+                    />
+                    <div class="mt-3 d-flex gap-2 flex-wrap">
+                        <button class="btn btn-sm btn-light-primary" onclick="showDemoRowOrder('demo-drag-handle')">
+                            <i class="ki-outline ki-information-5 me-1"></i> Get Row Order
+                        </button>
+                        <button class="btn btn-sm btn-light-warning" onclick="GeoGrid.resetRowOrder('demo-drag-handle')">
+                            <i class="ki-outline ki-arrows-loop me-1"></i> Reset Order
+                        </button>
+                    </div>
+                    <div id="demo-drag-order" class="mt-3 bg-light p-3 rounded fs-7" style="display: none;">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Full Row Dragging --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Full Row Dragging
+                    <span class="badge badge-light-success">Drag from anywhere on the row</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="demo-drag-fullrow"
+                        :columns="[
+                            ['key' => 'order', 'label' => '#', 'width' => 60],
+                            ['key' => 'task', 'label' => 'Task'],
+                            ['key' => 'priority', 'label' => 'Priority'],
+                            ['key' => 'assignee', 'label' => 'Assignee'],
+                        ]"
+                        :data="$draggableItems"
+                        :row-draggable="true"
+                        :row-drag-entire-row="true"
+                        :row-drag-managed="true"
+                        height="280px"
+                    />
+                </div>
+            </div>
+
+            {{-- Row Dragging with Selection --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Drag Multiple Selected Rows
+                    <span class="badge badge-light-primary">Select rows, then drag together</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.aggrid.base
+                        id="demo-drag-multi"
+                        :columns="[
+                            ['key' => 'order', 'label' => '#', 'width' => 60],
+                            ['key' => 'task', 'label' => 'Task'],
+                            ['key' => 'priority', 'label' => 'Priority'],
+                        ]"
+                        :data="$draggableItems"
+                        :row-draggable="true"
+                        :row-drag-managed="true"
+                        :row-drag-multi-row="true"
+                        :selectable="true"
+                        selection-mode="multiple"
+                        height="280px"
+                    />
+                </div>
+            </div>
+        </div>
+
+        {{-- Code Examples --}}
+        <div id="code-aggrid-dragging" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage</span>
+                <button class="showcase-code-copy">Copy</button>
+            </div>
+            <pre class="showcase-code">&lt;!-- Row Dragging with Handle Column --&gt;
+&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$tasks"
+    :row-draggable="true"
+    :row-drag-managed="true"
+    on-row-drag-end="handleReorder"
+/&gt;
+
+&lt;!-- Full Row Dragging (drag from anywhere) --&gt;
+&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$tasks"
+    :row-draggable="true"
+    :row-drag-entire-row="true"
+    :row-drag-managed="true"
+/&gt;
+
+&lt;!-- Drag Multiple Selected Rows --&gt;
+&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$tasks"
+    :row-draggable="true"
+    :row-drag-multi-row="true"
+    :selectable="true"
+    selection-mode="multiple"
+/&gt;
+
+&lt;script&gt;
+// Callback when row drag ends
+function handleReorder(event) {
+    console.log('Dragged:', event.draggedData);
+    console.log('New position:', event.overIndex);
+    console.log('All rows in new order:', event.allRows);
+
+    // Save new order to server
+    const ids = event.allRows.map(row => row.id);
+    fetch('/api/tasks/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ids })
+    });
+}
+
+// JS API methods
+const allRows = GeoGrid.getRowOrder('grid-id');      // Get all rows in current order
+const ids = GeoGrid.getRowOrderIds('grid-id');       // Get just the IDs
+GeoGrid.moveRow('grid-id', fromIndex, toIndex);      // Move row programmatically
+GeoGrid.resetRowOrder('grid-id');                    // Reset to original order
+&lt;/script&gt;</pre>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
     {{-- AG GRID - FEATURES                                                 --}}
     {{-- ================================================================== --}}
 
@@ -1450,5 +2023,180 @@ function handleSelection(selectedRows, params) {
         console.log('AG Grid Selection:', selectedRows);
         console.log('Selected count:', selectedRows.length);
     }
+
+    // Server-side demo request/response logging
+    function logServerRequest(params, request) {
+        console.log('%c[Server-Side Request]', 'color: #3498db; font-weight: bold', params);
+    }
+
+    function logServerResponse(response) {
+        console.log('%c[Server-Side Response]', 'color: #27ae60; font-weight: bold', {
+            rowCount: response.total || response.data?.length,
+            data: response.data?.slice(0, 2) // Show first 2 rows
+        });
+    }
+
+    // ========================================
+    // INLINE EDITING DEMO HANDLERS
+    // ========================================
+
+    function handleDemoCellChange(event) {
+        const log = document.getElementById('demo-edit-log');
+        const entry = document.createElement('div');
+        entry.innerHTML = `<span class="text-success">✓</span> <strong>${event.field}</strong>: "${event.oldValue}" → "${event.newValue}" <small class="text-muted">(Row ${event.rowIndex})</small>`;
+        log.prepend(entry);
+
+        // Remove the placeholder text if it exists
+        const placeholder = log.querySelector('em');
+        if (placeholder) placeholder.remove();
+
+        console.log('Cell changed:', event);
+    }
+
+    function handleDemoRowChange(event) {
+        console.log('Row edit completed:', event.rowData);
+        alert('Row saved: ' + JSON.stringify(event.rowData, null, 2));
+    }
+
+    // ========================================
+    // ROW DRAGGING DEMO HANDLERS
+    // ========================================
+
+    function handleDemoRowDrag(event) {
+        console.log('Row drag ended:', {
+            draggedData: event.draggedData,
+            newIndex: event.overIndex,
+            allRows: event.allRows
+        });
+    }
+
+    function showDemoRowOrder(gridId) {
+        const ids = GeoGrid.getRowOrderIds(gridId);
+        const orderDiv = document.getElementById('demo-drag-order');
+        orderDiv.style.display = 'block';
+        orderDiv.innerHTML = '<strong>Current Order (IDs):</strong> ' + ids.join(' → ');
+    }
+
+    // Mock server-side API endpoint
+    // In production, this would be handled by your actual backend
+    (function() {
+        // Generate mock data
+        const departments = ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations'];
+        const statuses = ['active', 'inactive'];
+        const mockUsers = [];
+
+        for (let i = 1; i <= 500; i++) {
+            mockUsers.push({
+                id: i,
+                name: `User ${i}`,
+                email: `user${i}@example.com`,
+                department: departments[Math.floor(Math.random() * departments.length)],
+                salary: Math.floor(Math.random() * 100000) + 40000,
+                status: statuses[Math.floor(Math.random() * statuses.length)],
+                created_at: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString()
+            });
+        }
+
+        // Intercept fetch for mock endpoints
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            const urlObj = new URL(url, window.location.origin);
+
+            // Mock server-side endpoint
+            if (urlObj.pathname === '/api/mock/server-side-users') {
+                return handleMockServerSide(urlObj, mockUsers);
+            }
+
+            // Mock infinite scroll endpoint
+            if (urlObj.pathname === '/api/mock/infinite-users') {
+                return handleMockInfinite(urlObj, mockUsers);
+            }
+
+            // Pass through to original fetch
+            return originalFetch.apply(this, arguments);
+        };
+
+        function handleMockServerSide(urlObj, data) {
+            return new Promise(resolve => {
+                // Simulate network delay
+                setTimeout(() => {
+                    let filtered = [...data];
+
+                    // Apply filters
+                    const filtersParam = urlObj.searchParams.get('filters');
+                    if (filtersParam) {
+                        const filters = JSON.parse(filtersParam);
+                        Object.entries(filters).forEach(([field, filter]) => {
+                            filtered = filtered.filter(row => {
+                                const value = row[field];
+                                if (filter.type === 'contains') {
+                                    return String(value).toLowerCase().includes(filter.value.toLowerCase());
+                                }
+                                if (filter.type === 'equals') {
+                                    return value == filter.value;
+                                }
+                                if (filter.type === 'greaterThan') {
+                                    return value > filter.value;
+                                }
+                                if (filter.type === 'lessThan') {
+                                    return value < filter.value;
+                                }
+                                return true;
+                            });
+                        });
+                    }
+
+                    // Apply sorting
+                    const sortBy = urlObj.searchParams.get('sort_by');
+                    const sortDir = urlObj.searchParams.get('sort_dir') || 'asc';
+                    if (sortBy) {
+                        filtered.sort((a, b) => {
+                            let aVal = a[sortBy];
+                            let bVal = b[sortBy];
+                            if (typeof aVal === 'string') {
+                                aVal = aVal.toLowerCase();
+                                bVal = bVal.toLowerCase();
+                            }
+                            if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
+                            if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
+                            return 0;
+                        });
+                    }
+
+                    // Paginate
+                    const start = parseInt(urlObj.searchParams.get('start') || '0');
+                    const limit = parseInt(urlObj.searchParams.get('limit') || '25');
+                    const paginated = filtered.slice(start, start + limit);
+
+                    resolve(new Response(JSON.stringify({
+                        data: paginated,
+                        total: filtered.length
+                    }), {
+                        status: 200,
+                        headers: { 'Content-Type': 'application/json' }
+                    }));
+                }, 300); // 300ms simulated delay
+            });
+        }
+
+        function handleMockInfinite(urlObj, data) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const start = parseInt(urlObj.searchParams.get('start') || '0');
+                    const limit = parseInt(urlObj.searchParams.get('limit') || '50');
+
+                    const paginated = data.slice(start, start + limit);
+
+                    resolve(new Response(JSON.stringify({
+                        data: paginated,
+                        total: data.length
+                    }), {
+                        status: 200,
+                        headers: { 'Content-Type': 'application/json' }
+                    }));
+                }, 200);
+            });
+        }
+    })();
 </script>
 @endpush
