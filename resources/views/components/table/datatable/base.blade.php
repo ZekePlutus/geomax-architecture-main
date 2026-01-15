@@ -229,6 +229,27 @@
     'showColumnToggle' => false,            // Show column visibility toggle dropdown
     'hiddenColumns' => [],                  // Initially hidden column keys
     'columnToggleLabel' => 'Columns',       // Label for column toggle dropdown
+
+    // ============================================
+    // INLINE EDITING (Opt-in)
+    // ============================================
+    'inlineEditing' => false,               // Enable inline cell editing (columns must also have editable: true)
+    'onCellEditStart' => null,              // Callback when cell edit starts: function(rowKey, columnKey, oldValue)
+    'onCellEditCommit' => null,             // Callback when cell edit commits: function(rowKey, columnKey, oldValue, newValue, rowData)
+
+    // ============================================
+    // ROW GROUPING (Opt-in)
+    // ============================================
+    'groupBy' => null,                      // Column key to group rows by (e.g., 'status', 'category')
+    'groupCollapsible' => true,             // Allow collapsing/expanding groups
+    'groupCollapsed' => false,              // Start with groups collapsed
+
+    // ============================================
+    // ROW REORDERING (Opt-in)
+    // ============================================
+    'rowReorder' => false,                  // Enable row drag & drop reordering
+    'onRowReorder' => null,                 // Callback when row is reordered: function(oldIndex, newIndex, rowData, allRows)
+    'rowReorderHandle' => true,             // Show explicit drag handle (always true for safety)
 ])
 
 @php
@@ -332,6 +353,14 @@
         // Column Filters
         'columnFilters' => $columnFilters,
         'columnFiltersPosition' => $columnFiltersPosition,
+        // Inline Editing
+        'inlineEditing' => $inlineEditing,
+        // Row Grouping
+        'groupBy' => $groupBy,
+        'groupCollapsible' => $groupCollapsible,
+        'groupCollapsed' => $groupCollapsed,
+        // Row Reordering
+        'rowReorder' => $rowReorder,
         'callbacks' => [
             'onInit' => $onInit,
             'onDraw' => $onDraw,
@@ -341,6 +370,9 @@
             'onBulkAction' => $onBulkAction,
             'onRowExpand' => $onRowExpand,
             'onRowCollapse' => $onRowCollapse,
+            'onCellEditStart' => $onCellEditStart,
+            'onCellEditCommit' => $onCellEditCommit,
+            'onRowReorder' => $onRowReorder,
         ],
     ];
 
@@ -1461,6 +1493,195 @@
         direction: rtl;
         text-align: right;
     }
+
+    /* ============================================ */
+    /* INLINE EDITING                              */
+    /* ============================================ */
+    .geo-cell-editable {
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .geo-cell-editable:hover {
+        background-color: var(--geo-table-row-hover);
+    }
+
+    .geo-cell-editable::after {
+        content: '';
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 14px;
+        height: 14px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237e8299' stroke-width='2'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/%3E%3C/svg%3E");
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+    }
+
+    .geo-cell-editable:hover::after {
+        opacity: 0.5;
+    }
+
+    .geo-cell-editing {
+        padding: 0 !important;
+        background-color: var(--bs-white, #fff) !important;
+    }
+
+    .geo-cell-editing::after {
+        display: none;
+    }
+
+    .geo-cell-editor {
+        width: 100%;
+        height: 100%;
+        min-height: 38px;
+        padding: 0.5rem 0.75rem;
+        border: 2px solid var(--bs-primary, #3699ff);
+        border-radius: 4px;
+        background: var(--bs-white, #fff);
+        font-size: inherit;
+        font-family: inherit;
+        color: var(--geo-table-text);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(54, 153, 255, 0.15);
+    }
+
+    .geo-cell-editor:focus {
+        border-color: var(--bs-primary, #3699ff);
+    }
+
+    .geo-cell-editor-select {
+        cursor: pointer;
+    }
+
+    /* Dark mode inline editing */
+    [data-bs-theme="dark"] .geo-cell-editing {
+        background-color: var(--geo-input-bg, #1b1b29) !important;
+    }
+
+    [data-bs-theme="dark"] .geo-cell-editor {
+        background: var(--geo-input-bg, #1b1b29);
+        border-color: var(--bs-primary, #3699ff);
+        color: var(--geo-table-text);
+    }
+
+    /* ============================================ */
+    /* ROW GROUPING                                */
+    /* ============================================ */
+    .geo-group-header {
+        background: linear-gradient(135deg, var(--geo-table-header-bg) 0%, var(--geo-table-row-stripe) 100%) !important;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.15s ease;
+    }
+
+    .geo-group-header:hover {
+        background: var(--geo-table-row-hover) !important;
+    }
+
+    .geo-group-header td {
+        padding: 0.75rem 1.25rem !important;
+        border-bottom: 2px solid var(--geo-table-border) !important;
+    }
+
+    .geo-group-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--geo-table-text);
+    }
+
+    .geo-group-toggle i {
+        font-size: 0.9rem;
+        transition: transform 0.2s ease;
+        color: var(--geo-table-text-muted);
+    }
+
+    .geo-group-header.collapsed .geo-group-toggle i {
+        transform: rotate(-90deg);
+    }
+
+    .geo-group-label {
+        font-weight: 600;
+        color: var(--geo-table-text);
+    }
+
+    .geo-group-count {
+        font-weight: 400;
+        font-size: 0.85em;
+        color: var(--geo-table-text-muted);
+        margin-left: 0.5rem;
+    }
+
+    .geo-group-row {
+        transition: opacity 0.2s ease, max-height 0.3s ease;
+    }
+
+    .geo-group-row.hidden {
+        display: none;
+    }
+
+    /* ============================================ */
+    /* ROW REORDERING (Drag & Drop)                */
+    /* ============================================ */
+    .geo-row-drag-handle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        cursor: grab;
+        border-radius: 4px;
+        color: var(--geo-table-text-muted);
+        transition: all 0.15s ease;
+    }
+
+    .geo-row-drag-handle:hover {
+        background: var(--geo-table-row-hover);
+        color: var(--bs-primary, #3699ff);
+    }
+
+    .geo-row-drag-handle:active {
+        cursor: grabbing;
+    }
+
+    .geo-row-drag-handle i {
+        font-size: 1.1rem;
+    }
+
+    .geo-row-dragging {
+        opacity: 0.5;
+        background: var(--geo-table-row-hover) !important;
+    }
+
+    .geo-row-dragging td {
+        background: inherit !important;
+    }
+
+    .geo-row-drag-over {
+        border-top: 2px solid var(--bs-primary, #3699ff) !important;
+    }
+
+    .geo-row-drag-over-bottom {
+        border-bottom: 2px solid var(--bs-primary, #3699ff) !important;
+    }
+
+    .geo-col-drag-handle {
+        width: 40px !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0 !important;
+    }
+
+    /* RTL support for drag handle */
+    [dir="rtl"] .geo-col-drag-handle,
+    .geo-datatable-wrapper[dir="rtl"] .geo-col-drag-handle {
+        padding-left: 0 !important;
+        padding-right: 0.5rem !important;
+    }
 </style>
 @endpush
 
@@ -2290,6 +2511,24 @@
                 this._setupColumnFilters(tableId, config);
                 this.instances[tableId]._columnFiltersSetup = true;
             }
+
+            // Setup inline editing
+            if (config.inlineEditing && !this.instances[tableId]._inlineEditingSetup) {
+                this._setupInlineEditing(tableId, config);
+                this.instances[tableId]._inlineEditingSetup = true;
+            }
+
+            // Setup row grouping
+            if (config.groupBy && !this.instances[tableId]._rowGroupingSetup) {
+                this._setupRowGrouping(tableId, config);
+                this.instances[tableId]._rowGroupingSetup = true;
+            }
+
+            // Setup row reordering
+            if (config.rowReorder && !this.instances[tableId]._rowReorderSetup) {
+                this._setupRowReorder(tableId, config);
+                this.instances[tableId]._rowReorderSetup = true;
+            }
         },
 
         _buildDTOptions: function(tableId, config) {
@@ -2977,6 +3216,621 @@
             instance.columnFilterValues[columnKey] = value;
         },
 
+        // ========================================
+        // INLINE EDITING
+        // ========================================
+
+        /**
+         * Setup inline editing functionality
+         * @param {string} tableId - The table element ID
+         * @param {object} config - Table configuration
+         */
+        _setupInlineEditing: function(tableId, config) {
+            var self = this;
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var instance = this.instances[tableId];
+            if (!instance) return;
+
+            var tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            // Track current editing cell
+            instance.editingCell = null;
+
+            // Handle click on editable cells
+            tbody.addEventListener('click', function(e) {
+                var cell = e.target.closest('td.geo-cell-editable');
+                if (!cell || cell.classList.contains('geo-cell-editing')) return;
+
+                // Get cell info
+                var row = cell.closest('tr');
+                var rowKey = row.getAttribute('data-row-key');
+                var colKey = cell.getAttribute('data-column-key');
+                var colIndex = parseInt(cell.getAttribute('data-column-index'));
+                var editorType = cell.getAttribute('data-editor-type') || 'text';
+                var editorOptions = cell.getAttribute('data-editor-options');
+                var oldValue = cell.getAttribute('data-cell-value') || cell.textContent.trim();
+
+                // Close any existing editor
+                if (instance.editingCell) {
+                    self._closeInlineEditor(tableId, false);
+                }
+
+                // Trigger callback
+                self._triggerCallback(config.callbacks.onCellEditStart, [rowKey, colKey, oldValue]);
+
+                // Open editor
+                self._openInlineEditor(tableId, cell, rowKey, colKey, oldValue, editorType, editorOptions);
+            });
+
+            // Handle click outside to close editor
+            document.addEventListener('click', function(e) {
+                if (instance.editingCell && !e.target.closest('.geo-cell-editing') && !e.target.closest('.geo-cell-editor')) {
+                    self._closeInlineEditor(tableId, true);
+                }
+            });
+        },
+
+        /**
+         * Open inline editor for a cell
+         */
+        _openInlineEditor: function(tableId, cell, rowKey, colKey, oldValue, editorType, editorOptions) {
+            var self = this;
+            var instance = this.instances[tableId];
+            var config = instance.config;
+
+            // Store original content and mark as editing
+            cell.setAttribute('data-original-html', cell.innerHTML);
+            cell.classList.add('geo-cell-editing');
+
+            // Create editor element
+            var editor;
+            if (editorType === 'select' && editorOptions) {
+                try {
+                    var options = JSON.parse(editorOptions);
+                    editor = document.createElement('select');
+                    editor.className = 'geo-cell-editor geo-cell-editor-select';
+
+                    // Add empty option
+                    var emptyOpt = document.createElement('option');
+                    emptyOpt.value = '';
+                    emptyOpt.textContent = '-- Select --';
+                    editor.appendChild(emptyOpt);
+
+                    // Add options
+                    Object.keys(options).forEach(function(key) {
+                        var opt = document.createElement('option');
+                        opt.value = key;
+                        opt.textContent = options[key];
+                        if (key === oldValue || options[key] === oldValue) {
+                            opt.selected = true;
+                        }
+                        editor.appendChild(opt);
+                    });
+                } catch (e) {
+                    editor = self._createTextEditor(oldValue, editorType);
+                }
+            } else {
+                editor = self._createTextEditor(oldValue, editorType);
+            }
+
+            // Clear cell and add editor
+            cell.innerHTML = '';
+            cell.appendChild(editor);
+            editor.focus();
+            if (editor.select) editor.select();
+
+            // Store editing state
+            instance.editingCell = {
+                cell: cell,
+                rowKey: rowKey,
+                colKey: colKey,
+                oldValue: oldValue,
+                editor: editor
+            };
+
+            // Handle keyboard events
+            editor.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && editorType !== 'textarea') {
+                    e.preventDefault();
+                    self._closeInlineEditor(tableId, true);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    self._closeInlineEditor(tableId, false);
+                } else if (e.key === 'Tab') {
+                    e.preventDefault();
+                    self._closeInlineEditor(tableId, true);
+                    // Could navigate to next editable cell here
+                }
+            });
+
+            // Handle change for select
+            if (editorType === 'select') {
+                editor.addEventListener('change', function() {
+                    self._closeInlineEditor(tableId, true);
+                });
+            }
+        },
+
+        /**
+         * Create text/number input editor
+         */
+        _createTextEditor: function(value, type) {
+            var editor = document.createElement('input');
+            editor.type = type === 'number' ? 'number' : 'text';
+            editor.className = 'geo-cell-editor';
+            editor.value = value;
+            if (type === 'number') {
+                editor.step = 'any';
+            }
+            return editor;
+        },
+
+        /**
+         * Close inline editor
+         * @param {string} tableId - The table element ID
+         * @param {boolean} save - Whether to save the value
+         */
+        _closeInlineEditor: function(tableId, save) {
+            var instance = this.instances[tableId];
+            if (!instance || !instance.editingCell) return;
+
+            var editing = instance.editingCell;
+            var cell = editing.cell;
+            var newValue = editing.editor.value;
+
+            cell.classList.remove('geo-cell-editing');
+
+            if (save && newValue !== editing.oldValue) {
+                // Update cell display
+                cell.textContent = newValue;
+                cell.setAttribute('data-cell-value', newValue);
+
+                // Update row data
+                var row = cell.closest('tr');
+                var rowData = row.getAttribute('data-row-data');
+                try {
+                    rowData = JSON.parse(rowData);
+                    rowData[editing.colKey] = newValue;
+                    row.setAttribute('data-row-data', JSON.stringify(rowData));
+                } catch (e) {}
+
+                // Trigger callback
+                var config = instance.config;
+                this._triggerCallback(config.callbacks.onCellEditCommit, [
+                    editing.rowKey,
+                    editing.colKey,
+                    editing.oldValue,
+                    newValue,
+                    rowData
+                ]);
+            } else {
+                // Restore original content
+                cell.innerHTML = cell.getAttribute('data-original-html');
+            }
+
+            cell.removeAttribute('data-original-html');
+            instance.editingCell = null;
+        },
+
+        /**
+         * Edit a cell programmatically
+         * @param {string} tableId - The table element ID
+         * @param {string} rowKey - The row key
+         * @param {string} colKey - The column key
+         */
+        editCell: function(tableId, rowKey, colKey) {
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var row = table.querySelector('tr[data-row-key="' + rowKey + '"]');
+            if (!row) return;
+
+            var cell = row.querySelector('td[data-column-key="' + colKey + '"].geo-cell-editable');
+            if (cell) {
+                cell.click();
+            }
+        },
+
+        /**
+         * Cancel current editing
+         * @param {string} tableId - The table element ID
+         */
+        cancelEdit: function(tableId) {
+            this._closeInlineEditor(tableId, false);
+        },
+
+        // ========================================
+        // ROW GROUPING
+        // ========================================
+
+        /**
+         * Setup row grouping functionality
+         * @param {string} tableId - The table element ID
+         * @param {object} config - Table configuration
+         */
+        _setupRowGrouping: function(tableId, config) {
+            var self = this;
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var instance = this.instances[tableId];
+            if (!instance) return;
+
+            var tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            // Store group states
+            instance.groupStates = {};
+
+            // Group the rows
+            self._applyRowGrouping(tableId, config);
+
+            // Re-apply grouping after table draw (for sorting/filtering)
+            if (instance.dt) {
+                instance.dt.on('draw.dt', function() {
+                    self._applyRowGrouping(tableId, config);
+                });
+            }
+        },
+
+        /**
+         * Apply row grouping to the table
+         */
+        _applyRowGrouping: function(tableId, config) {
+            var self = this;
+            var table = document.getElementById(tableId);
+            var instance = this.instances[tableId];
+            var tbody = table.querySelector('tbody');
+            var groupBy = config.groupBy;
+
+            // Remove existing group headers
+            tbody.querySelectorAll('.geo-group-header').forEach(function(el) {
+                el.remove();
+            });
+
+            // Remove group classes from rows
+            tbody.querySelectorAll('.geo-group-row').forEach(function(el) {
+                el.classList.remove('geo-group-row', 'hidden');
+                el.removeAttribute('data-group-key');
+            });
+
+            // Get all data rows
+            var rows = Array.from(tbody.querySelectorAll('tr[data-row-key]'));
+            if (rows.length === 0) return;
+
+            // Determine column count for colspan
+            var firstRow = rows[0];
+            var colCount = firstRow.querySelectorAll('td').length;
+
+            // Group rows by the groupBy column
+            var groups = {};
+            var groupOrder = [];
+
+            rows.forEach(function(row) {
+                var rowData = row.getAttribute('data-row-data');
+                try {
+                    rowData = JSON.parse(rowData);
+                } catch (e) {
+                    rowData = {};
+                }
+
+                var groupValue = rowData[groupBy] || 'Ungrouped';
+                var groupKey = 'group_' + groupValue.toString().toLowerCase().replace(/\s+/g, '_');
+
+                if (!groups[groupKey]) {
+                    groups[groupKey] = {
+                        label: groupValue,
+                        rows: [],
+                        key: groupKey
+                    };
+                    groupOrder.push(groupKey);
+                }
+                groups[groupKey].rows.push(row);
+            });
+
+            // Create group headers and organize rows
+            groupOrder.forEach(function(groupKey) {
+                var group = groups[groupKey];
+                var isCollapsed = instance.groupStates[groupKey] !== undefined
+                    ? instance.groupStates[groupKey]
+                    : config.groupCollapsed;
+
+                // Create group header row
+                var headerRow = document.createElement('tr');
+                headerRow.className = 'geo-group-header' + (isCollapsed ? ' collapsed' : '');
+                headerRow.setAttribute('data-group-key', groupKey);
+
+                var headerCell = document.createElement('td');
+                headerCell.setAttribute('colspan', colCount);
+                headerCell.innerHTML = '<span class="geo-group-toggle">' +
+                    (config.groupCollapsible ? '<i class="ki-outline ki-down"></i>' : '') +
+                    '<span class="geo-group-label">' + self._escapeHtml(group.label) + '</span>' +
+                    '<span class="geo-group-count">(' + group.rows.length + ')</span>' +
+                    '</span>';
+                headerRow.appendChild(headerCell);
+
+                // Insert header before first row of group
+                var firstGroupRow = group.rows[0];
+                tbody.insertBefore(headerRow, firstGroupRow);
+
+                // Mark rows and set visibility
+                group.rows.forEach(function(row) {
+                    row.classList.add('geo-group-row');
+                    row.setAttribute('data-group-key', groupKey);
+                    if (isCollapsed) {
+                        row.classList.add('hidden');
+                    }
+                });
+
+                // Handle click on group header
+                if (config.groupCollapsible) {
+                    headerRow.addEventListener('click', function() {
+                        self.toggleGroup(tableId, groupKey);
+                    });
+                }
+            });
+        },
+
+        /**
+         * Toggle a group's collapsed state
+         * @param {string} tableId - The table element ID
+         * @param {string} groupKey - The group key to toggle
+         */
+        toggleGroup: function(tableId, groupKey) {
+            var table = document.getElementById(tableId);
+            var instance = this.instances[tableId];
+            if (!table || !instance) return;
+
+            var headerRow = table.querySelector('.geo-group-header[data-group-key="' + groupKey + '"]');
+            var groupRows = table.querySelectorAll('.geo-group-row[data-group-key="' + groupKey + '"]');
+
+            if (!headerRow) return;
+
+            var isCollapsed = headerRow.classList.contains('collapsed');
+
+            if (isCollapsed) {
+                // Expand
+                headerRow.classList.remove('collapsed');
+                groupRows.forEach(function(row) {
+                    row.classList.remove('hidden');
+                });
+                instance.groupStates[groupKey] = false;
+            } else {
+                // Collapse
+                headerRow.classList.add('collapsed');
+                groupRows.forEach(function(row) {
+                    row.classList.add('hidden');
+                });
+                instance.groupStates[groupKey] = true;
+            }
+        },
+
+        /**
+         * Expand all groups
+         * @param {string} tableId - The table element ID
+         */
+        expandAllGroups: function(tableId) {
+            var self = this;
+            var table = document.getElementById(tableId);
+            var instance = this.instances[tableId];
+            if (!table || !instance) return;
+
+            var groupKeys = Object.keys(instance.groupStates || {});
+            table.querySelectorAll('.geo-group-header.collapsed').forEach(function(header) {
+                var groupKey = header.getAttribute('data-group-key');
+                self.toggleGroup(tableId, groupKey);
+            });
+        },
+
+        /**
+         * Collapse all groups
+         * @param {string} tableId - The table element ID
+         */
+        collapseAllGroups: function(tableId) {
+            var self = this;
+            var table = document.getElementById(tableId);
+            var instance = this.instances[tableId];
+            if (!table || !instance) return;
+
+            table.querySelectorAll('.geo-group-header:not(.collapsed)').forEach(function(header) {
+                var groupKey = header.getAttribute('data-group-key');
+                self.toggleGroup(tableId, groupKey);
+            });
+        },
+
+        // ========================================
+        // ROW REORDERING (Drag & Drop)
+        // ========================================
+
+        /**
+         * Setup row reordering functionality
+         * @param {string} tableId - The table element ID
+         * @param {object} config - Table configuration
+         */
+        _setupRowReorder: function(tableId, config) {
+            var self = this;
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var instance = this.instances[tableId];
+            if (!instance) return;
+
+            var tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            var draggedRow = null;
+            var draggedIndex = null;
+
+            // Handle drag start on drag handle
+            tbody.addEventListener('mousedown', function(e) {
+                var handle = e.target.closest('.geo-row-drag-handle');
+                if (!handle) return;
+
+                e.preventDefault();
+                var row = handle.closest('tr[data-row-key]');
+                if (!row || row.classList.contains('geo-group-header')) return;
+
+                draggedRow = row;
+                draggedIndex = self._getRowIndex(row);
+                row.classList.add('geo-row-dragging');
+
+                // Store initial position
+                instance.dragStartY = e.clientY;
+                instance.dragRowHeight = row.offsetHeight;
+            });
+
+            // Handle drag move
+            document.addEventListener('mousemove', function(e) {
+                if (!draggedRow) return;
+
+                e.preventDefault();
+
+                // Find row under cursor
+                var targetRow = self._getRowAtPosition(tbody, e.clientY, draggedRow);
+                if (targetRow && targetRow !== draggedRow && !targetRow.classList.contains('geo-group-header')) {
+                    // Remove previous indicators
+                    tbody.querySelectorAll('.geo-row-drag-over, .geo-row-drag-over-bottom').forEach(function(el) {
+                        el.classList.remove('geo-row-drag-over', 'geo-row-drag-over-bottom');
+                    });
+
+                    // Add indicator
+                    var targetRect = targetRow.getBoundingClientRect();
+                    var isAbove = e.clientY < targetRect.top + targetRect.height / 2;
+                    targetRow.classList.add(isAbove ? 'geo-row-drag-over' : 'geo-row-drag-over-bottom');
+                }
+            });
+
+            // Handle drag end
+            document.addEventListener('mouseup', function(e) {
+                if (!draggedRow) return;
+
+                // Find target position
+                var targetRow = self._getRowAtPosition(tbody, e.clientY, draggedRow);
+                var newIndex = draggedIndex;
+
+                // Remove all drag classes
+                tbody.querySelectorAll('.geo-row-dragging, .geo-row-drag-over, .geo-row-drag-over-bottom').forEach(function(el) {
+                    var wasOver = el.classList.contains('geo-row-drag-over');
+                    var wasOverBottom = el.classList.contains('geo-row-drag-over-bottom');
+                    el.classList.remove('geo-row-dragging', 'geo-row-drag-over', 'geo-row-drag-over-bottom');
+
+                    if (el === targetRow && el !== draggedRow) {
+                        newIndex = self._getRowIndex(el);
+                        if (wasOverBottom) newIndex++;
+                        if (newIndex > draggedIndex) newIndex--;
+                    }
+                });
+
+                // Perform the move if position changed
+                if (targetRow && targetRow !== draggedRow && newIndex !== draggedIndex) {
+                    // Get row data before moving
+                    var rowData = draggedRow.getAttribute('data-row-data');
+                    try { rowData = JSON.parse(rowData); } catch (e) { rowData = null; }
+
+                    // Move the row in DOM
+                    var targetRect = targetRow.getBoundingClientRect();
+                    var insertBefore = e.clientY < targetRect.top + targetRect.height / 2;
+
+                    if (insertBefore) {
+                        tbody.insertBefore(draggedRow, targetRow);
+                    } else {
+                        tbody.insertBefore(draggedRow, targetRow.nextSibling);
+                    }
+
+                    // Get all row data after reorder
+                    var allRows = [];
+                    tbody.querySelectorAll('tr[data-row-key]').forEach(function(row, idx) {
+                        var data = row.getAttribute('data-row-data');
+                        try { data = JSON.parse(data); } catch (e) { data = {}; }
+                        allRows.push(data);
+                    });
+
+                    // Trigger callback
+                    self._triggerCallback(config.callbacks.onRowReorder, [
+                        draggedIndex,
+                        newIndex,
+                        rowData,
+                        allRows
+                    ]);
+                }
+
+                draggedRow = null;
+                draggedIndex = null;
+            });
+        },
+
+        /**
+         * Get row index within tbody (excluding group headers)
+         */
+        _getRowIndex: function(row) {
+            var tbody = row.closest('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr[data-row-key]'));
+            return rows.indexOf(row);
+        },
+
+        /**
+         * Get the row at a given Y position
+         */
+        _getRowAtPosition: function(tbody, y, excludeRow) {
+            var rows = tbody.querySelectorAll('tr[data-row-key]');
+            for (var i = 0; i < rows.length; i++) {
+                if (rows[i] === excludeRow) continue;
+                var rect = rows[i].getBoundingClientRect();
+                if (y >= rect.top && y <= rect.bottom) {
+                    return rows[i];
+                }
+            }
+            return null;
+        },
+
+        /**
+         * Get current row order
+         * @param {string} tableId - The table element ID
+         * @returns {array} Array of row keys in current order
+         */
+        getRowOrder: function(tableId) {
+            var table = document.getElementById(tableId);
+            if (!table) return [];
+
+            var tbody = table.querySelector('tbody');
+            var order = [];
+            tbody.querySelectorAll('tr[data-row-key]').forEach(function(row) {
+                order.push(row.getAttribute('data-row-key'));
+            });
+            return order;
+        },
+
+        /**
+         * Get all row data in current order
+         * @param {string} tableId - The table element ID
+         * @returns {array} Array of row data objects
+         */
+        getRowData: function(tableId) {
+            var table = document.getElementById(tableId);
+            if (!table) return [];
+
+            var tbody = table.querySelector('tbody');
+            var data = [];
+            tbody.querySelectorAll('tr[data-row-key]').forEach(function(row) {
+                var rowData = row.getAttribute('data-row-data');
+                try { rowData = JSON.parse(rowData); } catch (e) { rowData = {}; }
+                data.push(rowData);
+            });
+            return data;
+        },
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        _escapeHtml: function(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        },
+
         _triggerCallback: function(callbackName, args) {
             if (callbackName && typeof window[callbackName] === 'function') {
                 window[callbackName].apply(null, args);
@@ -3112,6 +3966,11 @@
             {{-- Table Header --}}
             <thead class="{{ $headerClass }}">
                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase">
+                    {{-- Drag Handle Column --}}
+                    @if($rowReorder)
+                    <th class="geo-col-fixed geo-col-drag-handle"></th>
+                    @endif
+
                     {{-- Expand Toggle Column --}}
                     @if($rowDetails)
                     <th class="w-10px pe-2 geo-col-fixed geo-col-expand"></th>
@@ -3163,6 +4022,11 @@
                 {{-- Column Filters Row (Header Position) --}}
                 @if($columnFilters && $columnFiltersPosition === 'header')
                 <tr class="geo-column-filters-row">
+                    {{-- Drag Handle Column - No Filter --}}
+                    @if($rowReorder)
+                    <th></th>
+                    @endif
+
                     {{-- Expand Toggle Column - No Filter --}}
                     @if($rowDetails)
                     <th></th>
@@ -3244,6 +4108,15 @@
                     onclick="window.location='{{ str_replace('{id}', $rowKeyValue, $rowUrl) }}'"
                     @endif
                 >
+                    {{-- Drag Handle Cell --}}
+                    @if($rowReorder)
+                    <td class="geo-col-drag-handle">
+                        <span class="geo-row-drag-handle" title="Drag to reorder">
+                            <i class="ki-outline ki-abstract-14"></i>
+                        </span>
+                    </td>
+                    @endif
+
                     {{-- Expand Toggle Cell --}}
                     @if($rowDetails)
                     <td class="geo-col-expand">
@@ -3274,12 +4147,26 @@
                     @endif
 
                     {{-- Data Cells --}}
-                    @foreach($normalizedColumns as $column)
+                    @foreach($normalizedColumns as $colIdx => $column)
                     @if($column['visible'] !== false)
                     @php
                         $cellValue = $rowIsArray ? ($row[$column['key']] ?? '') : ($row->{$column['key']} ?? '');
+                        $isEditable = $inlineEditing && ($column['editable'] ?? false);
+                        $editorType = $column['editor'] ?? 'text';
+                        $editorOptions = isset($column['editorOptions']) ? json_encode($column['editorOptions']) : null;
                     @endphp
-                    <td class="{{ $column['class'] }}">
+                    <td
+                        class="{{ $column['class'] }} {{ $isEditable ? 'geo-cell-editable' : '' }}"
+                        @if($isEditable)
+                        data-column-key="{{ $column['key'] }}"
+                        data-column-index="{{ $colIdx }}"
+                        data-cell-value="{{ $cellValue }}"
+                        data-editor-type="{{ $editorType }}"
+                        @if($editorOptions)
+                        data-editor-options="{{ $editorOptions }}"
+                        @endif
+                        @endif
+                    >
                         {{-- Check for custom view path first --}}
                         @if(!empty($column['view']))
                             @include($column['view'], ['row' => $row, 'value' => $cellValue, 'column' => $column, 'index' => $index])
@@ -3483,6 +4370,11 @@
             @if($columnFilters && $columnFiltersPosition === 'footer')
             <tfoot class="geo-column-filters-footer">
                 <tr class="geo-column-filters-row">
+                    {{-- Drag Handle Column - No Filter --}}
+                    @if($rowReorder)
+                    <th></th>
+                    @endif
+
                     {{-- Expand Toggle Column - No Filter --}}
                     @if($rowDetails)
                     <th></th>

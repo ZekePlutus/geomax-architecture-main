@@ -586,6 +586,18 @@
                                         <td><span class="badge badge-success me-2">NEW</span>Column Filters (Per-Column Search)</td>
                                         <td><code>:column-filters="true"</code>, <code>column-filters-position="header|footer"</code></td>
                                     </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Inline Editing (Cell Edit)</td>
+                                        <td><code>:inline-editing="true"</code>, <code>on-cell-edit-start</code>, <code>on-cell-edit-commit</code></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Row Grouping</td>
+                                        <td><code>group-by="column"</code>, <code>:group-collapsible="true"</code>, <code>:group-collapsed="false"</code></td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><span class="badge badge-success me-2">NEW</span>Row Reordering (Drag & Drop)</td>
+                                        <td><code>:row-reorder="true"</code>, <code>on-row-reorder="callback"</code></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -594,53 +606,46 @@
 
                 {{-- Missing / Pending Features --}}
                 <div class="col-lg-6">
-                    <div class="card card-bordered border-danger">
-                        <div class="card-header bg-light-danger">
+                    <div class="card card-bordered border-success">
+                        <div class="card-header bg-light-success">
                             <h4 class="card-title">
-                                <i class="ki-outline ki-cross-circle text-danger me-2"></i>
-                                Missing / Pending Features
+                                <i class="ki-outline ki-check-circle text-success me-2"></i>
+                                All Core Features Implemented! ✅
                             </h4>
                         </div>
                         <div class="card-body">
+                            <div class="alert alert-success d-flex p-4">
+                                <i class="ki-outline ki-check-circle fs-2 me-3 text-success"></i>
+                                <div>
+                                    <strong>Feature Complete!</strong>
+                                    <br>All DataTable features including Inline Editing, Row Grouping, and Row Reordering have been implemented.
+                                    <br><small class="text-muted">All features are optional, config-driven, and event-based (no data persistence).</small>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold text-gray-700 mt-5 mb-3">New Features Summary:</h6>
                             <table class="table table-sm table-row-bordered">
                                 <thead>
                                     <tr class="fw-bold text-muted">
                                         <th>Feature</th>
-                                        <th>Notes</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td>Inline Editing</td>
-                                        <td>
-                                            Edit cells directly in the table
-                                            <br><small class="text-muted">Future enhancement</small>
-                                        </td>
+                                        <td><span class="badge badge-success">✅ DONE</span></td>
                                     </tr>
                                     <tr>
                                         <td>Row Grouping</td>
-                                        <td>
-                                            Group rows by a column value
-                                            <br><small class="text-muted">Future enhancement</small>
-                                        </td>
+                                        <td><span class="badge badge-success">✅ DONE</span></td>
                                     </tr>
                                     <tr>
-                                        <td>Row Reordering (Drag & Drop)</td>
-                                        <td>
-                                            Reorder rows via drag handles
-                                            <br><small class="text-muted">Future enhancement</small>
-                                        </td>
+                                        <td>Row Reordering</td>
+                                        <td><span class="badge badge-success">✅ DONE</span></td>
                                     </tr>
                                 </tbody>
                             </table>
-
-                            <div class="alert alert-success d-flex mt-5 p-4">
-                                <i class="ki-outline ki-check-circle fs-2 me-3 text-success"></i>
-                                <div>
-                                    <strong>Core Features Complete!</strong>
-                                    <br>All essential DataTable features are implemented. Remaining items are advanced enhancements.
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -1317,6 +1322,327 @@
     :pagination="true"
     :page-length="10"
 /&gt;</pre>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- INLINE EDITING (NEW FEATURE)                                       --}}
+    {{-- ================================================================== --}}
+
+    <section id="datatable-inline-editing" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-pencil me-2 text-info"></i>
+                <span class="badge badge-success me-2">NEW</span>
+                Inline Editing
+                <code>inline-editing, on-cell-edit-commit</code>
+            </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-datatable-inline-editing">
+                <i class="ki-outline ki-code"></i> View Code
+            </button>
+        </div>
+        <div class="showcase-section-body">
+            <p class="text-muted mb-5">
+                Click on <strong>Name</strong> or <strong>Role</strong> cells to edit inline. Press <kbd>Enter</kbd> or click outside to commit, <kbd>Escape</kbd> to cancel.
+                <br><small class="text-warning">⚠️ The component does NOT persist changes - your callback handles persistence via API.</small>
+            </p>
+
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Inline Editing with Text & Select Editors
+                </div>
+                <div class="showcase-example-preview">
+                    @php
+                        $inlineEditData = [
+                            ['id' => 1, 'name' => 'Alice Johnson', 'email' => 'alice@example.com', 'role' => 'Admin', 'status' => 'active'],
+                            ['id' => 2, 'name' => 'Bob Smith', 'email' => 'bob@example.com', 'role' => 'Editor', 'status' => 'active'],
+                            ['id' => 3, 'name' => 'Carol Williams', 'email' => 'carol@example.com', 'role' => 'Viewer', 'status' => 'pending'],
+                            ['id' => 4, 'name' => 'David Brown', 'email' => 'david@example.com', 'role' => 'Editor', 'status' => 'inactive'],
+                        ];
+                    @endphp
+                    <x-table.datatable.base
+                        id="demo-inline-editing"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => '60px'],
+                            ['key' => 'name', 'label' => 'Name', 'editable' => true, 'editorType' => 'text'],
+                            ['key' => 'email', 'label' => 'Email'],
+                            ['key' => 'role', 'label' => 'Role', 'editable' => true, 'editorType' => 'select', 'editorOptions' => [
+                                ['value' => 'Admin', 'label' => 'Admin'],
+                                ['value' => 'Editor', 'label' => 'Editor'],
+                                ['value' => 'Viewer', 'label' => 'Viewer'],
+                            ]],
+                            ['key' => 'status', 'label' => 'Status', 'render' => 'status', 'statuses' => [
+                                'active' => ['label' => 'Active', 'color' => 'success'],
+                                'pending' => ['label' => 'Pending', 'color' => 'warning'],
+                                'inactive' => ['label' => 'Inactive', 'color' => 'danger'],
+                            ]],
+                        ]"
+                        :data="$inlineEditData"
+                        :datatable="true"
+                        :inline-editing="true"
+                        on-cell-edit-start="handleCellEditStart"
+                        on-cell-edit-commit="handleCellEditCommit"
+                        row-key="id"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div id="code-datatable-inline-editing" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage - Inline Editing</span>
+                <button class="showcase-code-copy">Copy</button>
+            </div>
+            <pre class="showcase-code">&lt;!-- Inline Editing with Text and Select Editors --&gt;
+&lt;x-table.datatable.base
+    id="users-table"
+    :columns="[
+        ['key' => 'id', 'label' => 'ID'],
+        ['key' => 'name', 'label' => 'Name', 'editable' => true, 'editorType' => 'text'],
+        ['key' => 'email', 'label' => 'Email'],
+        ['key' => 'role', 'label' => 'Role', 'editable' => true, 'editorType' => 'select', 'editorOptions' => [
+            ['value' => 'Admin', 'label' => 'Admin'],
+            ['value' => 'Editor', 'label' => 'Editor'],
+            ['value' => 'Viewer', 'label' => 'Viewer'],
+        ]],
+    ]"
+    :data="$users"
+    :datatable="true"
+    :inline-editing="true"
+    on-cell-edit-start="handleCellEditStart"
+    on-cell-edit-commit="handleCellEditCommit"
+    row-key="id"
+/&gt;
+
+&lt;script&gt;
+// Called when editing starts
+function handleCellEditStart(tableId, cell, rowData, field, currentValue) {
+    console.log('Editing started:', { field, currentValue, rowId: rowData.id });
+}
+
+// Called when edit is committed - return false to prevent
+function handleCellEditCommit(tableId, cell, rowData, field, oldValue, newValue) {
+    console.log('Edit committed:', { field, oldValue, newValue });
+
+    // Example: Send to server
+    fetch(`/api/users/${rowData.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: newValue })
+    });
+
+    return true; // Allow change (return false to reject)
+}
+&lt;/script&gt;
+
+&lt;!-- Available Editor Types --&gt;
+&lt;!-- 'text'     - Simple text input --&gt;
+&lt;!-- 'textarea' - Multi-line text --&gt;
+&lt;!-- 'number'   - Numeric input --&gt;
+&lt;!-- 'select'   - Dropdown (requires editorOptions) --&gt;</pre>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- ROW GROUPING (NEW FEATURE)                                         --}}
+    {{-- ================================================================== --}}
+
+    <section id="datatable-row-grouping" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-element-11 me-2 text-primary"></i>
+                <span class="badge badge-success me-2">NEW</span>
+                Row Grouping
+                <code>group-by, group-collapsible</code>
+            </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-datatable-row-grouping">
+                <i class="ki-outline ki-code"></i> View Code
+            </button>
+        </div>
+        <div class="showcase-section-body">
+            <p class="text-muted mb-5">
+                Rows are grouped by <strong>Department</strong>. Click on group headers to expand/collapse.
+                <br><small class="text-warning">⚠️ Grouping is purely visual - use API methods for programmatic control.</small>
+            </p>
+
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Group by Column Value
+                </div>
+                <div class="showcase-example-preview">
+                    @php
+                        $groupingData = [
+                            ['id' => 1, 'name' => 'Alice', 'department' => 'Engineering', 'title' => 'Senior Developer'],
+                            ['id' => 2, 'name' => 'Bob', 'department' => 'Engineering', 'title' => 'Junior Developer'],
+                            ['id' => 3, 'name' => 'Carol', 'department' => 'Engineering', 'title' => 'Tech Lead'],
+                            ['id' => 4, 'name' => 'David', 'department' => 'Marketing', 'title' => 'Marketing Manager'],
+                            ['id' => 5, 'name' => 'Eve', 'department' => 'Marketing', 'title' => 'Content Writer'],
+                            ['id' => 6, 'name' => 'Frank', 'department' => 'Sales', 'title' => 'Sales Rep'],
+                            ['id' => 7, 'name' => 'Grace', 'department' => 'Sales', 'title' => 'Account Executive'],
+                            ['id' => 8, 'name' => 'Henry', 'department' => 'HR', 'title' => 'HR Manager'],
+                        ];
+                    @endphp
+                    <x-table.datatable.base
+                        id="demo-row-grouping"
+                        :columns="[
+                            ['key' => 'id', 'label' => 'ID', 'width' => '60px'],
+                            ['key' => 'name', 'label' => 'Name'],
+                            ['key' => 'department', 'label' => 'Department'],
+                            ['key' => 'title', 'label' => 'Job Title'],
+                        ]"
+                        :data="$groupingData"
+                        :datatable="false"
+                        group-by="department"
+                        :group-collapsible="true"
+                        :group-collapsed="false"
+                        row-key="id"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div id="code-datatable-row-grouping" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage - Row Grouping</span>
+                <button class="showcase-code-copy">Copy</button>
+            </div>
+            <pre class="showcase-code">&lt;!-- Row Grouping by Column --&gt;
+&lt;x-table.datatable.base
+    id="employees-table"
+    :columns="[
+        ['key' => 'id', 'label' => 'ID'],
+        ['key' => 'name', 'label' => 'Name'],
+        ['key' => 'department', 'label' => 'Department'],
+        ['key' => 'title', 'label' => 'Job Title'],
+    ]"
+    :data="$employees"
+    group-by="department"
+    :group-collapsible="true"
+    :group-collapsed="false"
+    row-key="id"
+/&gt;
+
+&lt;!-- Start with groups collapsed --&gt;
+&lt;x-table.datatable.base
+    :columns="$columns"
+    :data="$data"
+    group-by="status"
+    :group-collapsible="true"
+    :group-collapsed="true"
+/&gt;
+
+&lt;!-- JavaScript API --&gt;
+&lt;script&gt;
+// Toggle specific group
+GeoTable.toggleGroup('employees-table', 'Engineering');
+
+// Expand all groups
+GeoTable.expandAllGroups('employees-table');
+
+// Collapse all groups
+GeoTable.collapseAllGroups('employees-table');
+&lt;/script&gt;</pre>
+        </div>
+    </section>
+
+    {{-- ================================================================== --}}
+    {{-- ROW REORDERING (NEW FEATURE)                                       --}}
+    {{-- ================================================================== --}}
+
+    <section id="datatable-row-reorder" class="showcase-section">
+        <div class="showcase-section-header">
+            <h3 class="showcase-section-title">
+                <i class="ki-outline ki-arrow-up-down me-2 text-warning"></i>
+                <span class="badge badge-success me-2">NEW</span>
+                Row Reordering (Drag & Drop)
+                <code>row-reorder, on-row-reorder</code>
+            </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-datatable-row-reorder">
+                <i class="ki-outline ki-code"></i> View Code
+            </button>
+        </div>
+        <div class="showcase-section-body">
+            <p class="text-muted mb-5">
+                Drag the <strong>☰</strong> handle to reorder rows. The new order is emitted via callback.
+                <br><small class="text-warning">⚠️ The component does NOT persist order - your callback handles persistence via API.</small>
+            </p>
+
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Drag Handle Row Reordering
+                </div>
+                <div class="showcase-example-preview">
+                    @php
+                        $reorderData = [
+                            ['id' => 1, 'priority' => 1, 'task' => 'Complete project proposal', 'due' => 'Tomorrow'],
+                            ['id' => 2, 'priority' => 2, 'task' => 'Review pull requests', 'due' => 'Today'],
+                            ['id' => 3, 'priority' => 3, 'task' => 'Update documentation', 'due' => 'Next week'],
+                            ['id' => 4, 'priority' => 4, 'task' => 'Fix bug #1234', 'due' => 'Today'],
+                            ['id' => 5, 'priority' => 5, 'task' => 'Team standup meeting', 'due' => 'Daily'],
+                        ];
+                    @endphp
+                    <x-table.datatable.base
+                        id="demo-row-reorder"
+                        :columns="[
+                            ['key' => 'priority', 'label' => '#', 'width' => '50px'],
+                            ['key' => 'task', 'label' => 'Task'],
+                            ['key' => 'due', 'label' => 'Due Date'],
+                        ]"
+                        :data="$reorderData"
+                        :datatable="false"
+                        :row-reorder="true"
+                        on-row-reorder="handleRowReorder"
+                        row-key="id"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <div id="code-datatable-row-reorder" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage - Row Reordering</span>
+                <button class="showcase-code-copy">Copy</button>
+            </div>
+            <pre class="showcase-code">&lt;!-- Row Reordering with Drag & Drop --&gt;
+&lt;x-table.datatable.base
+    id="tasks-table"
+    :columns="[
+        ['key' => 'priority', 'label' => '#'],
+        ['key' => 'task', 'label' => 'Task'],
+        ['key' => 'due', 'label' => 'Due Date'],
+    ]"
+    :data="$tasks"
+    :row-reorder="true"
+    on-row-reorder="handleRowReorder"
+    row-key="id"
+/&gt;
+
+&lt;script&gt;
+// Called when rows are reordered
+function handleRowReorder(tableId, newOrder, fromIndex, toIndex) {
+    console.log('Row reordered:', { fromIndex, toIndex });
+
+    // Get ordered IDs
+    const orderedIds = newOrder.map(row => row.id);
+
+    // Send to server
+    fetch('/api/tasks/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order: orderedIds })
+    });
+}
+&lt;/script&gt;
+
+&lt;!-- JavaScript API --&gt;
+&lt;script&gt;
+// Get current row order
+const order = GeoTable.getRowOrder('tasks-table');
+console.log(order); // Array of row data in current order
+
+// Get specific row data
+const rowData = GeoTable.getRowData('tasks-table', 0);
+&lt;/script&gt;</pre>
         </div>
     </section>
 
@@ -2715,6 +3041,88 @@ GeoGrid.getContextMenuItems('grid-id');               // Get current menu items
         //         body: JSON.stringify({ ids: selectedIds })
         //     }).then(() => GeoTable.reload(tableId));
         // }
+    }
+
+    // ========================================
+    // DATATABLE INLINE EDITING HANDLERS
+    // ========================================
+
+    /**
+     * Called when a cell enters edit mode
+     * @param {string} tableId - The table ID
+     * @param {HTMLElement} cell - The cell element
+     * @param {Object} rowData - The row data
+     * @param {string} field - The field/column key
+     * @param {*} currentValue - The current cell value
+     */
+    function handleCellEditStart(tableId, cell, rowData, field, currentValue) {
+        console.log('%c[DataTable] Cell Edit Start', 'color: #3498db; font-weight: bold', {
+            tableId,
+            field,
+            currentValue,
+            rowId: rowData.id
+        });
+    }
+
+    /**
+     * Called when a cell edit is committed (Enter or blur)
+     * @param {string} tableId - The table ID
+     * @param {HTMLElement} cell - The cell element
+     * @param {Object} rowData - The row data
+     * @param {string} field - The field/column key
+     * @param {*} oldValue - The previous value
+     * @param {*} newValue - The new value
+     * @returns {boolean} Return false to prevent the change
+     */
+    function handleCellEditCommit(tableId, cell, rowData, field, oldValue, newValue) {
+        console.log('%c[DataTable] Cell Edit Commit', 'color: #27ae60; font-weight: bold', {
+            tableId,
+            field,
+            oldValue,
+            newValue,
+            rowId: rowData.id
+        });
+
+        // Example: Validate the change
+        // if (field === 'name' && newValue.trim() === '') {
+        //     alert('Name cannot be empty');
+        //     return false; // Prevent the change
+        // }
+
+        // Example: Send to server
+        // fetch(`/api/users/${rowData.id}`, {
+        //     method: 'PATCH',
+        //     body: JSON.stringify({ [field]: newValue })
+        // });
+
+        return true; // Allow the change
+    }
+
+    // ========================================
+    // DATATABLE ROW REORDER HANDLER
+    // ========================================
+
+    /**
+     * Called when rows are reordered via drag & drop
+     * @param {string} tableId - The table ID
+     * @param {Array} newOrder - Array of row data in new order
+     * @param {number} fromIndex - Original index of dragged row
+     * @param {number} toIndex - New index of dragged row
+     */
+    function handleRowReorder(tableId, newOrder, fromIndex, toIndex) {
+        console.log('%c[DataTable] Row Reorder', 'color: #9b59b6; font-weight: bold', {
+            tableId,
+            fromIndex,
+            toIndex,
+            newOrderIds: newOrder.map(row => row.id || row.priority)
+        });
+
+        // Example: Send new order to server
+        // const orderedIds = newOrder.map(row => row.id);
+        // fetch('/api/tasks/reorder', {
+        //     method: 'POST',
+        //     body: JSON.stringify({ order: orderedIds })
+        // });
     }
 
     // Demo handler for AG Grid selection
