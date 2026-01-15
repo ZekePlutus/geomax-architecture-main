@@ -18,75 +18,442 @@
     ================================================================================
 --}}
 
-@extends('core-ui.layouts.showcase')
+@extends('layout50.master')
 
-@section('header-title', 'Table Component Library')
-@section('header-description', 'Browse, test, and validate DataTable and AG Grid components')
+@section('title', 'Component Showcase')
+@section('page_title', 'UI Component Library')
 
-@section('sidebar-nav')
-    <!-- Feature Tracking -->
-    <div class="showcase-nav-category">Development</div>
-    <a href="#feature-tracker" class="showcase-nav-item">
-        <i class="ki-outline ki-chart-simple-2"></i>
-        Feature Tracker
-    </a>
+@php
+    $breadcrumbs = [
+        ['url' => "/", 'label' => 'Home'],
+        'Components'
+    ];
+@endphp
 
-    <!-- DataTable Category -->
-    <div class="showcase-nav-category">DataTable (jQuery)</div>
-    <a href="#datatable-static" class="showcase-nav-item active">
-        <i class="ki-outline ki-row-horizontal"></i>
-        DataTable (Static)
-    </a>
-    <a href="#datatable-ajax" class="showcase-nav-item">
-        <i class="ki-outline ki-cloud-download"></i>
-        DataTable (AJAX)
-    </a>
-    <a href="#datatable-features" class="showcase-nav-item">
-        <i class="ki-outline ki-setting-2"></i>
-        DataTable Features
-    </a>
-    <a href="#empty-states" class="showcase-nav-item">
-        <i class="ki-outline ki-file-deleted"></i>
-        Empty States
-    </a>
+@push('styles')
+<style>
+    /* Showcase Section Styles */
+    .showcase-section {
+        background: #fff;
+        border-radius: 12px;
+        margin-bottom: 40px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.03);
+        overflow: hidden;
+        display: block;
+        clear: both;
+    }
 
-    <!-- AG Grid Category -->
-    <div class="showcase-nav-category">AG Grid (Enterprise)</div>
-    <a href="#aggrid-basic" class="showcase-nav-item">
-        <i class="ki-outline ki-grid"></i>
-        AG Grid (Basic)
-    </a>
-    <a href="#aggrid-filtering" class="showcase-nav-item">
-        <i class="ki-outline ki-filter"></i>
-        AG Grid (Filtering)
-    </a>
-    <a href="#aggrid-selection" class="showcase-nav-item">
-        <i class="ki-outline ki-check-square"></i>
-        AG Grid (Selection)
-    </a>
-    <a href="#aggrid-server-side" class="showcase-nav-item">
-        <i class="ki-outline ki-cloud-download"></i>
-        AG Grid (Server-Side)
-    </a>
-    <a href="#aggrid-editing" class="showcase-nav-item">
-        <i class="ki-outline ki-pencil"></i>
-        <span class="badge badge-success badge-sm me-1">NEW</span> Inline Editing
-    </a>
-    <a href="#aggrid-row-dragging" class="showcase-nav-item">
-        <i class="ki-outline ki-arrow-up-down"></i>
-        <span class="badge badge-success badge-sm me-1">NEW</span> Row Dragging
-    </a>
-    <a href="#aggrid-context-menu" class="showcase-nav-item">
-        <i class="ki-outline ki-menu"></i>
-        <span class="badge badge-success badge-sm me-1">NEW</span> Context Menu
-    </a>
-    <a href="#aggrid-features" class="showcase-nav-item">
-        <i class="ki-outline ki-setting-3"></i>
-        AG Grid Features
-    </a>
-@endsection
+    /* Ensure proper section separation */
+    .showcase-section:not(:last-child) {
+        margin-bottom: 40px !important;
+    }
+
+    .showcase-section-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid #e4e6ef;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .showcase-section-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #181c32;
+    }
+
+    .showcase-section-title code {
+        font-size: 12px;
+        background: #f1f3f5;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-left: 10px;
+        color: #7e8299;
+    }
+
+    .showcase-section-body {
+        padding: 25px;
+    }
+
+    .showcase-section-footer {
+        padding: 15px 25px;
+        background: #f9fafb;
+        border-top: 1px solid #e4e6ef;
+        border-radius: 0 0 12px 12px;
+    }
+
+    /* Example Grid */
+    .showcase-example {
+        margin-bottom: 30px;
+        padding-bottom: 30px;
+        border-bottom: 1px dashed #e4e6ef;
+    }
+
+    .showcase-example:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    /* Additional spacing for multiple examples */
+    .showcase-example + .showcase-example,
+    .showcase-example.mt-10 {
+        margin-top: 40px !important;
+        padding-top: 30px;
+        border-top: 1px dashed #e4e6ef;
+    }
+
+    .showcase-example-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #5e6278;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    .showcase-example-label .badge {
+        margin-left: 8px;
+    }
+
+    /* Example Header */
+    .showcase-example-header {
+        margin-bottom: 15px;
+    }
+
+    .showcase-example-header h4 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #181c32;
+        margin: 0 0 5px 0;
+    }
+
+    .showcase-example-header p {
+        margin: 0;
+    }
+
+    .showcase-example-preview {
+        background: #fafbfc;
+        border: 1px solid #e4e6ef;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 0;
+        min-height: 150px;
+        overflow: auto;
+        position: relative;
+    }
+
+    /* Ensure geo-grid-wrapper takes full height when inside preview */
+    .showcase-example-preview > .geo-grid-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    /* Dark mode support for showcase */
+    [data-bs-theme="dark"] .showcase-section {
+        background: var(--bs-body-bg, #1e1e2d);
+        box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    [data-bs-theme="dark"] .showcase-section-header {
+        border-bottom-color: var(--bs-border-color, #2d2d3a);
+    }
+
+    [data-bs-theme="dark"] .showcase-section-title {
+        color: var(--bs-body-color, #f5f8fa);
+    }
+
+    [data-bs-theme="dark"] .showcase-example {
+        border-bottom-color: var(--bs-border-color, #2d2d3a);
+    }
+
+    [data-bs-theme="dark"] .showcase-example-header h4 {
+        color: var(--bs-body-color, #f5f8fa);
+    }
+
+    [data-bs-theme="dark"] .showcase-example-preview {
+        background: var(--bs-gray-900, #151521);
+        border-color: var(--bs-border-color, #2d2d3a);
+    }
+
+    /* Ensure AG Grid containers have proper sizing */
+    .showcase-example-preview .ag-theme-quartz,
+    .showcase-example-preview .ag-theme-quartz-dark,
+    .showcase-example-preview [id*="aggrid"] {
+        width: 100% !important;
+        display: block;
+    }
+
+    /* Ensure tables have proper spacing within examples */
+    .showcase-example-preview .geo-grid-wrapper,
+    .showcase-example-preview .geo-table-wrapper {
+        margin-bottom: 0;
+        width: 100%;
+        position: relative;
+    }
+
+    /* AG Grid specific fixes for showcase - critical for proper display */
+    .showcase-section .geo-grid-wrapper {
+        width: 100% !important;
+        display: block;
+        position: relative;
+        margin-bottom: 15px;
+    }
+
+    /* Ensure AG Grid container respects height */
+    .showcase-example-preview [class*="ag-theme-"] {
+        width: 100% !important;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    /* Critical: Force AG Grid to respect inline height */
+    .showcase-example-preview .ag-root-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 8px;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    /* Prevent AG Grid from overflowing */
+    .showcase-section .ag-root-wrapper-body {
+        position: relative;
+        height: 100%;
+    }
+
+    /* Force showcase sections to properly contain their content */
+    .showcase-section {
+        contain: layout style;
+    }
+
+    .showcase-section-body {
+        position: relative;
+        overflow: visible;
+    }
+
+    /* Fix for quick filter search box */
+    .showcase-section .geo-grid-toolbar {
+        margin-bottom: 10px;
+    }
+
+    /* Hide example code blocks - code should only show in slide-out panel */
+    .showcase-example-code {
+        display: none !important;
+    }
+
+    /* Code Block */
+    .showcase-code {
+        background: #1e1e2d;
+        color: #e4e6ef;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+        font-size: 13px;
+        line-height: 1.7;
+        overflow-x: auto;
+        margin: 0;
+        white-space: pre;
+        border: 1px solid #2d2d3a;
+    }
+
+    /* Legacy code wrapper (hidden by default, used for storing code) */
+    .showcase-code-wrapper {
+        display: none;
+    }
+
+    /* Slide-out Code Panel */
+    .showcase-code-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 550px;
+        max-width: 50vw;
+        height: 100vh;
+        background: #1e1e2d;
+        z-index: 1050;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        box-shadow: -5px 0 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .showcase-code-panel.open {
+        transform: translateX(0);
+    }
+
+    .showcase-code-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: #151521;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+    }
+
+    .showcase-code-panel-title {
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .showcase-code-panel-title i {
+        color: #3699ff;
+    }
+
+    .showcase-code-panel-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .showcase-code-panel-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .showcase-code-panel-copy {
+        background: #3699ff;
+        color: #fff;
+    }
+
+    .showcase-code-panel-copy:hover {
+        background: #1a73e8;
+    }
+
+    .showcase-code-panel-close {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .showcase-code-panel-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .showcase-code-panel-body {
+        flex: 1;
+        overflow: auto;
+        padding: 20px;
+    }
+
+    .showcase-code-panel-body .showcase-code {
+        border-radius: 0;
+        border: none;
+        background: transparent;
+        padding: 0;
+        min-height: 100%;
+    }
+
+    .showcase-code-panel-label {
+        display: inline-block;
+        padding: 4px 10px;
+        background: rgba(54, 153, 255, 0.2);
+        color: #3699ff;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-radius: 4px;
+    }
+
+    /* Backdrop when panel is open */
+    .showcase-code-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .showcase-code-backdrop.open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .showcase-code .tag {
+        color: #e74c3c;
+    }
+
+    .showcase-code .attr {
+        color: #3498db;
+    }
+
+    .showcase-code .string {
+        color: #2ecc71;
+    }
+
+    /* Toggle Button - Consistent style */
+    .showcase-toggle-code {
+        font-size: 12px;
+        padding: 6px 14px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f1f3f5 !important;
+        border: 1px solid #e4e6ef !important;
+        color: #5e6278 !important;
+    }
+
+    .showcase-toggle-code:hover {
+        background: #e9ecef !important;
+        border-color: #d1d5db !important;
+    }
+
+    .showcase-toggle-code.active {
+        background: #3699ff !important;
+        border-color: #3699ff !important;
+        color: #fff !important;
+    }
+
+    .showcase-toggle-code i {
+        font-size: 14px;
+    }
+</style>
+@endpush
 
 @section('content')
+    <!-- Slide-out Code Panel -->
+    <div class="showcase-code-backdrop" id="codeBackdrop"></div>
+    <div class="showcase-code-panel" id="codePanel">
+        <div class="showcase-code-panel-header">
+            <h4 class="showcase-code-panel-title">
+                <i class="ki-outline ki-code"></i>
+                <span id="codePanelTitle">Blade Usage</span>
+            </h4>
+            <div class="showcase-code-panel-actions">
+                <button class="showcase-code-panel-btn showcase-code-panel-copy" id="codePanelCopy">
+                    <i class="ki-outline ki-copy"></i>
+                    Copy
+                </button>
+                <button class="showcase-code-panel-btn showcase-code-panel-close" id="codePanelClose">
+                    <i class="ki-outline ki-cross"></i>
+                </button>
+            </div>
+        </div>
+        <div class="showcase-code-panel-body">
+            <pre class="showcase-code" id="codePanelContent"></pre>
+        </div>
+    </div>
+
     {{-- ================================================================== --}}
     {{-- FEATURE TRACKER                                                    --}}
     {{-- ================================================================== --}}
@@ -764,6 +1131,70 @@
                 </div>
             </div>
 
+            {{-- Row Details / Expandable Rows Example --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    <span class="badge badge-success me-2">NEW</span> Expandable Row Details
+                    <span class="badge badge-light-info ms-2">Click any row or the + button to expand</span>
+                </div>
+                <div class="showcase-example-preview">
+                    @php
+                        $rowDetailsDemo = [
+                            ['id' => 1, 'name' => 'John Doe', 'email' => 'john@example.com', 'phone' => '+1 (555) 123-4567', 'department' => 'Engineering', 'position' => 'Senior Developer', 'salary' => 95000, 'hire_date' => '2021-03-15', 'address' => '123 Main St, New York, NY 10001'],
+                            ['id' => 2, 'name' => 'Jane Smith', 'email' => 'jane@example.com', 'phone' => '+1 (555) 987-6543', 'department' => 'Marketing', 'position' => 'Marketing Manager', 'salary' => 85000, 'hire_date' => '2020-07-22', 'address' => '456 Oak Ave, Los Angeles, CA 90001'],
+                            ['id' => 3, 'name' => 'Bob Wilson', 'email' => 'bob@example.com', 'phone' => '+1 (555) 456-7890', 'department' => 'Sales', 'position' => 'Sales Representative', 'salary' => 65000, 'hire_date' => '2022-01-10', 'address' => '789 Pine Rd, Chicago, IL 60601'],
+                            ['id' => 4, 'name' => 'Alice Brown', 'email' => 'alice@example.com', 'phone' => '+1 (555) 321-0987', 'department' => 'HR', 'position' => 'HR Specialist', 'salary' => 72000, 'hire_date' => '2019-11-05', 'address' => '321 Elm St, Houston, TX 77001'],
+                        ];
+                    @endphp
+                    <x-table.datatable.base
+                        id="demo-row-details"
+                        :columns="[
+                            ['key' => 'name', 'label' => 'Name'],
+                            ['key' => 'email', 'label' => 'Email'],
+                            ['key' => 'department', 'label' => 'Department'],
+                        ]"
+                        :data="$rowDetailsDemo"
+                        :row-details="true"
+                        :row-details-columns="[
+                            ['key' => 'phone', 'label' => 'Phone Number'],
+                            ['key' => 'position', 'label' => 'Position'],
+                            ['key' => 'salary', 'label' => 'Salary'],
+                            ['key' => 'hire_date', 'label' => 'Hire Date'],
+                            ['key' => 'address', 'label' => 'Address'],
+                        ]"
+                        row-key="id"
+                    />
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-sm btn-light-primary" onclick="GeoTable.expandRow('demo-row-details', '1')">
+                            <i class="ki-outline ki-plus me-1"></i> Expand Row 1
+                        </button>
+                        <button class="btn btn-sm btn-light-warning" onclick="GeoTable.collapseAllRows('demo-row-details')">
+                            <i class="ki-outline ki-minus me-1"></i> Collapse All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Row Details - Show All Data --}}
+            <div class="showcase-example">
+                <div class="showcase-example-label">
+                    Row Details - Auto Show All Fields
+                    <span class="badge badge-light-info ms-2">No rowDetailsColumns = shows all data</span>
+                </div>
+                <div class="showcase-example-preview">
+                    <x-table.datatable.base
+                        id="demo-row-details-all"
+                        :columns="[
+                            ['key' => 'name', 'label' => 'Name'],
+                            ['key' => 'department', 'label' => 'Department'],
+                        ]"
+                        :data="$rowDetailsDemo"
+                        :row-details="true"
+                        row-key="id"
+                    />
+                </div>
+            </div>
+
             {{-- New Renderers Example --}}
             <div class="showcase-example">
                 <div class="showcase-example-label">
@@ -1141,6 +1572,9 @@
                 <i class="ki-outline ki-grid me-2 text-info"></i>
                 AG Grid - Basic Usage
             </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-aggrid-basic">
+                Show Code
+            </button>
         </div>
         <div class="showcase-section-body">
             <div class="showcase-example">
@@ -1184,24 +1618,33 @@
                         height="350px"
                     />
                 </div>
-                <div class="showcase-example-code">
-                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+            </div>
+        </div>
+
+        <div id="code-aggrid-basic" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage</span>
+            </div>
+            <pre class="showcase-code">&lt;x-table.aggrid.base
     :columns="[
         ['key' => 'id', 'label' => 'ID', 'width' => 80],
         ['key' => 'name', 'label' => 'Name', 'flex' => 1],
         ['key' => 'email', 'label' => 'Email', 'flex' => 1],
-        ['key' => 'role', 'label' => 'Role', 'render' => 'badge', 'colors' => ['Admin' => 'primary']],
-        ['key' => 'status', 'label' => 'Status', 'render' => 'status', 'statuses' => [...]],
-        ['key' => 'salary', 'label' => 'Salary', 'render' => 'currency', 'symbol' => '$'],
+        ['key' => 'role', 'label' => 'Role', 'render' => 'badge', 'colors' => ['Admin' => 'primary', 'Editor' => 'info', 'Viewer' => 'secondary']],
+        ['key' => 'status', 'label' => 'Status', 'render' => 'status', 'statuses' => [
+            'active' => ['label' => 'Active', 'color' => 'success'],
+            'inactive' => ['label' => 'Inactive', 'color' => 'danger'],
+            'pending' => ['label' => 'Pending', 'color' => 'warning'],
+        ]],
+        ['key' => 'salary', 'label' => 'Salary', 'render' => 'currency', 'symbol' => '$', 'decimals' => 0],
         ['key' => 'joined', 'label' => 'Joined', 'render' => 'date'],
     ]"
     :data="$users"
     :sortable="true"
     :pagination="true"
     :page-size="5"
-/&gt;</code></pre>
-                </div>
-            </div>
+    height="350px"
+/&gt;</pre>
         </div>
     </section>
 
@@ -1215,6 +1658,9 @@
                 <i class="ki-outline ki-filter me-2 text-info"></i>
                 AG Grid - Filtering
             </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-aggrid-filtering">
+                Show Code
+            </button>
         </div>
         <div class="showcase-section-body">
             <div class="showcase-example">
@@ -1242,21 +1688,31 @@
                         height="400px"
                     />
                 </div>
-                <div class="showcase-example-code">
-                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+            </div>
+        </div>
+
+        <div id="code-aggrid-filtering" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage</span>
+            </div>
+            <pre class="showcase-code">&lt;x-table.aggrid.base
     :columns="[
         ['key' => 'id', 'label' => 'ID', 'filter' => 'number'],
         ['key' => 'name', 'label' => 'Name', 'filter' => 'text'],
-        ['key' => 'salary', 'label' => 'Salary', 'filter' => 'number'],
-        ['key' => 'joined', 'label' => 'Joined', 'filter' => 'date'],
+        ['key' => 'email', 'label' => 'Email', 'filter' => 'text'],
+        ['key' => 'role', 'label' => 'Role', 'filter' => 'text', 'render' => 'badge'],
+        ['key' => 'salary', 'label' => 'Salary', 'filter' => 'number', 'render' => 'currency'],
+        ['key' => 'joined', 'label' => 'Joined', 'filter' => 'date', 'render' => 'date'],
     ]"
     :data="$users"
+    :sortable="true"
     :filterable="true"
     :floating-filter="true"
     :quick-filter="true"
-/&gt;</code></pre>
-                </div>
-            </div>
+    :pagination="true"
+/&gt;
+
+&lt;!-- Filter types available: 'text', 'number', 'date', 'set' --&gt;</pre>
         </div>
     </section>
 
@@ -1270,6 +1726,9 @@
                 <i class="ki-outline ki-check-square me-2 text-info"></i>
                 AG Grid - Row Selection
             </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-aggrid-selection">
+                Show Code
+            </button>
         </div>
         <div class="showcase-section-body">
             <div class="showcase-example">
@@ -1297,8 +1756,14 @@
                         height="350px"
                     />
                 </div>
-                <div class="showcase-example-code">
-                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+            </div>
+        </div>
+
+        <div id="code-aggrid-selection" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage</span>
+            </div>
+            <pre class="showcase-code">&lt;x-table.aggrid.base
     :columns="$columns"
     :data="$users"
     :selectable="true"
@@ -1312,10 +1777,16 @@
 &lt;script&gt;
 function handleSelection(selectedRows, params) {
     console.log('Selected:', selectedRows);
+    console.log('Selected IDs:', selectedRows.map(r => r.id));
 }
-&lt;/script&gt;</code></pre>
-                </div>
-            </div>
+
+// JS API methods
+const selected = GeoGrid.getSelected('grid-id');      // Get selected row data
+const selectedIds = GeoGrid.getSelectedIds('grid-id'); // Get selected IDs only
+GeoGrid.selectAll('grid-id');                          // Select all rows
+GeoGrid.deselectAll('grid-id');                        // Deselect all rows
+GeoGrid.selectRows('grid-id', [1, 2, 3]);              // Select specific rows by ID
+&lt;/script&gt;</pre>
         </div>
     </section>
 
@@ -1329,6 +1800,9 @@ function handleSelection(selectedRows, params) {
                 <i class="ki-outline ki-cloud-download me-2 text-primary"></i>
                 AG Grid - Server-Side Data Model
             </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-aggrid-server-side">
+                Show Code
+            </button>
         </div>
         <div class="showcase-section-body">
             <div class="alert alert-info mb-5">
@@ -1381,36 +1855,6 @@ function handleSelection(selectedRows, params) {
                         </button>
                     </div>
                 </div>
-                <div class="showcase-example-code">
-                    <pre><code class="language-blade">&lt;x-table.aggrid.base
-    id="users-grid"
-    :columns="[
-        ['key' => 'id', 'label' => 'ID', 'sortable' => true, 'filter' => 'number'],
-        ['key' => 'name', 'label' => 'Name', 'sortable' => true, 'filter' => 'text'],
-        ['key' => 'email', 'label' => 'Email', 'filter' => 'text'],
-        ['key' => 'salary', 'label' => 'Salary', 'render' => 'currency', 'filter' => 'number'],
-    ]"
-    ajax-url="/api/users"
-    :server-side="true"
-    :pagination="true"
-    :page-size="25"
-    :filterable="true"
-    :floating-filter="true"
-    :sortable="true"
-/&gt;
-
-&lt;!-- Your API should return: --&gt;
-{
-    "data": [
-        {"id": 1, "name": "John", "email": "john@example.com", "salary": 75000},
-        ...
-    ],
-    "total": 10000  // Total row count for pagination
-}
-
-&lt;!-- Query params sent to server: --&gt;
-?page=1&per_page=25&sort_by=name&sort_dir=asc&filters={"name":{"type":"contains","value":"john"}}</code></pre>
-                </div>
             </div>
 
             {{-- Infinite Scroll Demo --}}
@@ -1442,64 +1886,82 @@ function handleSelection(selectedRows, params) {
                         Scroll down to load more rows. Data loads in blocks of 50.
                     </p>
                 </div>
-                <div class="showcase-example-code">
-                    <pre><code class="language-blade">&lt;x-table.aggrid.base
+            </div>
+        </div>
+
+        <div id="code-aggrid-server-side" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage</span>
+            </div>
+            <pre class="showcase-code">&lt;!-- Server-Side with Pagination --&gt;
+&lt;x-table.aggrid.base
+    id="users-grid"
+    :columns="[
+        ['key' => 'id', 'label' => 'ID', 'sortable' => true, 'filter' => 'number'],
+        ['key' => 'name', 'label' => 'Name', 'sortable' => true, 'filter' => 'text'],
+        ['key' => 'email', 'label' => 'Email', 'filter' => 'text'],
+        ['key' => 'salary', 'label' => 'Salary', 'render' => 'currency', 'filter' => 'number'],
+    ]"
+    ajax-url="/api/users"
+    :server-side="true"
+    :pagination="true"
+    :page-size="25"
+    :filterable="true"
+    :floating-filter="true"
+    :sortable="true"
+/&gt;
+
+&lt;!-- Infinite Scroll Mode --&gt;
+&lt;x-table.aggrid.base
     :columns="$columns"
     ajax-url="/api/users"
     :server-side="true"
     :server-side-infinite="true"
     :cache-block-size="50"
-/&gt;</code></pre>
-                </div>
-            </div>
+/&gt;
 
-            {{-- Laravel Controller Example --}}
-            <div class="showcase-example mt-10">
-                <div class="showcase-example-header">
-                    <h4>Laravel Controller Example</h4>
-                    <p class="text-muted mb-0">Example backend implementation for handling server-side requests.</p>
-                </div>
-                <div class="showcase-example-code">
-                    <pre><code class="language-php">// app/Http/Controllers/Api/UserController.php
+&lt;!-- API Response Format --&gt;
+{
+    "data": [
+        {"id": 1, "name": "John", "email": "john@example.com", "salary": 75000},
+        ...
+    ],
+    "total": 10000
+}
 
+&lt;!-- Query params sent to server: --&gt;
+?page=1&amp;per_page=25&amp;sort_by=name&amp;sort_dir=asc&amp;filters={"name":{"type":"contains","value":"john"}}
+
+&lt;!-- Laravel Controller Example --&gt;
 public function index(Request $request)
 {
     $query = User::query();
 
     // Apply filters
-    if ($filters = $request->input('filters')) {
+    if ($filters = $request-&gt;input('filters')) {
         $filters = is_string($filters) ? json_decode($filters, true) : $filters;
-        foreach ($filters as $field => $filter) {
+        foreach ($filters as $field =&gt; $filter) {
             match ($filter['type']) {
-                'contains' => $query->where($field, 'like', '%' . $filter['value'] . '%'),
-                'equals' => $query->where($field, $filter['value']),
-                'startsWith' => $query->where($field, 'like', $filter['value'] . '%'),
-                'lessThan' => $query->where($field, '<', $filter['value']),
-                'greaterThan' => $query->where($field, '>', $filter['value']),
-                'inRange' => $query->whereBetween($field, [$filter['value'], $filter['valueTo']]),
-                default => null,
+                'contains' =&gt; $query-&gt;where($field, 'like', '%' . $filter['value'] . '%'),
+                'equals' =&gt; $query-&gt;where($field, $filter['value']),
+                default =&gt; null,
             };
         }
     }
 
     // Apply sorting
-    if ($sortBy = $request->input('sort_by')) {
-        $query->orderBy($sortBy, $request->input('sort_dir', 'asc'));
+    if ($sortBy = $request-&gt;input('sort_by')) {
+        $query-&gt;orderBy($sortBy, $request-&gt;input('sort_dir', 'asc'));
     }
 
     // Paginate
-    $perPage = $request->input('per_page', 25);
-    $paginated = $query->paginate($perPage);
+    $paginated = $query-&gt;paginate($request-&gt;input('per_page', 25));
 
-    return response()->json([
-        'data' => $paginated->items(),
-        'total' => $paginated->total(),
-        'page' => $paginated->currentPage(),
-        'per_page' => $paginated->perPage(),
+    return response()-&gt;json([
+        'data' =&gt; $paginated-&gt;items(),
+        'total' =&gt; $paginated-&gt;total(),
     ]);
-}</code></pre>
-                </div>
-            </div>
+}</pre>
         </div>
     </section>
 
@@ -2070,6 +2532,9 @@ GeoGrid.getContextMenuItems('grid-id');               // Get current menu items
                 <i class="ki-outline ki-setting-3 me-2 text-info"></i>
                 AG Grid - Advanced Features
             </h3>
+            <button class="btn btn-sm btn-light showcase-toggle-code" data-toggle-code="#code-aggrid-features">
+                Show Code
+            </button>
         </div>
         <div class="showcase-section-body">
             {{-- Column Pinning --}}
@@ -2099,17 +2564,6 @@ GeoGrid.getContextMenuItems('grid-id');               // Get current menu items
                         :sortable="true"
                         height="250px"
                     />
-                </div>
-                <div class="showcase-example-code">
-                    <pre><code class="language-blade">&lt;x-table.aggrid.base
-    :columns="[
-        ['key' => 'id', 'label' => 'ID', 'pinned' => 'left'],
-        ['key' => 'name', 'label' => 'Name', 'pinned' => 'left'],
-        // ... middle columns scroll ...
-        ['key' => 'status', 'label' => 'Status', 'pinned' => 'right'],
-    ]"
-    :data="$users"
-/&gt;</code></pre>
                 </div>
             </div>
 
@@ -2188,6 +2642,47 @@ GeoGrid.getContextMenuItems('grid-id');               // Get current menu items
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div id="code-aggrid-features" class="showcase-code-wrapper">
+            <div class="showcase-code-header">
+                <span class="showcase-code-label">Blade Usage</span>
+            </div>
+            <pre class="showcase-code">&lt;!-- Column Pinning --&gt;
+&lt;x-table.aggrid.base
+    :columns="[
+        ['key' => 'id', 'label' => 'ID', 'pinned' => 'left'],
+        ['key' => 'name', 'label' => 'Name', 'pinned' => 'left'],
+        ['key' => 'email', 'label' => 'Email'],
+        ['key' => 'department', 'label' => 'Department'],
+        // ... more scrollable columns ...
+        ['key' => 'status', 'label' => 'Status', 'pinned' => 'right'],
+    ]"
+    :data="$users"
+/&gt;
+
+&lt;!-- AG Grid Themes --&gt;
+&lt;x-table.aggrid.base
+    :columns="$columns"
+    :data="$users"
+    theme="alpine"   {{-- Options: quartz (default), alpine, balham, material --}}
+/&gt;
+
+&lt;!-- State Persistence --&gt;
+&lt;x-table.aggrid.base
+    id="my-grid"
+    :columns="$columns"
+    :data="$users"
+    :sortable="true"
+    :resizable="true"
+    :state-save="true"  {{-- Saves column state to localStorage --}}
+/&gt;
+
+&lt;!-- Reset saved state via JavaScript --&gt;
+&lt;script&gt;
+    localStorage.removeItem('geo-grid-state-my-grid');
+    location.reload();
+&lt;/script&gt;</pre>
         </div>
     </section>
 
@@ -2424,6 +2919,112 @@ GeoGrid.getContextMenuItems('grid-id');               // Get current menu items
                         headers: { 'Content-Type': 'application/json' }
                     }));
                 }, 200);
+            });
+        }
+    })();
+
+    // ========================================
+    // Showcase Code Panel Functionality
+    // ========================================
+    (function() {
+        // Code Panel Elements
+        const codePanel = document.getElementById('codePanel');
+        const codeBackdrop = document.getElementById('codeBackdrop');
+        const codePanelContent = document.getElementById('codePanelContent');
+        const codePanelTitle = document.getElementById('codePanelTitle');
+        const codePanelCopy = document.getElementById('codePanelCopy');
+        const codePanelClose = document.getElementById('codePanelClose');
+        let activeCodeButton = null;
+
+        // Open code panel
+        function openCodePanel(codeContent, title) {
+            codePanelContent.textContent = codeContent;
+            codePanelTitle.textContent = title || 'Blade Usage';
+            codePanel.classList.add('open');
+            codeBackdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close code panel
+        function closeCodePanel() {
+            codePanel.classList.remove('open');
+            codeBackdrop.classList.remove('open');
+            document.body.style.overflow = '';
+
+            // Remove active state from button
+            if (activeCodeButton) {
+                activeCodeButton.classList.remove('active');
+                activeCodeButton.innerHTML = '<i class="ki-outline ki-code"></i> Show Code';
+                activeCodeButton = null;
+            }
+        }
+
+        // Toggle code visibility (new slide-out behavior)
+        document.querySelectorAll('[data-toggle-code]').forEach(function(btn) {
+            // Update button HTML to include icon
+            if (!btn.querySelector('i')) {
+                btn.innerHTML = '<i class="ki-outline ki-code"></i> Show Code';
+            }
+
+            btn.addEventListener('click', function() {
+                var targetId = this.dataset.toggleCode;
+                var target = document.querySelector(targetId);
+
+                if (target) {
+                    // If this button is already active, close the panel
+                    if (this.classList.contains('active')) {
+                        closeCodePanel();
+                        return;
+                    }
+
+                    // Close any other active button
+                    if (activeCodeButton && activeCodeButton !== this) {
+                        activeCodeButton.classList.remove('active');
+                        activeCodeButton.innerHTML = '<i class="ki-outline ki-code"></i> Show Code';
+                    }
+
+                    // Get code content
+                    var codeBlock = target.querySelector('.showcase-code');
+                    var codeLabel = target.querySelector('.showcase-code-label');
+                    var title = codeLabel ? codeLabel.textContent : 'Blade Usage';
+                    var codeContent = codeBlock ? codeBlock.textContent : '';
+
+                    // Update button state
+                    this.classList.add('active');
+                    this.innerHTML = '<i class="ki-outline ki-eye-slash"></i> Hide Code';
+                    activeCodeButton = this;
+
+                    // Open panel
+                    openCodePanel(codeContent, title);
+                }
+            });
+        });
+
+        // Close panel events
+        if (codePanelClose) {
+            codePanelClose.addEventListener('click', closeCodePanel);
+        }
+        if (codeBackdrop) {
+            codeBackdrop.addEventListener('click', closeCodePanel);
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && codePanel && codePanel.classList.contains('open')) {
+                closeCodePanel();
+            }
+        });
+
+        // Copy code to clipboard
+        if (codePanelCopy) {
+            codePanelCopy.addEventListener('click', function() {
+                var codeContent = codePanelContent.textContent;
+                navigator.clipboard.writeText(codeContent).then(function() {
+                    codePanelCopy.innerHTML = '<i class="ki-outline ki-check"></i> Copied!';
+                    setTimeout(function() {
+                        codePanelCopy.innerHTML = '<i class="ki-outline ki-copy"></i> Copy';
+                    }, 2000);
+                });
             });
         }
     })();

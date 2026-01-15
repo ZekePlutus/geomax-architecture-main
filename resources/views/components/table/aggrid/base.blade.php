@@ -427,7 +427,8 @@
     // APPEARANCE
     // ============================================
     'theme' => 'quartz',                    // Grid theme: 'quartz', 'alpine', 'balham', 'material'
-    'darkMode' => false,                    // Enable dark mode variant
+    'darkMode' => false,                    // Enable dark mode variant (or 'auto' to detect from template)
+    'autoDetectTheme' => true,              // Auto-detect dark mode from template's data-bs-theme attribute
     'height' => '500px',                    // Grid height (CSS value)
     'minHeight' => '300px',                 // Minimum height
     'rowHeight' => null,                    // Custom row height (pixels)
@@ -542,8 +543,17 @@
         ], $col);
     })->toArray();
 
-    // Determine theme class
-    $themeClass = match($theme) {
+    // Determine base theme (light version - JS will handle dark mode switching)
+    $baseTheme = match($theme) {
+        'alpine' => 'ag-theme-alpine',
+        'balham' => 'ag-theme-balham',
+        'material' => 'ag-theme-material',
+        default => 'ag-theme-quartz',
+    };
+
+    // If not auto-detecting, use the darkMode prop to set initial theme
+    // If auto-detecting, JS will apply the correct theme on init
+    $themeClass = $autoDetectTheme ? $baseTheme : match($theme) {
         'alpine' => $darkMode ? 'ag-theme-alpine-dark' : 'ag-theme-alpine',
         'balham' => $darkMode ? 'ag-theme-balham-dark' : 'ag-theme-balham',
         'material' => $darkMode ? 'ag-theme-material-dark' : 'ag-theme-material',
@@ -592,7 +602,9 @@
         'suppressMovable' => $suppressMovable,
         // Appearance
         'theme' => $theme,
+        'baseTheme' => $baseTheme,
         'darkMode' => $darkMode,
+        'autoDetectTheme' => $autoDetectTheme,
         'rowHeight' => $rowHeight,
         'headerHeight' => $headerHeight,
         'domLayout' => $domLayout,
@@ -660,6 +672,47 @@
             /* ========================================== */
             /* AG Grid Component - Custom Styles          */
             /* ========================================== */
+
+            /* ========================================== */
+            /* AG GRID THEME COLOR INTEGRATION            */
+            /* Sync AG Grid colors with Bootstrap/Metronic */
+            /* ========================================== */
+
+            /* Light theme overrides */
+            .ag-theme-quartz,
+            .ag-theme-alpine,
+            .ag-theme-balham,
+            .ag-theme-material {
+                --ag-primary-color: var(--bs-primary, #3699ff);
+                --ag-row-hover-color: rgba(var(--bs-primary-rgb, 54, 153, 255), 0.08);
+                --ag-selected-row-background-color: rgba(var(--bs-primary-rgb, 54, 153, 255), 0.12);
+                --ag-checkbox-checked-color: var(--bs-primary, #3699ff);
+                --ag-range-selection-border-color: var(--bs-primary, #3699ff);
+                --ag-input-focus-border-color: var(--bs-primary, #3699ff);
+                --ag-header-background-color: var(--bs-gray-100, #f5f8fa);
+                --ag-border-color: var(--bs-border-color, #e4e6ef);
+                --ag-foreground-color: var(--bs-body-color, #181c32);
+                --ag-background-color: var(--bs-body-bg, #ffffff);
+                --ag-odd-row-background-color: var(--bs-gray-100, #f9f9f9);
+            }
+
+            /* Dark theme overrides */
+            .ag-theme-quartz-dark,
+            .ag-theme-alpine-dark,
+            .ag-theme-balham-dark,
+            .ag-theme-material-dark {
+                --ag-primary-color: var(--bs-primary, #3699ff);
+                --ag-row-hover-color: rgba(var(--bs-primary-rgb, 54, 153, 255), 0.15);
+                --ag-selected-row-background-color: rgba(var(--bs-primary-rgb, 54, 153, 255), 0.2);
+                --ag-checkbox-checked-color: var(--bs-primary, #3699ff);
+                --ag-range-selection-border-color: var(--bs-primary, #3699ff);
+                --ag-input-focus-border-color: var(--bs-primary, #3699ff);
+                --ag-header-background-color: var(--bs-gray-800, #1e1e2d);
+                --ag-border-color: var(--bs-border-color, #2d2d3a);
+                --ag-foreground-color: var(--bs-body-color, #f5f8fa);
+                --ag-background-color: var(--bs-body-bg, #151521);
+                --ag-odd-row-background-color: rgba(255, 255, 255, 0.02);
+            }
 
             .geo-grid-wrapper {
                 position: relative;
@@ -1519,6 +1572,64 @@
                     // Determine RTL: use explicit config, or auto-detect from HTML dir attribute
                     const isRtl = config.rtl !== null ? config.rtl :
                         (document.documentElement.dir === 'rtl' || document.body.dir === 'rtl');
+
+                    // ========================================
+                    // DARK MODE / THEME DETECTION
+                    // ========================================
+                    // Determine if template is in dark mode
+                    const detectDarkMode = () => {
+                        const htmlTheme = document.documentElement.getAttribute('data-bs-theme');
+                        const bodyTheme = document.body.getAttribute('data-bs-theme');
+                        const storedTheme = localStorage.getItem('data-bs-theme-mode');
+                        return htmlTheme === 'dark' || bodyTheme === 'dark' || storedTheme === 'dark';
+                    };
+
+                    // Apply theme class to grid container
+                    const applyThemeClass = (isDark) => {
+                        const themeMap = {
+                            'quartz': isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz',
+                            'alpine': isDark ? 'ag-theme-alpine-dark' : 'ag-theme-alpine',
+                            'balham': isDark ? 'ag-theme-balham-dark' : 'ag-theme-balham',
+                            'material': isDark ? 'ag-theme-material-dark' : 'ag-theme-material',
+                        };
+                        const newTheme = themeMap[config.theme] || themeMap['quartz'];
+
+                        // Remove all AG Grid theme classes and add the correct one
+                        container.className = container.className
+                            .replace(/ag-theme-[\w-]+/g, '')
+                            .trim() + ' ' + newTheme;
+                    };
+
+                    // If auto-detect is enabled, apply theme immediately and listen for changes
+                    if (config.autoDetectTheme) {
+                        applyThemeClass(detectDarkMode());
+
+                        // Listen for theme changes via MutationObserver
+                        const themeObserver = new MutationObserver((mutations) => {
+                            mutations.forEach((mutation) => {
+                                if (mutation.attributeName === 'data-bs-theme') {
+                                    applyThemeClass(detectDarkMode());
+                                }
+                            });
+                        });
+
+                        themeObserver.observe(document.documentElement, {
+                            attributes: true,
+                            attributeFilter: ['data-bs-theme']
+                        });
+
+                        // Also observe body in case theme is set there
+                        themeObserver.observe(document.body, {
+                            attributes: true,
+                            attributeFilter: ['data-bs-theme']
+                        });
+
+                        // Store observer for cleanup if needed
+                        container._themeObserver = themeObserver;
+                    } else if (config.darkMode) {
+                        // If not auto-detecting but darkMode is explicitly true
+                        applyThemeClass(true);
+                    }
 
                     // Build grid options
                     const gridOptions = {
@@ -2823,6 +2934,57 @@
                         if (instance) {
                             instance.api.hideOverlay();
                         }
+                    },
+
+                    // ========================================
+                    // THEME / DARK MODE API
+                    // ========================================
+
+                    /**
+                     * Set dark mode for a specific grid
+                     * @param {string} gridId - Grid ID
+                     * @param {boolean} isDark - Whether to use dark theme
+                     */
+                    setDarkMode(gridId, isDark) {
+                        const instance = instances[gridId];
+                        if (!instance) return;
+
+                        const container = document.getElementById(gridId);
+                        if (!container) return;
+
+                        const themeMap = {
+                            'quartz': isDark ? 'ag-theme-quartz-dark' : 'ag-theme-quartz',
+                            'alpine': isDark ? 'ag-theme-alpine-dark' : 'ag-theme-alpine',
+                            'balham': isDark ? 'ag-theme-balham-dark' : 'ag-theme-balham',
+                            'material': isDark ? 'ag-theme-material-dark' : 'ag-theme-material',
+                        };
+                        const newTheme = themeMap[instance.config.theme] || themeMap['quartz'];
+
+                        // Remove all AG Grid theme classes and add the correct one
+                        container.className = container.className
+                            .replace(/ag-theme-[\w-]+/g, '')
+                            .trim() + ' ' + newTheme;
+                    },
+
+                    /**
+                     * Set dark mode for ALL grids on the page
+                     * @param {boolean} isDark - Whether to use dark theme
+                     */
+                    setDarkModeAll(isDark) {
+                        Object.keys(instances).forEach(gridId => {
+                            this.setDarkMode(gridId, isDark);
+                        });
+                    },
+
+                    /**
+                     * Check if a grid is currently in dark mode
+                     * @param {string} gridId - Grid ID
+                     * @returns {boolean}
+                     */
+                    isDarkMode(gridId) {
+                        const container = document.getElementById(gridId);
+                        if (!container) return false;
+                        return container.className.includes('-dark');
                     },
 
                     // ========================================

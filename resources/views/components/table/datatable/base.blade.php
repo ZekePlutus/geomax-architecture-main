@@ -170,6 +170,51 @@
     />
     <!-- JS API: GeoTable.getColumnOrder(id), GeoTable.setColumnOrder(id, ['col1', 'col2']), GeoTable.resetColumnOrder(id) -->
 
+    12. TABLE WITH EXPANDABLE ROW DETAILS
+    -------------------------------------
+    Click on any row to expand and see more details:
+    <x-table.datatable.base
+        :columns="[
+            ['key' => 'name', 'label' => 'Name'],
+            ['key' => 'email', 'label' => 'Email'],
+        ]"
+        :data="$users"
+        :row-details="true"
+        row-key="id"
+    />
+
+    With specific columns in details:
+    <x-table.datatable.base
+        :columns="[
+            ['key' => 'name', 'label' => 'Name'],
+            ['key' => 'email', 'label' => 'Email'],
+        ]"
+        :data="$users"
+        :row-details="true"
+        :row-details-columns="[
+            ['key' => 'phone', 'label' => 'Phone Number'],
+            ['key' => 'address', 'label' => 'Address'],
+            ['key' => 'created_at', 'label' => 'Created Date'],
+        ]"
+        row-key="id"
+    />
+
+    With callbacks:
+    <x-table.datatable.base
+        :columns="$columns"
+        :data="$users"
+        :row-details="true"
+        on-row-expand="handleRowExpand"
+        on-row-collapse="handleRowCollapse"
+    />
+    <!-- JS: function handleRowExpand(rowData, rowElement, detailsElement) { console.log('Expanded:', rowData); } -->
+
+    JS API:
+    - GeoTable.expandRow(tableId, rowKey)
+    - GeoTable.collapseRow(tableId, rowKey)
+    - GeoTable.toggleRow(tableId, rowKey)
+    - GeoTable.collapseAllRows(tableId)
+
     ================================================================================
     RTL / LOCALE SUPPORT
     ================================================================================
@@ -357,6 +402,18 @@
     'actionsView' => null,                  // Blade view path for actions (receives $row, $index)
 
     // ============================================
+    // ROW DETAILS / EXPANDABLE ROWS
+    // ============================================
+    'rowDetails' => false,                  // Enable expandable row details (click row to expand)
+    'rowDetailsView' => null,               // Blade view path for row details (receives $row, $index)
+    'rowDetailsColumns' => null,            // Array of columns to show in details (null = all non-visible or all)
+    'rowDetailsIcon' => 'ki-outline ki-plus',  // Icon for expand button (collapsed)
+    'rowDetailsIconExpanded' => 'ki-outline ki-minus', // Icon for collapse button (expanded)
+    'rowDetailsAnimation' => true,          // Animate row details expand/collapse
+    'onRowExpand' => null,                  // Callback when row expands: function(rowData, rowElement)
+    'onRowCollapse' => null,                // Callback when row collapses: function(rowData, rowElement)
+
+    // ============================================
     // CALLBACKS (JavaScript function names)
     // ============================================
     'onInit' => null,                       // Callback after table init
@@ -464,6 +521,12 @@
         // RTL / Locale
         'rtl' => $rtl,
         'locale' => $locale ?? app()->getLocale(),
+        // Row Details
+        'rowDetails' => $rowDetails,
+        'rowDetailsColumns' => $rowDetailsColumns,
+        'rowDetailsIcon' => $rowDetailsIcon,
+        'rowDetailsIconExpanded' => $rowDetailsIconExpanded,
+        'rowDetailsAnimation' => $rowDetailsAnimation,
         // Bulk Actions
         'bulkActions' => $bulkActions,
         'onBulkAction' => $onBulkAction,
@@ -480,6 +543,8 @@
             'onSelectionChange' => $onSelectionChange,
             'onAjaxError' => $onAjaxError,
             'onBulkAction' => $onBulkAction,
+            'onRowExpand' => $onRowExpand,
+            'onRowCollapse' => $onRowCollapse,
         ],
     ];
 
@@ -1286,6 +1351,146 @@
     .geo-datatable-wrapper[dir="rtl"] .geo-datatable-empty {
         direction: rtl;
     }
+
+    /* ============================================ */
+    /* ROW DETAILS / EXPANDABLE ROWS               */
+    /* ============================================ */
+
+    /* Expand toggle button */
+    .geo-row-expand-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--geo-table-text-muted);
+    }
+
+    .geo-row-expand-toggle:hover {
+        background: var(--geo-table-row-hover);
+        color: var(--bs-primary, #3699ff);
+    }
+
+    .geo-row-expand-toggle i {
+        font-size: 1rem;
+        transition: transform 0.2s ease;
+    }
+
+    /* Expanded state */
+    tr.geo-row-expanded .geo-row-expand-toggle {
+        background: rgba(var(--bs-primary-rgb, 54, 153, 255), 0.1);
+        color: var(--bs-primary, #3699ff);
+    }
+
+    tr.geo-row-expanded {
+        background: var(--geo-table-row-hover) !important;
+    }
+
+    tr.geo-row-expanded td {
+        background: var(--geo-table-row-hover) !important;
+        border-bottom-color: transparent !important;
+    }
+
+    /* Details row */
+    tr.geo-row-details {
+        background: var(--geo-table-bg);
+    }
+
+    tr.geo-row-details > td {
+        padding: 0 !important;
+        border-bottom: 1px solid var(--geo-table-border);
+        background: linear-gradient(to bottom, var(--geo-table-row-hover) 0%, var(--geo-table-bg) 8px, var(--geo-table-bg) 100%);
+    }
+
+    /* Details content wrapper */
+    .geo-row-details-content {
+        padding: 1.5rem 2rem;
+        overflow: hidden;
+    }
+
+    /* Animation */
+    .geo-row-details-content.geo-animate {
+        animation: geo-slide-down 0.25s ease-out;
+    }
+
+    @keyframes geo-slide-down {
+        from {
+            opacity: 0;
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        to {
+            opacity: 1;
+            max-height: 500px;
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+        }
+    }
+
+    /* Details grid layout */
+    .geo-row-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem 2rem;
+    }
+
+    .geo-row-details-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .geo-row-details-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--geo-table-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .geo-row-details-value {
+        font-size: 0.95rem;
+        color: var(--geo-table-text);
+        word-break: break-word;
+    }
+
+    .geo-row-details-value:empty::before {
+        content: '-';
+        color: var(--geo-table-text-muted);
+    }
+
+    /* Card style variant for details */
+    .geo-row-details-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .geo-row-details-card {
+        flex: 1 1 200px;
+        max-width: 300px;
+        padding: 1rem;
+        background: var(--geo-table-row-stripe);
+        border-radius: 8px;
+        border: 1px solid var(--geo-table-border);
+    }
+
+    .geo-row-details-card .geo-row-details-label {
+        margin-bottom: 0.5rem;
+    }
+
+    /* RTL support for row details */
+    [dir="rtl"] .geo-row-details-content,
+    .geo-datatable-wrapper[dir="rtl"] .geo-row-details-content {
+        direction: rtl;
+        text-align: right;
+    }
 </style>
 @endpush
 
@@ -1416,6 +1621,19 @@
          */
         init: function(tableId, config) {
             var self = this;
+
+            // Check if already initialized - prevent reinitialize error
+            if (this.instances[tableId] && this.instances[tableId].dt) {
+                console.debug('GeoTable: Table already initialized:', tableId);
+                return this.instances[tableId].dt;
+            }
+
+            // Also check if DataTable is already initialized on the element
+            var $table = jQuery('#' + tableId);
+            if ($table.length && jQuery.fn.DataTable.isDataTable($table)) {
+                console.debug('GeoTable: DataTable already exists on element:', tableId);
+                return $table.DataTable();
+            }
 
             // Wait for dependencies
             this._waitForDependencies(function() {
@@ -1970,6 +2188,19 @@
                 return;
             }
 
+            // Double-check: prevent reinitialize if already a DataTable
+            if (jQuery.fn.DataTable.isDataTable($table)) {
+                console.debug('GeoTable: Skipping init - already a DataTable:', tableId);
+                if (!this.instances[tableId]) {
+                    this.instances[tableId] = {
+                        config: config,
+                        selected: [],
+                        dt: $table.DataTable()
+                    };
+                }
+                return;
+            }
+
             // Store instance
             this.instances[tableId] = {
                 config: config,
@@ -1997,6 +2228,11 @@
             // Setup column reordering
             if (config.columnReorderable) {
                 this._setupColumnReorder(tableId);
+            }
+
+            // Setup row details / expandable rows
+            if (config.rowDetails) {
+                this._setupRowDetails(tableId, config);
             }
 
             // Trigger init callback
@@ -2165,6 +2401,248 @@
             });
         },
 
+        // ========================================
+        // ROW DETAILS / EXPANDABLE ROWS
+        // ========================================
+
+        _setupRowDetails: function(tableId, config) {
+            var self = this;
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var tbody = table.querySelector('tbody');
+            if (!tbody) return;
+
+            // Store expanded rows state
+            this.instances[tableId].expandedRows = {};
+
+            // Handle click on expand toggle buttons
+            tbody.addEventListener('click', function(e) {
+                var toggleBtn = e.target.closest('.geo-row-expand-toggle');
+                if (!toggleBtn) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                var row = toggleBtn.closest('tr');
+                if (!row) return;
+
+                var rowKey = row.getAttribute('data-row-key');
+                var isExpanded = row.classList.contains('geo-row-expanded');
+
+                if (isExpanded) {
+                    self._collapseRow(tableId, row, rowKey, config);
+                } else {
+                    self._expandRow(tableId, row, rowKey, config);
+                }
+            });
+
+            // Also handle click on entire row if no rowClickable
+            tbody.addEventListener('click', function(e) {
+                // Skip if clicked on toggle button, checkbox, button, link, or actions
+                if (e.target.closest('.geo-row-expand-toggle, input, button, a, .btn')) return;
+
+                var row = e.target.closest('tr.geo-row-expandable');
+                if (!row || row.classList.contains('geo-row-details')) return;
+
+                var rowKey = row.getAttribute('data-row-key');
+                var isExpanded = row.classList.contains('geo-row-expanded');
+
+                if (isExpanded) {
+                    self._collapseRow(tableId, row, rowKey, config);
+                } else {
+                    self._expandRow(tableId, row, rowKey, config);
+                }
+            });
+        },
+
+        _expandRow: function(tableId, row, rowKey, config) {
+            var self = this;
+            var instance = this.instances[tableId];
+
+            // Mark row as expanded
+            row.classList.add('geo-row-expanded');
+            instance.expandedRows[rowKey] = true;
+
+            // Update toggle icon
+            var toggleBtn = row.querySelector('.geo-row-expand-toggle i');
+            if (toggleBtn && config.rowDetailsIconExpanded) {
+                toggleBtn.className = config.rowDetailsIconExpanded;
+            }
+
+            // Get row data
+            var rowData = row.getAttribute('data-row-data');
+            try { rowData = JSON.parse(rowData); } catch (e) { rowData = {}; }
+
+            // Calculate colspan (all visible columns)
+            var colspan = row.querySelectorAll('td').length;
+
+            // Build details content
+            var detailsHtml = this._buildRowDetailsContent(rowData, config);
+
+            // Create details row
+            var detailsRow = document.createElement('tr');
+            detailsRow.className = 'geo-row-details';
+            detailsRow.setAttribute('data-details-for', rowKey);
+
+            var detailsTd = document.createElement('td');
+            detailsTd.setAttribute('colspan', colspan);
+            detailsTd.innerHTML = '<div class="geo-row-details-content' + (config.rowDetailsAnimation ? ' geo-animate' : '') + '">' + detailsHtml + '</div>';
+
+            detailsRow.appendChild(detailsTd);
+
+            // Insert after the row
+            row.parentNode.insertBefore(detailsRow, row.nextSibling);
+
+            // Trigger callback
+            this._triggerCallback(config.callbacks.onRowExpand, [rowData, row, detailsRow]);
+        },
+
+        _collapseRow: function(tableId, row, rowKey, config) {
+            var instance = this.instances[tableId];
+
+            // Mark row as collapsed
+            row.classList.remove('geo-row-expanded');
+            delete instance.expandedRows[rowKey];
+
+            // Update toggle icon
+            var toggleBtn = row.querySelector('.geo-row-expand-toggle i');
+            if (toggleBtn && config.rowDetailsIcon) {
+                toggleBtn.className = config.rowDetailsIcon;
+            }
+
+            // Get row data for callback
+            var rowData = row.getAttribute('data-row-data');
+            try { rowData = JSON.parse(rowData); } catch (e) { rowData = {}; }
+
+            // Remove details row
+            var detailsRow = row.parentNode.querySelector('tr.geo-row-details[data-details-for="' + rowKey + '"]');
+            if (detailsRow) {
+                detailsRow.remove();
+            }
+
+            // Trigger callback
+            this._triggerCallback(config.callbacks.onRowCollapse, [rowData, row]);
+        },
+
+        _buildRowDetailsContent: function(rowData, config) {
+            var html = '<div class="geo-row-details-grid">';
+
+            // Determine which columns to show
+            var columnsToShow = config.rowDetailsColumns || config.columns;
+
+            if (columnsToShow && columnsToShow.length) {
+                columnsToShow.forEach(function(col) {
+                    var key = typeof col === 'string' ? col : col.key;
+                    var label = typeof col === 'string' ? key.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); }) : (col.label || key);
+                    var value = rowData[key];
+
+                    // Format value
+                    if (value === null || value === undefined) {
+                        value = '';
+                    } else if (typeof value === 'object') {
+                        value = JSON.stringify(value);
+                    }
+
+                    html += '<div class="geo-row-details-item">';
+                    html += '<span class="geo-row-details-label">' + label + '</span>';
+                    html += '<span class="geo-row-details-value">' + value + '</span>';
+                    html += '</div>';
+                });
+            } else {
+                // Show all data if no columns specified
+                Object.keys(rowData).forEach(function(key) {
+                    var value = rowData[key];
+                    var label = key.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+
+                    // Format value
+                    if (value === null || value === undefined) {
+                        value = '';
+                    } else if (typeof value === 'object') {
+                        value = JSON.stringify(value);
+                    }
+
+                    html += '<div class="geo-row-details-item">';
+                    html += '<span class="geo-row-details-label">' + label + '</span>';
+                    html += '<span class="geo-row-details-value">' + value + '</span>';
+                    html += '</div>';
+                });
+            }
+
+            html += '</div>';
+            return html;
+        },
+
+        /**
+         * Expand a row programmatically
+         * @param {string} tableId - The table element ID
+         * @param {string} rowKey - The row key to expand
+         */
+        expandRow: function(tableId, rowKey) {
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var row = table.querySelector('tr[data-row-key="' + rowKey + '"]');
+            if (row && !row.classList.contains('geo-row-expanded')) {
+                var config = this.instances[tableId]?.config;
+                if (config) {
+                    this._expandRow(tableId, row, rowKey, config);
+                }
+            }
+        },
+
+        /**
+         * Collapse a row programmatically
+         * @param {string} tableId - The table element ID
+         * @param {string} rowKey - The row key to collapse
+         */
+        collapseRow: function(tableId, rowKey) {
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var row = table.querySelector('tr[data-row-key="' + rowKey + '"]');
+            if (row && row.classList.contains('geo-row-expanded')) {
+                var config = this.instances[tableId]?.config;
+                if (config) {
+                    this._collapseRow(tableId, row, rowKey, config);
+                }
+            }
+        },
+
+        /**
+         * Toggle a row's expanded state
+         * @param {string} tableId - The table element ID
+         * @param {string} rowKey - The row key to toggle
+         */
+        toggleRow: function(tableId, rowKey) {
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var row = table.querySelector('tr[data-row-key="' + rowKey + '"]');
+            if (row) {
+                if (row.classList.contains('geo-row-expanded')) {
+                    this.collapseRow(tableId, rowKey);
+                } else {
+                    this.expandRow(tableId, rowKey);
+                }
+            }
+        },
+
+        /**
+         * Collapse all expanded rows
+         * @param {string} tableId - The table element ID
+         */
+        collapseAllRows: function(tableId) {
+            var self = this;
+            var instance = this.instances[tableId];
+            if (!instance) return;
+
+            var expandedKeys = Object.keys(instance.expandedRows || {});
+            expandedKeys.forEach(function(rowKey) {
+                self.collapseRow(tableId, rowKey);
+            });
+        },
+
         _triggerCallback: function(callbackName, args) {
             if (callbackName && typeof window[callbackName] === 'function') {
                 window[callbackName].apply(null, args);
@@ -2300,6 +2778,11 @@
             {{-- Table Header --}}
             <thead class="{{ $headerClass }}">
                 <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase">
+                    {{-- Expand Toggle Column --}}
+                    @if($rowDetails)
+                    <th class="w-10px pe-2 geo-col-fixed geo-col-expand"></th>
+                    @endif
+
                     {{-- Checkbox Column --}}
                     @if($selectable)
                     <th class="w-10px pe-2 geo-col-fixed">
@@ -2352,7 +2835,7 @@
                     $rowIsArray = is_array($row);
                 @endphp
                 <tr
-                    class="{{ $rowClass }} {{ $rowClickable ? 'geo-row-clickable' : '' }}"
+                    class="{{ $rowClass }} {{ $rowClickable ? 'geo-row-clickable' : '' }} {{ $rowDetails ? 'geo-row-expandable' : '' }}"
                     data-row-key="{{ $rowKeyValue }}"
                     data-row-data="{{ json_encode($row) }}"
                     @foreach($rowAttributes as $attrKey => $attrValue)
@@ -2362,6 +2845,15 @@
                     onclick="window.location='{{ str_replace('{id}', $rowKeyValue, $rowUrl) }}'"
                     @endif
                 >
+                    {{-- Expand Toggle Cell --}}
+                    @if($rowDetails)
+                    <td class="geo-col-expand">
+                        <button type="button" class="geo-row-expand-toggle" aria-label="Expand row details" data-row-key="{{ $rowKeyValue }}">
+                            <i class="{{ $rowDetailsIcon }}"></i>
+                        </button>
+                    </td>
+                    @endif
+
                     {{-- Checkbox Cell --}}
                     @if($selectable)
                     <td>
