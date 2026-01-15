@@ -8,43 +8,27 @@ require __DIR__ . '/locale.php';
 Route::get('/', function () {
     return view('welcome');
 });
-
-/*
-|--------------------------------------------------------------------------
-| Component Showcase (DEV ONLY)
-|--------------------------------------------------------------------------
-*/
-if (in_array(app()->environment(), ['local', 'staging', 'development', 'testing'])) {
-    Route::prefix('components')->group(function () {
-        Route::get('/', function () {
-            return view('core-ui.components.showcase');
-        })->name('core-ui.showcase');
-
-        Route::get('/{category}/{component}', function (string $category, string $component) {
-            $viewPath = "core-ui.components.examples.{$category}.{$component}";
-            if (!view()->exists($viewPath)) {
-                abort(404, "Component example not found: {$category}/{$component}");
-            }
-            return view($viewPath);
-        })->name('core-ui.component.preview');
-    });
-}
-
 // Component Examples
 Route::prefix('examples')->name('examples')->group(function () {
     Route::get('/', function () {
-        return view('layout50.examples.index');
+        return view('examples.index');
     });
-
+    
     // Form Components
     Route::get('/form/input', function () {
-        return view('layout50.examples.form.input');
+        return view('examples.form.input');
     })->name('.form.input');
-
+    
+    Route::get('/form/range', function () {
+        return view('examples.form.range');
+    })->name('.form.range');
+    
     // General Components
     Route::get('/drawer', function () {
-        return view('layout50.examples.drawer');
+        return view('examples.drawer');
     })->name('.drawer');
-
-
+    
+    Route::get('/datatable', function () {
+        return view('examples.datatable');
+    })->name('.datatable');
 });

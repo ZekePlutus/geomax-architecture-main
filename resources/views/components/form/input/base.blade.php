@@ -1,7 +1,9 @@
 {{--
     Metronic Form Input Component
     
-    Documentation: https://preview.keenthemes.com/html/metronic/docs/?page=base/forms/controls
+    Documentation: 
+    - https://preview.keenthemes.com/html/metronic/docs/?page=base/forms/controls
+    - https://preview.keenthemes.com/html/metronic/docs/?page=base/forms/input-group
     
     Usage:
     <x-form.input.base 
@@ -11,6 +13,13 @@
         placeholder="name@example.com"
         icon="ki-outline ki-sms"
     />
+    
+    Input Group Examples:
+    <x-form.input.base name="username" prepend="@" />
+    <x-form.input.base name="email" append="@example.com" />
+    <x-form.input.base name="price" prepend="$" append=".00" />
+    <x-form.input.base name="url" prependIcon="ki-outline ki-globe" />
+    <x-form.input.base name="search" appendButton="Search" appendButtonClass="btn-primary" />
     
     Sizes: sm, lg (default is normal)
     Types: text, email, number, password, url, tel, date, datetime-local, time, month, week, color, search
@@ -40,7 +49,18 @@
     'icon' => null,                  // Icon class: ki-outline ki-user
     'iconPosition' => 'start',       // start, end
     'prepend' => null,               // Text/HTML to prepend (input group)
+    'prependIcon' => null,           // Icon class for prepend: ki-outline ki-user
     'append' => null,                // Text/HTML to append (input group)
+    'appendIcon' => null,            // Icon class for append: ki-outline ki-sms
+    'appendButton' => null,          // Button text to append
+    'appendButtonClass' => 'btn-secondary', // Button class (btn-primary, btn-light, etc.)
+    'appendButtonType' => 'button',  // Button type: button, submit
+    'appendButtonId' => null,        // Button ID for JS hooks
+    'prependButton' => null,         // Button text to prepend
+    'prependButtonClass' => 'btn-secondary', // Prepend button class
+    'prependButtonType' => 'button', // Prepend button type
+    'prependButtonId' => null,       // Prepend button ID
+    'inputGroupVariant' => null,     // null (default), solid
     
     // States
     'required' => false,
@@ -98,43 +118,20 @@
     $formControlClass .= ' ' . $inputClass;
     
     // Determine if we need input group
-    $hasInputGroup = $icon || $prepend || $append;
+    $hasInputGroup = $icon || $prepend || $append || $prependIcon || $appendIcon || $appendButton || $prependButton;
     
     // Input group classes (Metronic specific)
-    $inputGroupClass = 'input-group input-group-solid';
+    $inputGroupClass = 'input-group';
+    if ($inputGroupVariant === 'solid' || $variant === 'solid') {
+        $inputGroupClass .= ' input-group-solid';
+    }
     if ($size === 'sm') {
         $inputGroupClass .= ' input-group-sm';
     } elseif ($size === 'lg') {
         $inputGroupClass .= ' input-group-lg';
     }
     
-    // Check if mask is needed
-    $needsMask = !empty($mask) || !empty($maskOptions);
 @endphp
-
-{{-- jQuery Mask Plugin (loaded once) --}}
-@if($needsMask)
-@once
-@push('scripts')
-<script>
-// Wait for jQuery to be available before loading mask plugin
-(function waitForJQuery() {
-    if (typeof jQuery !== 'undefined') {
-        var script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js';
-        script.onload = function() {
-            window.maskPluginReady = true;
-            jQuery(document).trigger('maskPluginReady');
-        };
-        document.head.appendChild(script);
-    } else {
-        setTimeout(waitForJQuery, 50);
-    }
-})();
-</script>
-@endpush
-@endonce
-@endif
 
 <div class="mb-5 {{ $wrapperClass }}">
     {{-- Label with optional tooltip --}}
@@ -152,6 +149,20 @@
     @if($hasInputGroup)
     {{-- Input with icon/prepend/append --}}
     <div class="{{ $inputGroupClass }}">
+        {{-- Prepend button --}}
+        @if($prependButton)
+        <button class="btn {{ $prependButtonClass }}" type="{{ $prependButtonType }}" @if($prependButtonId) id="{{ $prependButtonId }}" @endif>
+            {!! $prependButton !!}
+        </button>
+        @endif
+
+        {{-- Prepend icon --}}
+        @if($prependIcon)
+        <span class="input-group-text">
+            <i class="{{ $prependIcon }}"></i>
+        </span>
+        @endif
+
         {{-- Prepend text --}}
         @if($prepend)
         <span class="input-group-text">{!! $prepend !!}</span>
@@ -181,6 +192,8 @@
             @if($pattern) pattern="{{ $pattern }}" @endif
             @if($inputmode) inputmode="{{ $inputmode }}" @endif
             @if($dir) dir="{{ $dir }}" @endif
+            @if($mask) data-mask="{{ $mask }}" @endif
+            @if($maskOptions) data-mask-options='@json($maskOptions)' @endif
             @if($required) required @endif
             @if($disabled) disabled @endif
             @if($readonly) readonly @endif
@@ -197,6 +210,20 @@
         {{-- Append text --}}
         @if($append)
         <span class="input-group-text">{!! $append !!}</span>
+        @endif
+
+        {{-- Append icon --}}
+        @if($appendIcon)
+        <span class="input-group-text">
+            <i class="{{ $appendIcon }}"></i>
+        </span>
+        @endif
+
+        {{-- Append button --}}
+        @if($appendButton)
+        <button class="btn {{ $appendButtonClass }}" type="{{ $appendButtonType }}" @if($appendButtonId) id="{{ $appendButtonId }}" @endif>
+            {!! $appendButton !!}
+        </button>
         @endif
     </div>
     @else
@@ -217,6 +244,8 @@
         @if($pattern) pattern="{{ $pattern }}" @endif
         @if($inputmode) inputmode="{{ $inputmode }}" @endif
         @if($dir) dir="{{ $dir }}" @endif
+        @if($mask) data-mask="{{ $mask }}" @endif
+        @if($maskOptions) data-mask-options='@json($maskOptions)' @endif
         @if($required) required @endif
         @if($disabled) disabled @endif
         @if($readonly) readonly @endif
@@ -237,44 +266,83 @@
     @endif
 </div>
 
-{{-- Input Mask Initialization --}}
-@if($needsMask)
+{{-- Global Mask Initializer (loaded once, library-agnostic) --}}
+@if($mask || $maskOptions)
+@once
 @push('scripts')
 <script>
 (function() {
-    function initMask_{{ str_replace(['-', '.'], '_', $inputId) }}() {
-        if (!window.maskPluginReady || typeof jQuery === 'undefined' || typeof jQuery.fn.mask === 'undefined') return false;
-        try {
-            @if($mask)
-            jQuery('#{{ $inputId }}').mask('{{ $mask }}', @json($maskOptions ?? new stdClass()));
-            @elseif($maskOptions)
-            jQuery('#{{ $inputId }}').mask(@json($maskOptions));
-            @endif
-            return true;
-        } catch (e) {
-            console.warn('Mask init failed for {{ $inputId }}:', e);
-            return false;
-        }
-    }
+    // Mask definitions: 0 = digit, A = alpha, S = alphanumeric
+    const MASK_TOKENS = { '0': /\d/, 'A': /[a-zA-Z]/, 'S': /[a-zA-Z0-9]/ };
     
-    function waitAndInit() {
-        if (typeof jQuery !== 'undefined') {
-            if (window.maskPluginReady) {
-                initMask_{{ str_replace(['-', '.'], '_', $inputId) }}();
-            } else {
-                jQuery(document).one('maskPluginReady', initMask_{{ str_replace(['-', '.'], '_', $inputId) }});
+    function applyMask(input, pattern, options = {}) {
+        const tokens = { ...MASK_TOKENS, ...(options.tokens || {}) };
+        
+        function format(value) {
+            let result = '', valueIndex = 0;
+            const cleanValue = value.replace(/[^a-zA-Z0-9]/g, '');
+            
+            for (let i = 0; i < pattern.length && valueIndex < cleanValue.length; i++) {
+                const maskChar = pattern[i];
+                if (tokens[maskChar]) {
+                    if (tokens[maskChar].test(cleanValue[valueIndex])) {
+                        result += cleanValue[valueIndex++];
+                    } else {
+                        valueIndex++;
+                        i--;
+                    }
+                } else {
+                    result += maskChar;
+                    if (cleanValue[valueIndex] === maskChar) valueIndex++;
+                }
             }
-        } else {
-            setTimeout(waitAndInit, 50);
+            return result;
         }
+        
+        function handleInput(e) {
+            const pos = input.selectionStart;
+            const oldLen = input.value.length;
+            input.value = format(input.value);
+            const newLen = input.value.length;
+            const newPos = Math.max(0, pos + (newLen - oldLen));
+            input.setSelectionRange(newPos, newPos);
+        }
+        
+        input.addEventListener('input', handleInput);
+        input.addEventListener('focus', () => { if (input.value) input.value = format(input.value); });
+        if (input.value) input.value = format(input.value);
+        
+        // Store cleanup function
+        input._maskCleanup = () => {
+            input.removeEventListener('input', handleInput);
+        };
     }
     
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', waitAndInit);
-    } else {
-        waitAndInit();
+    function initMasks() {
+        document.querySelectorAll('[data-mask]:not([data-mask-initialized])').forEach(input => {
+            const mask = input.dataset.mask;
+            let options = {};
+            try { options = JSON.parse(input.dataset.maskOptions || '{}'); } catch(e) {}
+            applyMask(input, mask, options);
+            input.dataset.maskInitialized = 'true';
+        });
     }
+    
+    // Init on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMasks);
+    } else {
+        initMasks();
+    }
+    
+    // Support Livewire/Turbo/dynamic content
+    document.addEventListener('livewire:navigated', initMasks);
+    document.addEventListener('turbo:load', initMasks);
+    
+    // Expose for manual re-init
+    window.initInputMasks = initMasks;
 })();
 </script>
 @endpush
+@endonce
 @endif

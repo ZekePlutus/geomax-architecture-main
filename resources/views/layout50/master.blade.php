@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-
-<html lang="en" >   
+@php
+    $isRtl = app()->getLocale() === 'ar';
+@endphp
+<html lang="{{ app()->getLocale() }}" direction="{{ $isRtl ? 'rtl' : 'ltr' }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" @if($isRtl) style="direction: rtl" @endif>   
 	<!--begin::Head-->
     @include('layout50.includes.head')
 	<!--end::Head-->
 	<!--begin::Body-->
 	<body id="kt_app_body" data-kt-app-header-fixed="true" data-kt-app-header-fixed-mobile="true" 
     data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true" data-kt-app-sidebar-stacked="true" data-kt-app-sidebar-secondary-enabled="true" 
-    data-kt-app-toolbar-enabled="true" class="app-default">
+    data-kt-app-toolbar-enabled="true" 
+	class="app-default"
+	
+	>
 		<!--begin::Theme mode setup on page load-->
 		@include('layout50.includes.theme-customizer')
 		<!--end::Theme mode setup on page load-->

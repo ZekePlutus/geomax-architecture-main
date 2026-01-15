@@ -10,11 +10,14 @@
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
 
-   
+    @php
+        $isRtl = app()->getLocale() === 'ar';
+        $rtlSuffix = $isRtl ? '.rtl' : '';
+    @endphp
 
     <!-- Global Stylesheets -->
-    <link href="{{ asset('assets/css/plugins.bundle.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/css/style.bundle.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/css/plugins.bundle' . $rtlSuffix . '.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/css/style.bundle' . $rtlSuffix . '.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/custom.css') }}?v={{ time() }}" rel="stylesheet" type="text/css" />
 
     @stack('styles')
